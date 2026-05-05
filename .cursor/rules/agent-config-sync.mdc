@@ -1,0 +1,11 @@
+---
+description: Keep Cursor and Claude project assumptions synchronized
+alwaysApply: true
+---
+
+# Agent Configuration Sync
+
+- Treat `CLAUDE.md` and `AGENTS.md` as mirrored policy files for this project.
+- Keep the "Project Configuration" block and Svelte MCP instructions semantically identical in both files.
+- Before finishing changes that touch agent settings, verify `.cursor/mcp.json` still includes the `svelte` server.
+- If one policy file changes, update the other in the same edit batch.
