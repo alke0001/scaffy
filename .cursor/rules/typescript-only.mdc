@@ -1,0 +1,11 @@
+---
+description: Use TypeScript for all project application code
+alwaysApply: true
+---
+
+# TypeScript
+
+- Use **TypeScript** for all new application code under `src/` and for SvelteKit route/module files (e.g. `+server.ts`, `+layout.server.ts`, `hooks.server.ts`).
+- Svelte components: `<script lang="ts">` (not plain `script`).
+- Do **not** add new plain `.js` source files under `src/`. When changing existing `.js`, prefer renaming/migrating to `.ts` in the same edit when it is straightforward.
+- Config and tooling in this repo already use TypeScript (e.g. `vite.config.ts`); keep new config as `.ts` unless the tool requires otherwise.
