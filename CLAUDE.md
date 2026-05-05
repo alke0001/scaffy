@@ -89,6 +89,12 @@ for (const char of chunk.code) {
 - A/B testing: scaffolding with friction vs. classic agentic coding
 - Event logging via Tinybird for analytics
 
+## Language Conventions
+
+- **README.md**: American English only.
+- **Code comments**: American English only (inline, block, JSDoc/TSDoc).
+- **Chat**: Reply in German when the user writes in German.
+
 ---
 
 You are able to use the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here's how to use the available tools effectively:
