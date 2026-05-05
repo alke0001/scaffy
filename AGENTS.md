@@ -10,6 +10,12 @@
 - `CLAUDE.md` and `AGENTS.md` must stay semantically identical for project assumptions.
 - Changes to one file require the same change in the other file in the same batch.
 
+## Language Conventions
+
+- **README.md**: American English only.
+- **Code comments**: American English only (inline, block, JSDoc/TSDoc).
+- **Chat**: Reply in German when the user writes in German.
+
 ---
 
 You are able to use the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here's how to use the available tools effectively:
