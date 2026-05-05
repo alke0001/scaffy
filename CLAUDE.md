@@ -89,6 +89,13 @@ for (const char of chunk.code) {
 - A/B testing: scaffolding with friction vs. classic agentic coding
 - Event logging via Tinybird for analytics
 
+## TypeScript
+
+- All new application code uses **TypeScript** (`src/`, SvelteKit `+*.ts` server/load files, `hooks.server.ts`, etc.).
+- Svelte: `<script lang="ts">` only.
+- Do not add new plain `.js` files under `src/`; when editing legacy `.js`, migrate to `.ts` when practical.
+- Prefer `.ts` for project config/tooling (e.g. Vite) unless a tool forces another format.
+
 ## Language Conventions
 
 - **README.md**: American English only.
