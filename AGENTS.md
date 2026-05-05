@@ -3,6 +3,12 @@
 - **Language**: TypeScript
 - **Package Manager**: npm
 - **Add-ons**: prettier, eslint, tailwindcss, sveltekit-adapter, mcp
+- **MCP Servers (.cursor/mcp.json)**: svelte, vercel
+
+## Agent Config Synchronization
+
+- `CLAUDE.md` and `AGENTS.md` must stay semantically identical for project assumptions.
+- Changes to one file require the same change in the other file in the same batch.
 
 ---
 
