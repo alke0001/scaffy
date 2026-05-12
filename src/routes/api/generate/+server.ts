@@ -2,6 +2,7 @@ import { json, error, isHttpError } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { APIError } from '@anthropic-ai/sdk';
 import { client, resolveModel } from '$lib/server/claude';
+import systemPrompt from '$lib/server/scaffy-system-prompt.md?raw';
 
 /**
  * SvelteKit route endpoint: this file maps to POST /api/generate (no +page.svelte here—only API).
@@ -48,13 +49,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const modelStr = typeof model === 'string' ? model : undefined;
 	const { apiModelId } = resolveModel(modelStr);
 
-	// TODO: Replace with final system prompt + JSON schema (structured output) for Scaffy chunks.
-	const system = [
-		'You are a stub generator for Scaffy.',
-		'Reply with valid JSON only, no Markdown fences.',
-		'Schema: {"chunks": [...]} where chunks is an array (e.g. empty or placeholder strings).',
-		'No other top-level keys besides "chunks".'
-	].join(' ');
+	const system = systemPrompt.trim();
 
 	try {
 		const message = await client.messages.create({
