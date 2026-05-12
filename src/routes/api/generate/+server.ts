@@ -2,6 +2,7 @@ import { json, error, isHttpError } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { APIError } from '@anthropic-ai/sdk';
 import { client, resolveModel } from '$lib/server/claude';
+import { OUTPUT_JSON_SCHEMA, validateStructuredOutput } from '$lib/server/scaffy-output-schema';
 import systemPrompt from '$lib/server/scaffy-system-prompt.md?raw';
 
 /**
@@ -17,15 +18,6 @@ type GenerateRequestBody = {
 	prompt?: unknown;
 	model?: unknown;
 };
-
-function hasChunks(value: unknown): value is { chunks: unknown[] } {
-	return (
-		typeof value === 'object' &&
-		value !== null &&
-		'chunks' in value &&
-		Array.isArray((value as { chunks: unknown }).chunks)
-	);
-}
 
 export const POST: RequestHandler = async ({ request }) => {
 	let body: unknown;
@@ -55,10 +47,25 @@ export const POST: RequestHandler = async ({ request }) => {
 		const message = await client.messages.create({
 			model: apiModelId,
 			max_tokens: 4096,
-			temperature: 0.2,
 			system,
-			messages: [{ role: 'user', content: trimmedPrompt }]
+			messages: [{ role: 'user', content: trimmedPrompt }],
+			output_config: {
+				format: {
+					type: 'json_schema',
+					schema: OUTPUT_JSON_SCHEMA
+				}
+			}
 		});
+
+		if (message.stop_reason === 'refusal') {
+			throw error(502, 'Claude refused the request; structured output may be invalid.');
+		}
+		if (message.stop_reason === 'max_tokens') {
+			throw error(
+				502,
+				'Claude hit max_tokens before finishing structured output. Retry with a smaller request or higher max_tokens.'
+			);
+		}
 
 		const textBlock = message.content.find((b) => b.type === 'text');
 		if (!textBlock || textBlock.type !== 'text') {
@@ -72,25 +79,32 @@ export const POST: RequestHandler = async ({ request }) => {
 			throw error(502, 'Anthropic response was not valid JSON.');
 		}
 
-		if (!hasChunks(parsed)) {
-			throw error(502, 'JSON does not contain a "chunks" array.');
+		const validated = validateStructuredOutput(parsed);
+		if (!validated.ok) {
+			throw error(502, `Output validation failed: ${validated.message}`);
 		}
 
-		return json({ chunks: parsed.chunks });
+		return json({ scaffolds: validated.value.scaffolds });
 	} catch (e) {
 		if (isHttpError(e)) throw e;
 
 		if (e instanceof APIError) {
 			const status = e.status;
-			if (status === 401) throw error(401, 'Claude API: authentication failed.');
-			if (status === 403) throw error(403, 'Claude API: access denied.');
-			if (status === 429) throw error(429, 'Claude API: rate limited — try again later.');
+			const detail = e.message || 'Claude API error.';
+			console.error('[api/generate] Claude APIError', {
+				status,
+				type: e.type,
+				requestID: e.requestID,
+				error: e.error
+			});
+			if (status === 401) throw error(401, detail);
+			if (status === 403) throw error(403, detail);
+			if (status === 429) throw error(429, detail);
 			if (typeof status === 'number' && status >= 500) {
 				throw error(502, 'Claude API is temporarily unavailable.');
 			}
-			if (status === 400) throw error(400, 'Claude API: invalid request.');
 			if (typeof status === 'number' && status >= 400 && status < 500) {
-				throw error(status, 'Claude API error.');
+				throw error(status, detail);
 			}
 			throw error(502, 'Claude API: no usable response.');
 		}
