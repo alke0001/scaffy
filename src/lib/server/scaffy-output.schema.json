@@ -1,0 +1,55 @@
+{
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+		"scaffolds": {
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"$ref": "#/$defs/scaffold"
+			}
+		}
+	},
+	"required": ["scaffolds"],
+	"$defs": {
+		"option": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"id": { "type": "string" },
+				"text": { "type": "string" }
+			},
+			"required": ["id", "text"]
+		},
+		"knowledgeCheck": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"question": { "type": "string" },
+				"options": {
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"$ref": "#/$defs/option"
+					}
+				},
+				"correctOptionId": { "type": "string" },
+				"explanation": { "type": "string" }
+			},
+			"required": ["question", "options", "correctOptionId", "explanation"]
+		},
+		"scaffold": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"targetPath": { "type": "string" },
+				"language": { "type": "string" },
+				"codeSnippet": { "type": "string" },
+				"knowledgeCheck": {
+					"$ref": "#/$defs/knowledgeCheck"
+				}
+			},
+			"required": ["codeSnippet", "knowledgeCheck"]
+		}
+	}
+}

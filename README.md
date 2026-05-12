@@ -19,7 +19,7 @@ The API key lives **only** on the server in `.env.local` (ignored by Git). Use `
 3. Optional: set `ANTHROPIC_DEFAULT_MODEL` to `claude-sonnet-4-5` or `claude-sonnet-4-6` (only these models are allowed).
 4. Restart the dev server: `npm run dev`
 
-**Endpoint:** `POST /api/generate` with JSON body `{ "prompt": string, "model"?: string }`. On success: `{ "chunks": [...] }`. Errors use HTTP status codes (e.g. 400, 401, 429, 502); the response body never includes the API key.
+**Endpoint:** `POST /api/generate` with JSON body `{ "prompt": string, "model"?: string }`. On success: `{ "scaffolds": [...] }`. Errors use HTTP status codes (e.g. 400, 401, 429, 502); the response body never includes the API key.
 
 ## Vercel (deployments)
 
@@ -44,7 +44,7 @@ The API key lives **only** on the server in `.env.local` (ignored by Git). Use `
 3. Optional: set `ANTHROPIC_DEFAULT_MODEL` to `claude-sonnet-4-5` or `claude-sonnet-4-6` (only these models are allowed).
 4. Restart the dev server: `npm run dev`
 
-**Endpoint:** `POST /api/generate` with JSON body `{ "prompt": string, "model"?: string }`. On success: `{ "chunks": [...] }`. Errors use HTTP status codes (e.g. 400, 401, 429, 502); the response body never includes the API key.
+**Endpoint:** `POST /api/generate` with JSON body `{ "prompt": string, "model"?: string }`. On success: `{ "scaffolds": [...] }`. Errors use HTTP status codes (e.g. 400, 401, 429, 502); the response body never includes the API key.
 
 ## Vercel (deployments)
 

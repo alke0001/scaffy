@@ -38,10 +38,10 @@ These three files must stay semantically identical in their shared project assum
 ### Claude API — Core Flow
 
 - User submits a prompt (e.g. _"Generate a Svelte 5 login dialog component with password validation"_)
-- Claude returns the full response as **structured JSON** — all code chunks and learning questions in one shot (no streaming)
-- Each chunk is revealed via a **typewriter effect** in Monaco (`editor.executeEdits()`, ~15 ms per character)
-- A framework-specific question appears as a Monaco `viewZone` between code lines before the next chunk renders
-- The next chunk is only revealed after the user answers correctly
+- Claude returns the full response as **structured JSON** — ordered **scaffolds** (`codeSnippet` + `knowledgeCheck` per step) in one shot (no streaming)
+- Each scaffold’s code is revealed via a **typewriter effect** in Monaco (`editor.executeEdits()`, ~15 ms per character)
+- A framework-specific question appears as a Monaco `viewZone` between code lines before the next scaffold’s code renders
+- The next scaffold is only revealed after the user answers correctly (or acknowledges the explainer)
 
 ### Claude API — Architecture
 
@@ -60,12 +60,12 @@ Browser → /api/generate (SvelteKit server route) → api.anthropic.com
 
 - Claude API is called via **REST** (no streaming)
 - Streaming and structured JSON are incompatible: a partial JSON string cannot be parsed
-- The full JSON is returned at once; chunks are typed into Monaco with a typewriter effect
+- The full JSON is returned at once; each scaffold’s `codeSnippet` is typed into Monaco with a typewriter effect
 - Visually identical to real token streaming (like Claude Code CLI), but simpler to implement
 
 ```ts
 // Typewriter principle in Monaco
-for (const char of chunk.code) {
+for (const char of scaffold.codeSnippet) {
 	editor.executeEdits('', [{ range: cursorPosition, text: char }]);
 	await new Promise((r) => setTimeout(r, 15));
 }

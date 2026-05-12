@@ -47,10 +47,16 @@
 				return;
 			}
 
-			// Success: +server.ts returns json({ chunks }) — pretty-print for the readonly textarea.
+			// Success: +server.ts returns json({ scaffolds }) — pretty-print for the readonly textarea.
 			try {
 				const data: unknown = JSON.parse(text);
 				output = JSON.stringify(data, null, 2);
+				if (import.meta.env.DEV) {
+					// Same pretty JSON as the textarea — easy to scan or copy from DevTools.
+					console.log(
+						`[claude-chat-panel] POST /api/generate (${res.status})\n${JSON.stringify(data, null, 2)}`
+					);
+				}
 			} catch {
 				output = text;
 			}
