@@ -1,64 +1,39 @@
 <script lang="ts">
-	// Smoke-test UI: the browser never talks to Anthropic directly. It only calls our
-	// SvelteKit route handler at src/routes/api/generate/+server.ts (POST /api/generate),
-	// which holds the API key and forwards the prompt to Claude.
+	import ClaudeChatPanel from '$lib/claude-chat-panel.svelte';
+	import MonacoEditorPlaceholder from '$lib/monaco-editor-placeholder.svelte';
 
-	let prompt = $state(
-		'Explain in one short sentence what a Svelte component is, without using angle brackets or semicolons'
-	);
-	let output = $state('');
-	let errorMessage = $state('');
-	let loading = $state(false);
+	const tabOrder = ['editor', 'chat'] as const;
+	type WorkspaceTab = (typeof tabOrder)[number];
 
-	function isKitErrorBody(value: unknown): value is { message: string } {
-		return (
-			typeof value === 'object' &&
-			value !== null &&
-			'message' in value &&
-			typeof (value as { message: unknown }).message === 'string'
-		);
+	let activeTab = $state<WorkspaceTab>('editor');
+	let editorTabButton: HTMLButtonElement | undefined = $state();
+	let chatTabButton: HTMLButtonElement | undefined = $state();
+
+	function selectTab(tab: WorkspaceTab) {
+		activeTab = tab;
 	}
 
-	async function onSubmit(event: SubmitEvent) {
-		event.preventDefault();
-		errorMessage = '';
-		output = '';
-		loading = true;
-		try {
-			// Same-origin request: Vite/SvelteKit serves +server.ts as POST /api/generate.
-			// Body matches what +server.ts expects: { prompt: string, model?: string }.
-			const res = await fetch('/api/generate', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ prompt: prompt.trim() })
-			});
+	function focusTab(tab: WorkspaceTab) {
+		activeTab = tab;
+		queueMicrotask(() => {
+			(tab === 'editor' ? editorTabButton : chatTabButton)?.focus();
+		});
+	}
 
-			// Read once as text so we can handle both JSON success and non-JSON error pages.
-			const text = await res.text();
-
-			if (!res.ok) {
-				// +server.ts uses SvelteKit error(): body is usually { message: string }.
-				try {
-					const body: unknown = JSON.parse(text);
-					errorMessage = isKitErrorBody(body) ? body.message : text || res.statusText;
-				} catch {
-					errorMessage = text || res.statusText;
-				}
-				return;
-			}
-
-			// Success: +server.ts returns json({ chunks }) — pretty-print for the readonly textarea.
-			try {
-				const data: unknown = JSON.parse(text);
-				output = JSON.stringify(data, null, 2);
-			} catch {
-				output = text;
-			}
-		} catch (e) {
-			// Network failure, CORS misconfig (unlikely here), or other fetch-level errors.
-			errorMessage = e instanceof Error ? e.message : 'Request failed';
-		} finally {
-			loading = false;
+	function onTablistKeydown(event: KeyboardEvent) {
+		const i = tabOrder.indexOf(activeTab);
+		if (event.key === 'ArrowRight') {
+			event.preventDefault();
+			focusTab(tabOrder[(i + 1) % tabOrder.length]);
+		} else if (event.key === 'ArrowLeft') {
+			event.preventDefault();
+			focusTab(tabOrder[(i - 1 + tabOrder.length) % tabOrder.length]);
+		} else if (event.key === 'Home') {
+			event.preventDefault();
+			focusTab('editor');
+		} else if (event.key === 'End') {
+			event.preventDefault();
+			focusTab('chat');
 		}
 	}
 </script>
@@ -68,37 +43,65 @@
 	Visit <a href="https://github.com/alke0001/scaffy">scaffy GitHub</a> to read more about this project
 </p>
 
-<!-- Submitting the form runs onSubmit above (client only); the Anthropic call happens on the server. -->
-<section class="mt-8 max-w-3xl space-y-3" aria-label="Claude API smoke test">
-	<h2 class="text-lg font-semibold">API smoke test</h2>
-	<form class="space-y-2" onsubmit={onSubmit}>
-		<label class="block text-sm font-medium" for="prompt-input">User prompt</label>
-		<textarea
-			id="prompt-input"
-			class="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-28 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-			bind:value={prompt}
-			disabled={loading}
-			placeholder="At least 10 characters; avoid &lt;, curly braces, and semicolons (server heuristic)."
-		></textarea>
+<div class="mt-8 max-w-3xl">
+	<div
+		role="tablist"
+		aria-label="Workspace"
+		tabindex="-1"
+		class="border-input bg-muted/40 flex gap-1 rounded-t-md border border-b-0 p-1"
+		onkeydown={onTablistKeydown}
+	>
 		<button
-			type="submit"
-			class="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium disabled:pointer-events-none disabled:opacity-50"
-			disabled={loading}
+			bind:this={editorTabButton}
+			id="tab-monaco-editor"
+			type="button"
+			role="tab"
+			aria-selected={activeTab === 'editor'}
+			aria-controls="panel-monaco-editor"
+			tabindex={activeTab === 'editor' ? 0 : -1}
+			class="ring-offset-background focus-visible:ring-ring rounded-md px-3 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none {activeTab ===
+			'editor'
+				? 'bg-background text-foreground shadow-sm'
+				: 'text-muted-foreground hover:text-foreground'}"
+			onclick={() => selectTab('editor')}
 		>
-			{loading ? 'Calling API…' : 'Send to /api/generate'}
+			Monaco Editor
 		</button>
-	</form>
+		<button
+			bind:this={chatTabButton}
+			id="tab-claude-chat"
+			type="button"
+			role="tab"
+			aria-selected={activeTab === 'chat'}
+			aria-controls="panel-claude-chat"
+			tabindex={activeTab === 'chat' ? 0 : -1}
+			class="ring-offset-background focus-visible:ring-ring rounded-md px-3 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none {activeTab ===
+			'chat'
+				? 'bg-background text-foreground shadow-sm'
+				: 'text-muted-foreground hover:text-foreground'}"
+			onclick={() => selectTab('chat')}
+		>
+			Claude Chat
+		</button>
+	</div>
 
-	{#if errorMessage}
-		<p class="text-destructive text-sm whitespace-pre-wrap" role="alert">{errorMessage}</p>
-	{/if}
+	<div
+		class="border-input bg-background space-y-3 rounded-b-md border p-4"
+		role="tabpanel"
+		id="panel-monaco-editor"
+		aria-labelledby="tab-monaco-editor"
+		hidden={activeTab !== 'editor'}
+	>
+		<MonacoEditorPlaceholder />
+	</div>
 
-	<label class="block text-sm font-medium" for="response-output">Response (read-only)</label>
-	<textarea
-		id="response-output"
-		class="border-input bg-muted/30 text-muted-foreground min-h-48 w-full rounded-md border px-3 py-2 font-mono text-xs whitespace-pre-wrap"
-		readonly
-		bind:value={output}
-		placeholder="Successful JSON from the server appears here."
-	></textarea>
-</section>
+	<div
+		class="border-input bg-background space-y-3 rounded-b-md border p-4"
+		role="tabpanel"
+		id="panel-claude-chat"
+		aria-labelledby="tab-claude-chat"
+		hidden={activeTab !== 'chat'}
+	>
+		<ClaudeChatPanel />
+	</div>
+</div>
