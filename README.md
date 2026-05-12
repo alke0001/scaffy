@@ -76,11 +76,11 @@ vercel env add ANTHROPIC_DEFAULT_MODEL production
 
 This project is configured for AI agent-assisted development with three tools:
 
-| Tool | Config |
-|---|---|
-| [Claude Code](https://claude.ai/code) | `CLAUDE.md`, `.cursor/mcp.json` |
-| [Cursor](https://cursor.com) | `.cursor/rules/`, `.cursor/mcp.json` |
-| [GitHub Copilot](https://github.com/features/copilot) | `.github/copilot-instructions.md` |
+| Tool                                                  | Config                               |
+| ----------------------------------------------------- | ------------------------------------ |
+| [Claude Code](https://claude.ai/code)                 | `CLAUDE.md`, `.cursor/mcp.json`      |
+| [Cursor](https://cursor.com)                          | `.cursor/rules/`, `.cursor/mcp.json` |
+| [GitHub Copilot](https://github.com/features/copilot) | `.github/copilot-instructions.md`    |
 
 All three agents share the same design decisions and coding conventions defined in `CLAUDE.md`.
 
