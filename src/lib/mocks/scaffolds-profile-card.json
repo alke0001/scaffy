@@ -1,0 +1,112 @@
+{
+	"scaffolds": [
+		{
+			"targetPath": "ProfileCard.svelte",
+			"language": "svelte",
+			"codeSnippet": "",
+			"knowledgeCheck": {
+				"question": "Welche Svelte-Syntax verwendet man, um TypeScript-Props in einer Komponente zu definieren?",
+				"options": [
+					{
+						"id": "a",
+						"text": "<script lang=\"ts\"> mit $props() rune"
+					},
+					{
+						"id": "b",
+						"text": "export let name: string im <script> Block"
+					},
+					{
+						"id": "c",
+						"text": "interface Props {} ohne $props()"
+					},
+					{
+						"id": "d",
+						"text": "defineProps<Props>() wie in Vue"
+					}
+				],
+				"correctOptionId": "a",
+				"explanation": "Die korrekte Antwort ist Option a: <script lang=\"ts\"> mit $props() rune. In modernem Svelte 5 nutzt man die $props() rune innerhalb eines <script lang=\"ts\"> Blocks, um typisierte Props zu deklarieren. Dies ist der idiomatische Weg für TypeScript-Props in Svelte."
+			}
+		},
+		{
+			"targetPath": "ProfileCard.svelte",
+			"language": "svelte",
+			"codeSnippet": "<script lang=\"ts\">\n\tinterface Props {\n\t\tname: string;\n\t\tprofilePictureUrl: string;\n\t}\n\n\tlet { name, profilePictureUrl }: Props = $props();\n</script>",
+			"knowledgeCheck": {
+				"question": "Warum destructuren wir die Props mit let { name, profilePictureUrl } statt sie direkt als Objekt zu verwenden?",
+				"options": [
+					{
+						"id": "a",
+						"text": "Um die Werte direkt im Template ohne props. Präfix nutzen zu können"
+					},
+					{
+						"id": "b",
+						"text": "Weil $props() sonst nicht funktioniert"
+					},
+					{
+						"id": "c",
+						"text": "Um die Props immutable zu machen"
+					}
+				],
+				"correctOptionId": "a",
+				"explanation": "Die korrekte Antwort ist Option a: Um die Werte direkt im Template ohne props. Präfix nutzen zu können. Durch Destructuring können wir {name} statt {props.name} im Markup schreiben, was den Code cleaner und lesbarer macht."
+			}
+		},
+		{
+			"targetPath": "ProfileCard.svelte",
+			"language": "svelte",
+			"codeSnippet": "<script lang=\"ts\">\n\tinterface Props {\n\t\tname: string;\n\t\tprofilePictureUrl: string;\n\t}\n\n\tlet { name, profilePictureUrl }: Props = $props();\n</script>\n\n<div class=\"profile-card\">\n\t<img src={profilePictureUrl} alt=\"Profilbild von {name}\" />\n\t<h2>{name}</h2>\n</div>",
+			"knowledgeCheck": {
+				"question": "Warum ist das alt-Attribut mit 'Profilbild von {name}' wichtig für die Barrierefreiheit?",
+				"options": [
+					{
+						"id": "a",
+						"text": "Es ermöglicht Screenreadern, das Bild für sehbehinderte Nutzer zu beschreiben"
+					},
+					{
+						"id": "b",
+						"text": "Es verbessert das SEO-Ranking der Seite"
+					},
+					{
+						"id": "c",
+						"text": "Es ist Pflicht in Svelte, sonst gibt es einen Compiler-Fehler"
+					},
+					{
+						"id": "d",
+						"text": "Es macht das Bild schneller ladbar"
+					}
+				],
+				"correctOptionId": "a",
+				"explanation": "Die korrekte Antwort ist Option a: Es ermöglicht Screenreadern, das Bild für sehbehinderte Nutzer zu beschreiben. Das alt-Attribut ist ein essentieller Accessibility-Standard (WCAG), damit Menschen mit Sehbehinderung verstehen können, was auf dem Bild dargestellt wird."
+			}
+		},
+		{
+			"targetPath": "ProfileCard.svelte",
+			"language": "svelte",
+			"codeSnippet": "<script lang=\"ts\">\n\tinterface Props {\n\t\tname: string;\n\t\tprofilePictureUrl: string;\n\t}\n\n\tlet { name, profilePictureUrl }: Props = $props();\n</script>\n\n<div class=\"profile-card\">\n\t<img src={profilePictureUrl} alt=\"Profilbild von {name}\" />\n\t<h2>{name}</h2>\n</div>\n\n<style>\n\t.profile-card {\n\t\tdisplay: flex;\n\t\tflex-direction: column;\n\t\talign-items: center;\n\t\tpadding: 1.5rem;\n\t\tborder-radius: 0.5rem;\n\t\tbox-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n\t\tbackground: white;\n\t\tmax-width: 300px;\n\t}\n\n\timg {\n\t\twidth: 120px;\n\t\theight: 120px;\n\t\tborder-radius: 50%;\n\t\tobject-fit: cover;\n\t\tmargin-bottom: 1rem;\n\t}\n\n\th2 {\n\t\tmargin: 0;\n\t\tfont-size: 1.5rem;\n\t\tcolor: #333;\n\t}\n</style>",
+			"knowledgeCheck": {
+				"question": "Was bewirkt die CSS-Eigenschaft object-fit: cover beim img-Element?",
+				"options": [
+					{
+						"id": "a",
+						"text": "Das Bild füllt den Container aus und behält seine Proportionen, überstehende Teile werden abgeschnitten"
+					},
+					{
+						"id": "b",
+						"text": "Das Bild wird verzerrt, um exakt in den Container zu passen"
+					},
+					{
+						"id": "c",
+						"text": "Das Bild wird zentriert ohne Größenänderung"
+					},
+					{
+						"id": "d",
+						"text": "Das Bild wird in Graustufen umgewandelt"
+					}
+				],
+				"correctOptionId": "a",
+				"explanation": "Die korrekte Antwort ist Option a: Das Bild füllt den Container aus und behält seine Proportionen, überstehende Teile werden abgeschnitten. object-fit: cover sorgt dafür, dass Profilbilder unterschiedlicher Seitenverhältnisse immer den kreisförmigen Container (120x120px + border-radius: 50%) vollständig ausfüllen, ohne verzerrt zu werden."
+			}
+		}
+	]
+}
