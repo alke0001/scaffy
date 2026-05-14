@@ -48,12 +48,12 @@ These three files must stay semantically identical in their shared project assum
 #### No direct browser API calls
 
 - The API key is **never in the client bundle** — it would be visible in the browser network tab
-- A SvelteKit **server route** (`src/routes/api/generate/+server.ts`) acts as a proxy
+- A SvelteKit **server route** (`src/routes/api/scaffold/+server.ts`) acts as a proxy
 - Key is stored as an environment variable in Vercel (`ANTHROPIC_API_KEY`)
-- Client calls only `/api/generate` — never `api.anthropic.com` directly
+- Client calls only `/api/scaffold` — never `api.anthropic.com` directly
 
 ```
-Browser → /api/generate (SvelteKit server route) → api.anthropic.com
+Browser → /api/scaffold (SvelteKit server route) → api.anthropic.com
 ```
 
 #### No streaming — typewriter effect instead

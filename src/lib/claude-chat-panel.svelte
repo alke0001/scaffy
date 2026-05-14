@@ -1,6 +1,6 @@
 <script lang="ts">
 	// Smoke-test UI: the browser never talks to Anthropic directly. It only calls our
-	// SvelteKit route handler at src/routes/api/generate/+server.ts (POST /api/generate),
+	// SvelteKit route handler at src/routes/api/scaffold/+server.ts (POST /api/scaffold),
 	// which holds the API key and forwards the prompt to Claude.
 
 	let prompt = $state(
@@ -25,9 +25,9 @@
 		output = '';
 		loading = true;
 		try {
-			// Same-origin request: Vite/SvelteKit serves +server.ts as POST /api/generate.
+			// Same-origin request: Vite/SvelteKit serves +server.ts as POST /api/scaffold.
 			// Body matches what +server.ts expects: { prompt: string, model?: string }.
-			const res = await fetch('/api/generate', {
+			const res = await fetch('/api/scaffold', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ prompt: prompt.trim() })
@@ -54,7 +54,7 @@
 				if (import.meta.env.DEV) {
 					// Same pretty JSON as the textarea — easy to scan or copy from DevTools.
 					console.log(
-						`[claude-chat-panel] POST /api/generate (${res.status})\n${JSON.stringify(data, null, 2)}`
+						`[claude-chat-panel] POST /api/scaffold (${res.status})\n${JSON.stringify(data, null, 2)}`
 					);
 				}
 			} catch {
@@ -86,7 +86,7 @@
 			class="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium disabled:pointer-events-none disabled:opacity-50"
 			disabled={loading}
 		>
-			{loading ? 'Calling API…' : 'Send to /api/generate'}
+			{loading ? 'Calling API…' : 'Send to /api/scaffold'}
 		</button>
 	</form>
 
