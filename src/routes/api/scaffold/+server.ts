@@ -1,7 +1,7 @@
 import { json, error, isHttpError } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { APIError } from '@anthropic-ai/sdk';
-import { client, resolveModel } from '$lib/server/claude';
+import { client, resolveModel } from '$lib/server/anthropic-client.js';
 import { OUTPUT_JSON_SCHEMA, validateStructuredOutput } from '$lib/server/scaffy-output-schema';
 import systemPrompt from '$lib/server/scaffy-system-prompt.md?raw';
 
