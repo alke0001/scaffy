@@ -1,10 +1,11 @@
 /**
- * Wire JSON Schema for Anthropic Messages `output_config.format` (structured outputs).
- * The schema object lives in `scaffy-output.schema.json` so route handlers stay small.
+ * Anthropic structured-output schema loaded from `scaffy-output.schema.json`.
+ * `OUTPUT_JSON_SCHEMA` is the **request** payload fragment `output_config.format.schema`; the
+ * assistant still returns JSON in `content[].text`—same format family, different role.
  */
 import outputRootSchema from './scaffy-output.schema.json';
 
-/** Root JSON Schema object passed as `output_config.format.schema`. */
+/** Immutable: pass as `output_config.format.schema` on `client.messages.create`. */
 export const OUTPUT_JSON_SCHEMA = outputRootSchema as {
 	type: string;
 	additionalProperties: boolean;
