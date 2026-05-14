@@ -50,12 +50,12 @@ These three files must stay semantically identical in their shared project assum
 #### No direct browser API calls
 
 - The API key must **never** appear in the client bundle — it would be visible in the browser network tab.
-- All Claude API calls go through the SvelteKit server route `src/routes/api/generate/+server.ts`.
+- All Claude API calls go through the SvelteKit server route `src/routes/api/scaffold/+server.ts`.
 - `ANTHROPIC_API_KEY` is injected server-side via `import { ANTHROPIC_API_KEY } from '$env/static/private'`.
-- Client code calls only `/api/generate` — never `api.anthropic.com` directly.
+- Client code calls only `/api/scaffold` — never `api.anthropic.com` directly.
 
 ```
-Browser → /api/generate (SvelteKit server route) → api.anthropic.com
+Browser → /api/scaffold (SvelteKit server route) → api.anthropic.com
 ```
 
 #### No streaming — typewriter effect instead

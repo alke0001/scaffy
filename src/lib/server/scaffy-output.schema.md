@@ -52,7 +52,7 @@ Anthropic structured outputs only support a **subset** of JSON Schema. In partic
 
 ## Stop reasons (runtime, not in schema)
 
-Per Anthropic docs, `stop_reason` values such as `refusal` or `max_tokens` can yield text that does **not** satisfy the schema. The generate route must inspect `stop_reason` and fail with a clear HTTP error instead of trusting the payload alone.
+Per Anthropic docs, `stop_reason` values such as `refusal` or `max_tokens` can yield text that does **not** satisfy the schema. The scaffold route must inspect `stop_reason` and fail with a clear HTTP error instead of trusting the payload alone.
 
 ## Relation to `scaffy-system-prompt.md`
 

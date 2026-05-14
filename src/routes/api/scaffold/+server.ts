@@ -27,15 +27,13 @@ const MODEL_MAX_OUTPUT_TOKENS = 4096;
 const MODEL_TEMPERATURE = 0.3;
 
 /**
- * SvelteKit route endpoint: this file maps to POST /api/generate (no +page.svelte here—only API).
- * Runs exclusively on the server (dev: Node; prod: e.g. Vercel serverless).
+ * SvelteKit route endpoint: maps to POST /api/scaffold (server-only).
  *
- * Why not call Anthropic from the browser? Secret keys and validation must stay server-side so
- * credentials never ship to clients and rules (prompt shape, allowed models) cannot be bypassed.
- * The UI uses fetch('/api/generate', …) to the same origin—SvelteKit dispatches to this handler.
+ * Proxies to Claude with structured output for Scaffy `scaffolds`. The UI uses
+ * `fetch('/api/scaffold', …)`; the API key never leaves the server.
  */
 
-type GenerateRequestBody = {
+type ScaffoldRequestBody = {
 	prompt?: unknown;
 	model?: unknown;
 };
@@ -48,7 +46,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		throw error(400, 'Invalid JSON body.');
 	}
 
-	const { prompt, model } = (body ?? {}) as GenerateRequestBody;
+	const { prompt, model } = (body ?? {}) as ScaffoldRequestBody;
 
 	if (typeof prompt !== 'string' || prompt.trim().length < 10) {
 		throw error(400, 'Prompt must be at least 10 characters long.');
@@ -113,7 +111,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		if (e instanceof APIError) {
 			const status = e.status;
 			const detail = e.message || 'Claude API error.';
-			console.error('[api/generate] Claude APIError', {
+			console.error('[api/scaffold] Claude APIError', {
 				status,
 				type: e.type,
 				requestID: e.requestID,
@@ -131,7 +129,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			throw error(502, 'Claude API: no usable response.');
 		}
 
-		console.error('[api/generate]', e);
+		console.error('[api/scaffold]', e);
 		throw error(500, 'Unexpected server error.');
 	}
 };
