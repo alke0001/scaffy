@@ -6,6 +6,27 @@ import { OUTPUT_JSON_SCHEMA, validateStructuredOutput } from '$lib/server/scaffy
 import systemPrompt from '$lib/server/scaffy-system-prompt.md?raw';
 
 /**
+ * Model hyperparameter: `max_tokens` — hard cap on **completion** tokens for one
+ * `client.messages.create` call. Independent of `OUTPUT_JSON_SCHEMA`; raise if responses hit
+ * `stop_reason === 'max_tokens'` before the JSON is complete.
+ */
+const MODEL_MAX_OUTPUT_TOKENS = 4096;
+
+/**
+ * Model hyperparameter: `temperature` — standard sampling control (how flat vs. peaked the
+ * next-token distribution is). Lower → more deterministic; higher → more diverse **among**
+ * tokens the model still deems likely at each step.
+ *
+ * **Structured output** is separate: `OUTPUT_JSON_SCHEMA` in `output_config.format` tells the
+ * API to constrain the assistant text to **valid JSON matching that schema** (shape and types).
+ * That is not the same knob as temperature; the schema rules out illegal JSON, while temperature
+ * still biases **which** legal completion (e.g. wording inside `codeSnippet` / `knowledgeCheck`)
+ * you get. Server-side `validateStructuredOutput` adds stricter checks; `systemPrompt` sets
+ * teaching rules. If `temperature` causes 400 for your model, try `1`.
+ */
+const MODEL_TEMPERATURE = 0.3;
+
+/**
  * SvelteKit route endpoint: this file maps to POST /api/generate (no +page.svelte here—only API).
  * Runs exclusively on the server (dev: Node; prod: e.g. Vercel serverless).
  *
@@ -46,7 +67,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const message = await client.messages.create({
 			model: apiModelId,
-			max_tokens: 4096,
+			max_tokens: MODEL_MAX_OUTPUT_TOKENS,
+			temperature: MODEL_TEMPERATURE,
 			system,
 			messages: [{ role: 'user', content: trimmedPrompt }],
 			output_config: {
