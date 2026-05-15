@@ -1,4 +1,4 @@
-# Scaffy structured output (`scaffy-output.schema.json`)
+# Scaffold API structured output (`output.schema.json`)
 
 Maintainer reference for the JSON Schema file next to this document. That file is sent to the Anthropic Messages API as `output_config.format.schema` (with `type: "json_schema"`). It is **not** loaded into the model as user-visible prompt text.
 
@@ -48,12 +48,12 @@ Each element is one pedagogical step in sequence.
 
 ## Why server-side rules still exist
 
-Anthropic structured outputs only support a **subset** of JSON Schema. In particular, array `minItems` is limited on the API side, so this wire schema cannot express “at least four options”. The server therefore applies extra checks (for example **2–6** options, non-empty trimmed text, unique `id`s, `correctOptionId` present in `options`). See `validateStructuredOutput` in [`scaffy-output-schema.ts`](scaffy-output-schema.ts).
+Anthropic structured outputs only support a **subset** of JSON Schema. In particular, array `minItems` is limited on the API side, so this wire schema cannot express “at least four options”. The server therefore applies extra checks (for example **2–6** options, non-empty trimmed text, unique `id`s, `correctOptionId` present in `options`). See `validateStructuredOutput` in [`output-schema.ts`](output-schema.ts).
 
 ## Stop reasons (runtime, not in schema)
 
 Per Anthropic docs, `stop_reason` values such as `refusal` or `max_tokens` can yield text that does **not** satisfy the schema. The scaffold route must inspect `stop_reason` and fail with a clear HTTP error instead of trusting the payload alone.
 
-## Relation to `scaffy-system-prompt.md`
+## Relation to `system-prompt.md`
 
 The system prompt teaches **pedagogy** (how many scaffolds, how hard questions should be, language, no markdown fences inside `codeSnippet`, etc.). The JSON schema teaches **shape**. Do not paste the full schema into the system prompt; reference “output shape is enforced by the API schema”.
