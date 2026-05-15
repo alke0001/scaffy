@@ -50,12 +50,12 @@ These three files must stay semantically identical in their shared project assum
 #### No direct browser API calls
 
 - The API key must **never** appear in the client bundle — it would be visible in the browser network tab.
-- All Claude API calls go through the SvelteKit server route `src/routes/api/scaffold/+server.ts`.
+- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** handlers (today `scaffold`; **`chat` planned** with its own handler and `src/lib/server/chat/` assets such as system prompt).
 - `ANTHROPIC_API_KEY` is injected server-side via `import { ANTHROPIC_API_KEY } from '$env/static/private'`.
-- Client code calls only `/api/scaffold` — never `api.anthropic.com` directly.
+- Client code calls only same-origin **`/api/...`** — never `api.anthropic.com` directly.
 
 ```
-Browser → /api/scaffold (SvelteKit server route) → api.anthropic.com
+Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 ```
 
 #### No streaming — typewriter effect instead
@@ -79,6 +79,12 @@ Browser → /api/scaffold (SvelteKit server route) → api.anthropic.com
 - State is handled at three levels: **URL** (routing), **global/component state** (SPA), **localStorage**.
 - Learning progress persisted in localStorage.
 
+### Repository layout (source conventions)
+
+- **Svelte UI:** `src/lib/components/<area>/` (`chat`, `editor`, …). Avoid new loose `*.svelte` at `src/lib/` root. When an area grows large, consider `src/lib/features/<name>/` instead of ever-deeper `components/`.
+- **HTTP API:** `src/routes/api/<endpoint>/+server.ts` — one folder per surface (`scaffold` today; **`chat` planned** with its own handler and system prompt).
+- **Server-only library:** `src/lib/server/` — never imported from the client. Subfolders per concern: `scaffold/` (schema, validation, system prompt); **planned `chat/`** for chat-specific prompts/schemas. Shared modules (e.g. `anthropic-client.ts`) at `server/` root until a `shared/` subfolder is warranted.
+
 ### Monaco + Svelte Integration
 
 - Use `viewZones` for inline question components rendered between code lines.
@@ -88,7 +94,7 @@ Browser → /api/scaffold (SvelteKit server route) → api.anthropic.com
 ### SPA Mode
 
 - This is a pure SPA — do not add SSR data loading (`+page.server.ts` load functions) outside of the `/api/` route directory.
-- The only server-side code lives in `src/routes/api/`.
+- **Route handlers** for HTTP APIs live in `src/routes/api/`. **Shared server-only** code (Anthropic client, prompts, schemas) lives in `src/lib/server/` — see Repository layout above.
 
 ### Nice to Have
 

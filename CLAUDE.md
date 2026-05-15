@@ -48,12 +48,12 @@ These three files must stay semantically identical in their shared project assum
 #### No direct browser API calls
 
 - The API key is **never in the client bundle** — it would be visible in the browser network tab
-- A SvelteKit **server route** (`src/routes/api/scaffold/+server.ts`) acts as a proxy
+- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** proxies (today: `scaffold` → `POST /api/scaffold`; **planned:** `chat` with its own handler and `src/lib/server/chat/` assets such as system prompt)
 - Key is stored as an environment variable in Vercel (`ANTHROPIC_API_KEY`)
-- Client calls only `/api/scaffold` — never `api.anthropic.com` directly
+- Client calls only same-origin **`/api/...`** — never `api.anthropic.com` directly
 
 ```
-Browser → /api/scaffold (SvelteKit server route) → api.anthropic.com
+Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 ```
 
 #### No streaming — typewriter effect instead
@@ -86,6 +86,18 @@ for (const char of scaffold.codeSnippet) {
 - Global state as singletons in `src/lib/*.svelte.ts` (split by concern: editor / session / questions)
 - State is handled at three levels: **URL** (routing), **global/component state** (SPA), **localStorage**
 - Learning progress persisted in localStorage
+
+### Repository layout (source conventions)
+
+These conventions keep the codebase navigable as we add endpoints (for example **`/api/chat`**) and more UI. Prefer them for new files; refactor opportunistically when touching old paths.
+
+- **Svelte UI components:** `src/lib/components/<area>/` — one subdirectory per product area (`chat`, `editor`, future `questions`, …). Do not add new loose `*.svelte` files at `src/lib/` root unless they are tiny one-offs. When an area grows large (many components plus `*.svelte.ts` and helpers), consider promoting it to `src/lib/features/<name>/` instead of deepening `components/` indefinitely.
+- **HTTP API (SvelteKit routes):** `src/routes/api/<endpoint>/+server.ts` — **one folder per HTTP surface**. Today: `scaffold` (`POST /api/scaffold`). Planned: `chat` (`POST /api/chat` or similar) with its own handler; keep handlers thin (parse body → call Anthropic → return).
+- **Server-only library code:** `src/lib/server/` — must never be imported from client components. Use **subfolders per endpoint or concern** alongside shared files at the `server/` root:
+  - **`src/lib/server/scaffold/`** — structured-output JSON schema, `output-schema.ts` validation, `system-prompt.md` for the scaffold API.
+  - **Planned: `src/lib/server/chat/`** — chat-specific system prompt(s), optional schema or message shaping for the chat route (separate from scaffold pedagogy).
+  - **Shared:** `anthropic-client.ts` and similar cross-route modules stay at `src/lib/server/` until multiple shared modules justify a `src/lib/server/shared/` folder.
+- **Routes vs `lib`:** `src/routes/` defines URLs, layouts, and thin `+server.ts` handlers. Reusable UI and domain logic live under `src/lib/`.
 
 ### Monaco + Svelte Integration
 

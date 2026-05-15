@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ClaudeChatPanel from '$lib/claude-chat-panel.svelte';
-	import MonacoEditorPlaceholder from '$lib/monaco-editor-placeholder.svelte';
+	import ClaudeChatPanel from '$lib/components/chat/claude-chat-panel.svelte';
+	import MonacoEditorPlaceholder from '$lib/components/editor/monaco-editor-placeholder.svelte';
 
 	const tabOrder = ['editor', 'chat'] as const;
 	type WorkspaceTab = (typeof tabOrder)[number];
