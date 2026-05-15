@@ -1,9 +1,9 @@
 /**
- * Anthropic structured-output schema loaded from `scaffy-output.schema.json`.
+ * Anthropic structured-output schema loaded from `output.schema.json` in this folder.
  * `OUTPUT_JSON_SCHEMA` is the **request** payload fragment `output_config.format.schema`; the
  * assistant still returns JSON in `content[].text`—same format family, different role.
  */
-import outputRootSchema from './scaffy-output.schema.json';
+import outputRootSchema from './output.schema.json';
 
 /** Immutable: pass as `output_config.format.schema` on `client.messages.create`. */
 export const OUTPUT_JSON_SCHEMA = outputRootSchema as {
@@ -37,19 +37,19 @@ export type Scaffold = {
 };
 
 /** Parsed assistant JSON: ordered scaffolds only (no other top-level keys). */
-export type StructuredGenerateOutput = {
+export type StructuredScaffoldOutput = {
 	scaffolds: Scaffold[];
 };
 
 export type StructuredOutputValidation =
-	| { ok: true; value: StructuredGenerateOutput }
+	| { ok: true; value: StructuredScaffoldOutput }
 	| { ok: false; message: string };
 
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 6;
 
 /**
- * Extra rules beyond the Anthropic wire schema (subset limits). See `scaffy-output.schema.md`.
+ * Extra rules beyond the Anthropic wire schema (subset limits). See `output.schema.md`.
  */
 export function validateStructuredOutput(parsed: unknown): StructuredOutputValidation {
 	if (typeof parsed !== 'object' || parsed === null) {
@@ -158,5 +158,5 @@ export function validateStructuredOutput(parsed: unknown): StructuredOutputValid
 		}
 	}
 
-	return { ok: true, value: parsed as StructuredGenerateOutput };
+	return { ok: true, value: parsed as StructuredScaffoldOutput };
 }
