@@ -10,7 +10,7 @@ import systemPrompt from '$lib/server/scaffold/system-prompt.md?raw';
  * `client.messages.create` call. Independent of `OUTPUT_JSON_SCHEMA`; raise if responses hit
  * `stop_reason === 'max_tokens'` before the JSON is complete.
  */
-const MODEL_MAX_OUTPUT_TOKENS = 4096;
+const MODEL_MAX_OUTPUT_TOKENS = 8192;
 
 /**
  * Model hyperparameter: `temperature` — standard sampling control (how flat vs. peaked the
