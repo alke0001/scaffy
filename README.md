@@ -93,7 +93,32 @@ The API key lives **only** on the server in `.env.local` (ignored by Git). Use `
 3. Optional: set `ANTHROPIC_DEFAULT_MODEL` to `claude-sonnet-4-5` or `claude-sonnet-4-6` (only these models are allowed).
 4. Restart the dev server: `npm run dev`
 
-**Endpoint:** `POST /api/generate` with JSON body `{ "prompt": string, "model"?: string }`. On success: `{ "chunks": [...] }`. Errors use HTTP status codes (e.g. 400, 401, 429, 502); the response body never includes the API key.
+**Endpoint:** `POST /api/scaffold` with JSON body `{ "prompt": string, "model"?: string }`. On success: `{ "scaffolds": [...] }`. Errors use HTTP status codes (e.g. 400, 401, 429, 502); the response body never includes the API key.
+
+## Vercel (deployments)
+
+Set the same variables on your Vercel project so serverless functions can access the key:
+
+**Dashboard:** Project → Settings → Environment Variables → add `ANTHROPIC_API_KEY` for Production, Preview, and optionally Development. Optionally add `ANTHROPIC_DEFAULT_MODEL` (`claude-sonnet-4-5` or `claude-sonnet-4-6`).
+
+**CLI** (after `npm i -g vercel` and `vercel link` in the repo):
+
+```sh
+vercel env add ANTHROPIC_API_KEY production
+vercel env add ANTHROPIC_API_KEY preview
+vercel env add ANTHROPIC_DEFAULT_MODEL production
+```
+
+## Claude API (local)
+
+The API key lives **only** on the server in `.env.local` (ignored by Git). Use `.env.example` in the repo as a template.
+
+1. Copy the template: `cp .env.example .env.local` (Windows PowerShell: `Copy-Item .env.example .env.local`)
+2. In `.env.local`, replace the placeholder `<<< PASTE YOUR REAL KEY HERE >>>` with your key from [console.anthropic.com](https://console.anthropic.com/).
+3. Optional: set `ANTHROPIC_DEFAULT_MODEL` to `claude-sonnet-4-5` or `claude-sonnet-4-6` (only these models are allowed).
+4. Restart the dev server: `npm run dev`
+
+**Endpoint:** `POST /api/scaffold` with JSON body `{ "prompt": string, "model"?: string }`. On success: `{ "scaffolds": [...] }`. Errors use HTTP status codes (e.g. 400, 401, 429, 502); the response body never includes the API key.
 
 ## Vercel (deployments)
 
@@ -110,7 +135,6 @@ vercel env add ANTHROPIC_DEFAULT_MODEL production
 ```
 
 `vercel env pull .env.local` downloads linked variables into `.env.local` and **overwrites** that file—use it only when you intentionally want to sync values.
-## Developing
 
 Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
