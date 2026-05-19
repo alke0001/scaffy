@@ -6,25 +6,23 @@ import { OUTPUT_JSON_SCHEMA, validateStructuredOutput } from '$lib/server/scaffo
 import systemPrompt from '$lib/server/scaffold/system-prompt.md?raw';
 
 /**
- * Model hyperparameter: `max_tokens` — hard cap on **completion** tokens for one
- * `client.messages.create` call. Independent of `OUTPUT_JSON_SCHEMA`; raise if responses hit
- * `stop_reason === 'max_tokens'` before the JSON is complete.
- */
-const MODEL_MAX_OUTPUT_TOKENS = 8192;
-
-/**
- * Model hyperparameter: `temperature` — standard sampling control (how flat vs. peaked the
- * next-token distribution is). Lower → more deterministic; higher → more diverse **among**
- * tokens the model still deems likely at each step.
+ * Singleton config for POST /api/scaffold — all model hyperparameters and caching in one place.
  *
- * **Structured output** is separate: `OUTPUT_JSON_SCHEMA` in `output_config.format` tells the
- * API to constrain the assistant text to **valid JSON matching that schema** (shape and types).
- * That is not the same knob as temperature; the schema rules out illegal JSON, while temperature
- * still biases **which** legal completion (e.g. wording inside `codeSnippet` / `knowledgeCheck`)
- * you get. Server-side `validateStructuredOutput` adds stricter checks; `systemPrompt` sets
- * teaching rules. If `temperature` causes 400 for your model, try `1`.
+ * `maxOutputTokens`      — hard cap on completion tokens; raise if responses hit stop_reason === 'max_tokens'.
+ * `temperature`          — lower → more deterministic. Note: structured output schema constrains shape;
+ *                          temperature only biases wording within that shape. Try 1 if you get a 400.
+ * `systemPromptCacheTtl` — '5m' during active prompt development (changes take effect within 5 min);
+ *                          '1h' once the prompt is stable (2× write cost, break-even at 3+ req/h).
  */
-const MODEL_TEMPERATURE = 0.3;
+const CONFIG = {
+	maxOutputTokens: 8192,
+	temperature: 0.3,
+	systemPromptCacheTtl: '5m',
+} as const satisfies {
+	maxOutputTokens: number;
+	temperature: number;
+	systemPromptCacheTtl: '5m' | '1h';
+};
 
 /**
  * SvelteKit route endpoint: maps to POST /api/scaffold (server-only).
@@ -60,14 +58,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	const modelStr = typeof model === 'string' ? model : undefined;
 	const { apiModelId } = resolveModel(modelStr);
 
-	const system = systemPrompt.trim();
-
 	try {
 		const message = await client.messages.create({
 			model: apiModelId,
-			max_tokens: MODEL_MAX_OUTPUT_TOKENS,
-			temperature: MODEL_TEMPERATURE,
-			system,
+			max_tokens: CONFIG.maxOutputTokens,
+			temperature: CONFIG.temperature,
+			// cache_control caches the system prompt — avoids re-processing ~2500 tokens on every request
+			system: [{ type: 'text', text: systemPrompt.trim(), cache_control: { type: 'ephemeral', ttl: CONFIG.systemPromptCacheTtl } }],
 			messages: [{ role: 'user', content: trimmedPrompt }],
 			output_config: {
 				format: {
