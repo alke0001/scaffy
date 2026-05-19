@@ -9,24 +9,26 @@
 
 These three files must stay semantically identical in their shared project assumptions (stack, conventions, design decisions):
 
-| Agent | Config file |
-|---|---|
-| Claude Code | `CLAUDE.md` |
-| Cursor | `.cursor/rules/` + `.cursor/mcp.json` |
-| GitHub Copilot | `.github/copilot-instructions.md` |
+| Agent          | Config file                           |
+| -------------- | ------------------------------------- |
+| Claude Code    | `CLAUDE.md`                           |
+| Cursor         | `.cursor/rules/` + `.cursor/mcp.json` |
+| GitHub Copilot | `.github/copilot-instructions.md`     |
 
 - Changes to project configuration or design decisions must be applied to all three in the same edit batch.
 
 ---
 
 ## App Vision
+
 - **Name:** Scaffy
-- **Punchline:** *"AI that teaches you to build good code, not just builds for you."*
+- **Punchline:** _"AI that teaches you to build good code, not just builds for you."_
 - **Core concept:** Scaffolding + Friction — AI generates code step by step; targeted questions block the next chunk until the user answers correctly.
 
 ## Scaffy — Software Design Decisions
 
 ### Tech Stack
+
 - SvelteKit 5, SPA mode (no SSR/SSG)
 - Monaco Editor (VS Code engine)
 - shadcn-svelte + dark theme
@@ -34,60 +36,93 @@ These three files must stay semantically identical in their shared project assum
 - GitHub + Vercel
 
 ### Claude API — Core Flow
-- User submits a prompt (e.g. *"Generate a Svelte 5 login dialog component with password validation"*)
-- Claude returns the full response as **structured JSON** — all code chunks and learning questions in one shot (no streaming)
-- Each chunk is revealed via a **typewriter effect** in Monaco (`editor.executeEdits()`, ~15 ms per character)
-- A framework-specific question appears as a Monaco `viewZone` between code lines before the next chunk renders
-- The next chunk is only revealed after the user answers correctly
+
+- User submits a prompt (e.g. _"Generate a Svelte 5 login dialog component with password validation"_)
+- Claude returns the full response as **structured JSON** — ordered **scaffolds** (`codeSnippet` + `knowledgeCheck` per step) in one shot (no streaming)
+- Each scaffold’s code is revealed via a **typewriter effect** in Monaco (`editor.executeEdits()`, ~15 ms per character)
+- A framework-specific question appears as a Monaco `viewZone` between code lines before the next scaffold’s code renders
+- The next scaffold is only revealed after the user answers correctly (or acknowledges the explainer)
 
 ### Claude API — Architecture
 
 #### No direct browser API calls
+
 - The API key is **never in the client bundle** — it would be visible in the browser network tab
-- A SvelteKit **server route** (`src/routes/api/generate/+server.ts`) acts as a proxy
+- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** proxies (today: `scaffold` → `POST /api/scaffold`; **planned:** `chat` with its own handler and `src/lib/server/chat/` assets such as system prompt)
 - Key is stored as an environment variable in Vercel (`ANTHROPIC_API_KEY`)
-- Client calls only `/api/generate` — never `api.anthropic.com` directly
+- Client calls only same-origin **`/api/...`** — never `api.anthropic.com` directly
 
 ```
-Browser → /api/generate (SvelteKit server route) → api.anthropic.com
+Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 ```
 
 #### No streaming — typewriter effect instead
+
 - Claude API is called via **REST** (no streaming)
 - Streaming and structured JSON are incompatible: a partial JSON string cannot be parsed
-- The full JSON is returned at once; chunks are typed into Monaco with a typewriter effect
+- The full JSON is returned at once; each scaffold’s `codeSnippet` is typed into Monaco with a typewriter effect
 - Visually identical to real token streaming (like Claude Code CLI), but simpler to implement
 
 ```ts
 // Typewriter principle in Monaco
-for (const char of chunk.code) {
-  editor.executeEdits('', [{ range: cursorPosition, text: char }]);
-  await new Promise(r => setTimeout(r, 15));
+for (const char of scaffold.codeSnippet) {
+	editor.executeEdits('', [{ range: cursorPosition, text: char }]);
+	await new Promise((r) => setTimeout(r, 15));
 }
 ```
 
 #### Environment variables
+
 - `.env.local` — real key, never committed
 - `.env.example` — committed, documents required variables for teammates
 - SvelteKit import: `import { ANTHROPIC_API_KEY } from '$env/static/private'`
 
 #### Model
+
 - `claude-sonnet-4-20250514` — same model as Claude Code CLI
 
 ### State & Architecture
+
 - Global state as singletons in `src/lib/*.svelte.ts` (split by concern: editor / session / questions)
 - State is handled at three levels: **URL** (routing), **global/component state** (SPA), **localStorage**
 - Learning progress persisted in localStorage
 
+### Repository layout (source conventions)
+
+These conventions keep the codebase navigable as we add endpoints (for example **`/api/chat`**) and more UI. Prefer them for new files; refactor opportunistically when touching old paths.
+
+- **Svelte UI components:** `src/lib/components/<area>/` — one subdirectory per product area (`chat`, `editor`, future `questions`, …). Do not add new loose `*.svelte` files at `src/lib/` root unless they are tiny one-offs. When an area grows large (many components plus `*.svelte.ts` and helpers), consider promoting it to `src/lib/features/<name>/` instead of deepening `components/` indefinitely.
+- **HTTP API (SvelteKit routes):** `src/routes/api/<endpoint>/+server.ts` — **one folder per HTTP surface**. Today: `scaffold` (`POST /api/scaffold`). Planned: `chat` (`POST /api/chat` or similar) with its own handler; keep handlers thin (parse body → call Anthropic → return).
+- **Server-only library code:** `src/lib/server/` — must never be imported from client components. Use **subfolders per endpoint or concern** alongside shared files at the `server/` root:
+  - **`src/lib/server/scaffold/`** — structured-output JSON schema, `output-schema.ts` validation, `system-prompt.md` for the scaffold API.
+  - **Planned: `src/lib/server/chat/`** — chat-specific system prompt(s), optional schema or message shaping for the chat route (separate from scaffold pedagogy).
+  - **Shared:** `anthropic-client.ts` and similar cross-route modules stay at `src/lib/server/` until multiple shared modules justify a `src/lib/server/shared/` folder.
+- **Routes vs `lib`:** `src/routes/` defines URLs, layouts, and thin `+server.ts` handlers. Reusable UI and domain logic live under `src/lib/`.
+
 ### Monaco + Svelte Integration
+
 - `viewZones` for inline question components between code lines
 - `overlayWidgets` as an alternative
 - Typewriter effect via `editor.executeEdits()` — character by character with ~15 ms delay
 
 ### Nice to Have
+
 - Authentication
 - A/B testing: scaffolding with friction vs. classic agentic coding
 - Event logging via Tinybird for analytics
+
+## TypeScript
+
+- All new application code uses **TypeScript** (`src/`, SvelteKit `+*.ts` server/load files, `hooks.server.ts`, etc.).
+- Svelte: `<script lang="ts">` only.
+- Do not add new plain `.js` files under `src/`; when editing legacy `.js`, migrate to `.ts` when practical.
+- Prefer `.ts` for project config/tooling (e.g. Vite) unless a tool forces another format.
+
+## Language Conventions
+
+- **README.md**: American English only.
+- **Code comments**: American English only (inline, block, JSDoc/TSDoc).
+- **Chat**: Reply in German when the user writes in German.
 
 ---
 

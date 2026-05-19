@@ -1,12 +1,12 @@
 {
-  "mcpServers": {
-    "svelte": {
-      "type": "http",
-      "url": "https://mcp.svelte.dev/mcp"
-    },
-    "vercel": {
-      "type": "http",
-      "url": "https://mcp.vercel.com/sse"
-    }
-  }
+	"mcpServers": {
+		"svelte": {
+			"type": "http",
+			"url": "https://mcp.svelte.dev/mcp"
+		},
+		"vercel": {
+			"type": "http",
+			"url": "https://mcp.vercel.com/sse"
+		}
+	}
 }

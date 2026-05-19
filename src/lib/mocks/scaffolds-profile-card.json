@@ -1,0 +1,144 @@
+{
+	"scaffolds": [
+		{
+			"targetPath": "ProfileCard.svelte",
+			"language": "svelte",
+			"codeSnippet": "",
+			"knowledgeCheck": {
+				"question": "Was ist eine Svelte-Komponente grundsätzlich?",
+				"options": [
+					{
+						"id": "a",
+						"text": "Eine JavaScript-Klasse, die von einer Basis-Klasse erbt"
+					},
+					{
+						"id": "b",
+						"text": "Eine .svelte-Datei mit drei optionalen Bereichen: Script-Block für Logik, Markup für UI und Style-Block für CSS"
+					},
+					{
+						"id": "c",
+						"text": "Eine Funktion, die JSX zurückgibt"
+					},
+					{
+						"id": "d",
+						"text": "Ein HTML-Template mit eingebetteten Vue-Direktiven"
+					}
+				],
+				"correctOptionId": "b",
+				"explanation": "Die korrekte Antwort ist Option b: Eine .svelte-Datei mit drei optionalen Bereichen: Script-Block für Logik, Markup für UI und Style-Block für CSS. Svelte-Komponenten sind Single-File-Components, ähnlich wie Vue. Der Unterschied: In React schreibt man JavaScript-Funktionen, die JSX zurückgeben, in Angular sind es TypeScript-Klassen mit Decorators. Svelte kombiniert alle drei Aspekte (Logik, Markup, Styling) in einer Datei, kompiliert aber zur Build-Zeit in hochoptimierten Vanilla-JavaScript-Code."
+			}
+		},
+		{
+			"targetPath": "ProfileCard.svelte",
+			"language": "svelte",
+			"codeSnippet": "<script>\n  let { name, image, description } = $props()\n</script>",
+			"knowledgeCheck": {
+				"question": "Warum verwendet Svelte 5 die $props()-Rune statt des alten 'export let name' aus Svelte 4?",
+				"options": [
+					{
+						"id": "a",
+						"text": "Weil $props() die Props typsicher macht und besser mit TypeScript funktioniert"
+					},
+					{
+						"id": "b",
+						"text": "Um Props read-only zu machen und klarer zwischen Props und lokalem State zu unterscheiden"
+					},
+					{
+						"id": "c",
+						"text": "Weil export let in modernen Browsern nicht mehr unterstützt wird"
+					},
+					{
+						"id": "d",
+						"text": "Um die Syntax an React anzupassen"
+					}
+				],
+				"correctOptionId": "b",
+				"explanation": "Die korrekte Antwort ist Option b: Um Props read-only zu machen und klarer zwischen Props und lokalem State zu unterscheiden. Svelte 5 führt Runes ein, um das Reaktivitätssystem expliziter zu machen. $props() macht deutlich, dass diese Werte von außen kommen und nicht verändert werden dürfen (one-way data flow). In React sind Props ebenfalls read-only per Convention, in Vue durch defineProps(), in Angular durch den @Input()-Decorator. Der große Unterschied: Svelte 4 nutzte export let, was verwirrend war, da es wie normaler State aussah."
+			}
+		},
+		{
+			"targetPath": "ProfileCard.svelte",
+			"language": "svelte",
+			"codeSnippet": "<script>\n  let { name, image, description } = $props()\n</script>\n\n<div class=\"profile-card\">\n  <img src={image} alt={name} />\n  <h2>{name}</h2>\n  <p>{description}</p>\n</div>",
+			"knowledgeCheck": {
+				"question": "Wie bindet man Props im Markup in Svelte ein?",
+				"options": [
+					{
+						"id": "a",
+						"text": "Mit doppelten geschweiften Klammern wie in Vue: {{ name }}"
+					},
+					{
+						"id": "b",
+						"text": "Mit einfachen geschweiften Klammern: {name}"
+					},
+					{
+						"id": "c",
+						"text": "Mit eckigen Klammern wie in Angular: [name]"
+					},
+					{
+						"id": "d",
+						"text": "Direkt ohne Syntax, einfach name schreiben"
+					}
+				],
+				"correctOptionId": "b",
+				"explanation": "Die korrekte Antwort ist Option b: Mit einfachen geschweiften Klammern: {name}. Svelte und React nutzen beide {expression} für JavaScript-Ausdrücke im Markup. Vue verwendet doppelte geschweifte Klammern {{ expression }}, Angular ebenfalls. Der Unterschied liegt im Template-Kompilierungs-Ansatz: Svelte kompiliert alles zu Vanilla JS, React nutzt JSX mit VDOM, Vue und Angular parsen Templates zur Laufzeit. Für Attribute in Svelte gilt dasselbe: src={image} ist Shorthand für src={image}, genau wie in React JSX."
+			}
+		},
+		{
+			"targetPath": "ProfileCard.svelte",
+			"language": "svelte",
+			"codeSnippet": "<script>\n  let { name, image, description, children } = $props()\n</script>\n\n<div class=\"profile-card\">\n  <img src={image} alt={name} />\n  <h2>{name}</h2>\n  <p>{description}</p>\n  <div class=\"social-links\">\n    {@render children?.()}\n  </div>\n</div>",
+			"knowledgeCheck": {
+				"question": "Welche Mechanik nutzt Svelte 5 für Slots, und wie unterscheidet sich das von anderen Frameworks?",
+				"options": [
+					{
+						"id": "a",
+						"text": "<slot /> wie in Vue und Svelte 4"
+					},
+					{
+						"id": "b",
+						"text": "<ng-content /> wie in Angular"
+					},
+					{
+						"id": "c",
+						"text": "Die children-Prop als Snippet, gerendert mit {@render children?.()}"
+					},
+					{
+						"id": "d",
+						"text": "Direkt {children} ohne Render-Funktion wie in React"
+					}
+				],
+				"correctOptionId": "c",
+				"explanation": "Die korrekte Antwort ist Option c: Die children-Prop als Snippet, gerendert mit {@render children?.()}. Svelte 5 ersetzt das alte <slot />-System durch Snippets, die explizit mit @render aufgerufen werden. Das macht den Datenfluss klarer: children ist eine Prop wie jede andere. In React ist children eine spezielle Prop, die direkt gerendert wird: {children}. Vue nutzt <slot />, Angular <ng-content />. Svelte 5 wählt einen Mittelweg: Die Syntax ist expliziter als React, aber flexibler als das alte Slot-System – du kannst Snippets mehrfach rendern oder bedingt aufrufen."
+			}
+		},
+		{
+			"targetPath": "ProfileCard.svelte",
+			"language": "svelte",
+			"codeSnippet": "<script>\n  let { name, image, description, children } = $props()\n</script>\n\n<div class=\"profile-card\">\n  <img src={image} alt={name} />\n  <h2>{name}</h2>\n  <p>{description}</p>\n  <div class=\"social-links\">\n    {@render children?.()}\n  </div>\n</div>\n\n<style>\n  .profile-card {\n    border: 1px solid #e0e0e0;\n    border-radius: 8px;\n    padding: 1.5rem;\n    max-width: 320px;\n    text-align: center;\n  }\n\n  img {\n    width: 100%;\n    border-radius: 50%;\n    aspect-ratio: 1;\n    object-fit: cover;\n  }\n\n  h2 {\n    margin: 1rem 0 0.5rem;\n    font-size: 1.5rem;\n  }\n\n  p {\n    color: #666;\n    margin-bottom: 1rem;\n  }\n\n  .social-links {\n    display: flex;\n    gap: 0.75rem;\n    justify-content: center;\n  }\n</style>",
+			"knowledgeCheck": {
+				"question": "Was macht das <style>-Tag in einer Svelte-Komponente besonders im Vergleich zu React und Angular?",
+				"options": [
+					{
+						"id": "a",
+						"text": "Styles sind global und beeinflussen alle Komponenten"
+					},
+					{
+						"id": "b",
+						"text": "Styles sind automatisch scoped auf die Komponente, ohne explizites Attribut"
+					},
+					{
+						"id": "c",
+						"text": "Styles müssen als CSS-in-JS-Objekte geschrieben werden"
+					},
+					{
+						"id": "d",
+						"text": "Styles werden zur Laufzeit injiziert wie bei styled-components"
+					}
+				],
+				"correctOptionId": "b",
+				"explanation": "Die korrekte Antwort ist Option b: Styles sind automatisch scoped auf die Komponente, ohne explizites Attribut. Svelte fügt zur Compile-Zeit eindeutige Klassen hinzu, sodass CSS nur die eigene Komponente betrifft. Vue bietet dasselbe mit <style scoped>, Angular mit ViewEncapsulation.Emulated (Standard). React hat kein eingebautes Scoping – du brauchst CSS Modules, styled-components oder Tailwind. Der Tradeoff: Svelte und Vue machen Scoping elegant und zero-config, dafür bist du an Single-File-Components gebunden. React gibt dir mehr Flexibilität, verlangt aber explizite Tooling-Entscheidungen."
+			}
+		}
+	]
+}

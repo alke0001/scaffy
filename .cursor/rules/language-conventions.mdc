@@ -1,0 +1,10 @@
+---
+description: README and code comments in American English; chat in German
+alwaysApply: true
+---
+
+# Language Conventions
+
+- **README.md**: Write and update in **American English** only.
+- **Code comments**: All comments (inline, block, JSDoc/TSDoc, etc.) must be **American English**.
+- **Chat**: When the user writes in **German**, reply in **German**. Repo-facing prose above still follows English rules for README and comments.
