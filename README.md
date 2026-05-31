@@ -74,10 +74,10 @@ The AI API key is server-only and never exposed to the browser. Scaffold your lo
 cp .env.example .env.local   # then edit .env.local
 ```
 
-| Variable | Required | Description |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | Yes | Your API key from [console.anthropic.com](https://console.anthropic.com/) |
-| `ANTHROPIC_DEFAULT_MODEL` | No | Model Scaffy uses when the client omits one. Allowed: `claude-sonnet-4-5`, `claude-sonnet-4-6` |
+| Variable                  | Required | Description                                                                                    |
+| ------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
+| `ANTHROPIC_API_KEY`       | Yes      | Your API key from [console.anthropic.com](https://console.anthropic.com/)                      |
+| `ANTHROPIC_DEFAULT_MODEL` | No       | Model Scaffy uses when the client omits one. Allowed: `claude-sonnet-4-5`, `claude-sonnet-4-6` |
 
 `.env.local` is listed in `.gitignore` and is never committed.
 
@@ -127,10 +127,10 @@ vercel env pull .env.local
 
 This project is configured for AI-assisted development with three tools. All agents share the same design decisions and coding conventions defined in `CLAUDE.md`.
 
-| Tool | Config |
-|---|---|
-| [Claude Code](https://claude.ai/code) | `CLAUDE.md`, `.cursor/mcp.json` |
-| [Cursor](https://cursor.com) | `.cursor/rules/`, `.cursor/mcp.json` |
-| [GitHub Copilot](https://github.com/features/copilot) | `.github/copilot-instructions.md` |
+| Tool                                                  | Config                               |
+| ----------------------------------------------------- | ------------------------------------ |
+| [Claude Code](https://claude.ai/code)                 | `CLAUDE.md`, `.cursor/mcp.json`      |
+| [Cursor](https://cursor.com)                          | `.cursor/rules/`, `.cursor/mcp.json` |
+| [GitHub Copilot](https://github.com/features/copilot) | `.github/copilot-instructions.md`    |
 
 When making changes to project configuration or design decisions, update all three config files in the same edit batch to keep them in sync.

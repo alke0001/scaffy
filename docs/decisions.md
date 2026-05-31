@@ -2,9 +2,9 @@
 
 This document records **why** Scaffy is built the way it is. It complements [`CLAUDE.md`](../CLAUDE.md), which holds short, agent-facing invariants synced to Cursor and GitHub Copilot.
 
-| Audience | Use |
-| -------- | --- |
-| Humans | Full context, alternatives, and status |
+| Audience  | Use                                                                                                         |
+| --------- | ----------------------------------------------------------------------------------------------------------- |
+| Humans    | Full context, alternatives, and status                                                                      |
 | AI agents | Read relevant sections when changing chat, API, or state; keep `CLAUDE.md` in sync only for top-level rules |
 
 **How to maintain:** When a decision changes, update the entry here (status, consequences). If agents must always obey it, add or adjust a short bullet in `CLAUDE.md` and sync `.cursor/rules/design-decisions.mdc` + `.github/copilot-instructions.md` in the same edit batch.
@@ -13,21 +13,21 @@ This document records **why** Scaffy is built the way it is. It complements [`CL
 
 ## Index
 
-| ID | Title | Status |
-| -- | ----- | ------ |
-| [ADR-001](#adr-001-product-vision-scaffolding--friction) | Product vision: scaffolding + friction | Accepted |
-| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell) | SPA: SvelteKit 5, no SSR for app shell | Accepted |
-| [ADR-003](#adr-003-claude-only-via-server-api-routes) | Claude only via server API routes | Accepted |
-| [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask) | Separate API endpoints for Learn and Ask | Accepted |
-| [ADR-005](#adr-005-learn-scaffold-rest--structured-json) | Learn: REST + structured JSON | Accepted |
-| [ADR-006](#adr-006-ask-chat-sse-streaming) | Ask: chat SSE streaming | Accepted |
-| [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership) | ChatPanel dual mode and state ownership | Accepted |
-| [ADR-008](#adr-008-chat-message-lifecycle-statuses) | Chat message lifecycle statuses | Accepted |
-| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later) | Session store for scaffolds (Monaco later) | Accepted |
-| [ADR-010](#adr-010-repository-layout-and-typescript) | Repository layout and TypeScript | Accepted |
-| [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned) | Monaco typewriter and viewZones (planned) | Accepted (not implemented) |
-| [ADR-012](#adr-012-ask-markdown-rendering-during-stream) | Ask markdown rendering during stream | Proposed |
-| [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd) | Documentation split: CLAUDE.md vs decisions.md | Accepted |
+| ID                                                              | Title                                          | Status                     |
+| --------------------------------------------------------------- | ---------------------------------------------- | -------------------------- |
+| [ADR-001](#adr-001-product-vision-scaffolding--friction)        | Product vision: scaffolding + friction         | Accepted                   |
+| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)        | SPA: SvelteKit 5, no SSR for app shell         | Accepted                   |
+| [ADR-003](#adr-003-claude-only-via-server-api-routes)           | Claude only via server API routes              | Accepted                   |
+| [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask)    | Separate API endpoints for Learn and Ask       | Accepted                   |
+| [ADR-005](#adr-005-learn-scaffold-rest--structured-json)        | Learn: REST + structured JSON                  | Accepted                   |
+| [ADR-006](#adr-006-ask-chat-sse-streaming)                      | Ask: chat SSE streaming                        | Accepted                   |
+| [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership)     | ChatPanel dual mode and state ownership        | Accepted                   |
+| [ADR-008](#adr-008-chat-message-lifecycle-statuses)             | Chat message lifecycle statuses                | Accepted                   |
+| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later)    | Session store for scaffolds (Monaco later)     | Accepted                   |
+| [ADR-010](#adr-010-repository-layout-and-typescript)            | Repository layout and TypeScript               | Accepted                   |
+| [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned)     | Monaco typewriter and viewZones (planned)      | Accepted (not implemented) |
+| [ADR-012](#adr-012-ask-markdown-rendering-during-stream)        | Ask markdown rendering during stream           | Proposed                   |
+| [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd) | Documentation split: CLAUDE.md vs decisions.md | Accepted                   |
 
 ---
 
@@ -111,10 +111,10 @@ Learn and Ask need different system prompts, output shapes, temperatures, and tr
 
 ### Decision
 
-| Mode | Route | Transport | Output |
-| ---- | ----- | --------- | ------ |
-| **Learn Code** | `POST /api/scaffold` | REST | Structured JSON `{ scaffolds: [...] }` |
-| **Ask** | `POST /api/chat` | SSE | Plain text stream |
+| Mode           | Route                | Transport | Output                                 |
+| -------------- | -------------------- | --------- | -------------------------------------- |
+| **Learn Code** | `POST /api/scaffold` | REST      | Structured JSON `{ scaffolds: [...] }` |
+| **Ask**        | `POST /api/chat`     | SSE       | Plain text stream                      |
 
 - Server assets: `src/lib/server/scaffold/` vs `src/lib/server/chat/`.
 - Shared: `src/lib/server/anthropic-client.ts` (`@anthropic-ai/sdk`).
@@ -218,13 +218,13 @@ Chat UIs need visible pending/loading/streaming/error states; the same model sho
 
 Types in `src/lib/types/chat-message.ts`:
 
-| Status | Meaning |
-| ------ | ------- |
-| `pending` | Optimistic / sending (optional, short) |
-| `loading` | Request started, no content yet |
-| `streaming` | Ask: tokens arriving |
-| `complete` | Success, settled |
-| `error` | Failed; optional partial `content` |
+| Status      | Meaning                                |
+| ----------- | -------------------------------------- |
+| `pending`   | Optimistic / sending (optional, short) |
+| `loading`   | Request started, no content yet        |
+| `streaming` | Ask: tokens arriving                   |
+| `complete`  | Success, settled                       |
+| `error`     | Failed; optional partial `content`     |
 
 - `isThreadBusy()` disables send while any message is `pending` | `loading` | `streaming`.
 - Ask history for the API: only `complete` user/assistant messages (`toChatHistory()`).
@@ -315,11 +315,11 @@ Claude Ask replies are often Markdown (`**bold**`, fenced code). `chat-message.s
 
 Align with common NLIs (ChatGPT, Claude.ai): **stream plain text with cursor**, parse Markdown on a **throttled** schedule (e.g. `requestAnimationFrame` or 50–100 ms), not on every token.
 
-| Approach | Streaming feel | Performance | Markdown during stream |
-| -------- | -------------- | ----------- | ---------------------- |
-| Complete-only | Yes (plain until end) | Best | No — jump at end |
-| Throttled live parse | Yes | Good | Yes, with minor fence flicker |
-| Parse every token | Yes | Poor | Yes, unstable |
+| Approach             | Streaming feel        | Performance | Markdown during stream        |
+| -------------------- | --------------------- | ----------- | ----------------------------- |
+| Complete-only        | Yes (plain until end) | Best        | No — jump at end              |
+| Throttled live parse | Yes                   | Good        | Yes, with minor fence flicker |
+| Parse every token    | Yes                   | Poor        | Yes, unstable                 |
 
 - Render Markdown only for **assistant** messages in **Ask** mode.
 - Sanitize HTML (`marked` + DOMPurify or AST-to-components); never unsanitized `{@html}`.
@@ -347,12 +347,12 @@ Agent config files must stay small and synced across three tools; detailed ratio
 
 ### Decision
 
-| Layer | Location | Content |
-| ----- | -------- | ------- |
-| Agent invariants | `CLAUDE.md`, `.cursor/rules/design-decisions.mdc`, `.github/copilot-instructions.md` | Stable rules agents must follow |
-| Decision log | **`docs/decisions.md`** (this file) | Context, alternatives, status, consequences |
-| Product brief | `Projektsteckbrief_Scaffy.md` | German stakeholder view |
-| Operational | `docs/*.md` (e.g. test prompts) | Runbooks, fixtures |
+| Layer            | Location                                                                             | Content                                     |
+| ---------------- | ------------------------------------------------------------------------------------ | ------------------------------------------- |
+| Agent invariants | `CLAUDE.md`, `.cursor/rules/design-decisions.mdc`, `.github/copilot-instructions.md` | Stable rules agents must follow             |
+| Decision log     | **`docs/decisions.md`** (this file)                                                  | Context, alternatives, status, consequences |
+| Product brief    | `Projektsteckbrief_Scaffy.md`                                                        | German stakeholder view                     |
+| Operational      | `docs/*.md` (e.g. test prompts)                                                      | Runbooks, fixtures                          |
 
 - New architectural choices: add or update a section here; add a **one-line pointer** in `CLAUDE.md` only when agents need to know the rule exists.
 
@@ -373,6 +373,6 @@ Agent config files must stay small and synced across three tools; detailed ratio
 
 ## Changelog
 
-| Date | Change |
-| ---- | ------ |
+| Date       | Change                                                                                                                                  |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-05-31 | Initial `docs/decisions.md` — documents decisions through ChatPanel, dual API, SSE Ask, session store, and proposed markdown rendering. |
