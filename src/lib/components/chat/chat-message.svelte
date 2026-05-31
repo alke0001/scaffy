@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ChatMarkdown from '$lib/components/chat/chat-markdown.svelte';
 	import { loadingLabel, roleLabel, type ChatMode } from '$lib/chat/message-actions.js';
 	import type { ChatMessage } from '$lib/types/chat-message.js';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
@@ -15,6 +16,9 @@
 	const showSpinner = $derived(message.status === 'loading' || message.status === 'pending');
 	const showCursor = $derived(message.status === 'streaming');
 	const isError = $derived(message.status === 'error');
+	const useAskMarkdown = $derived(
+		mode === 'ask' && !isUser && !isError && !showSpinner && Boolean(message.content)
+	);
 </script>
 
 <div
@@ -42,6 +46,8 @@
 			{#if message.content}
 				<p class="mt-2 whitespace-pre-wrap opacity-80">{message.content}</p>
 			{/if}
+		{:else if useAskMarkdown}
+			<ChatMarkdown content={message.content} streaming={showCursor} {showCursor} />
 		{:else if message.content}
 			<p class="whitespace-pre-wrap">
 				{message.content}{#if showCursor}<span

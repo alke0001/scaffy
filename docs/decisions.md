@@ -26,7 +26,7 @@ This document records **why** Scaffy is built the way it is. It complements [`CL
 | [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later)    | Session store for scaffolds (Monaco later)     | Accepted                   |
 | [ADR-010](#adr-010-repository-layout-and-typescript)            | Repository layout and TypeScript               | Accepted                   |
 | [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned)     | Monaco typewriter and viewZones (planned)      | Accepted (not implemented) |
-| [ADR-012](#adr-012-ask-markdown-rendering-during-stream)        | Ask markdown rendering during stream           | Proposed                   |
+| [ADR-012](#adr-012-ask-markdown-rendering-during-stream)        | Ask markdown rendering during stream           | Accepted                   |
 | [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd) | Documentation split: CLAUDE.md vs decisions.md | Accepted                   |
 
 ---
@@ -305,35 +305,30 @@ Learn mode should feel like live typing without API streaming of JSON.
 
 ## ADR-012: Ask markdown rendering during stream
 
-**Status:** Proposed
+**Status:** Accepted
 
 ### Context
 
-Claude Ask replies are often Markdown (`**bold**`, fenced code). `chat-message.svelte` renders plain `whitespace-pre-wrap` text.
+Claude Ask replies are often Markdown (`**bold**`, fenced code). Plain `whitespace-pre-wrap` showed raw syntax.
 
-### Decision (recommended when implemented)
+### Decision
 
-Align with common NLIs (ChatGPT, Claude.ai): **stream plain text with cursor**, parse Markdown on a **throttled** schedule (e.g. `requestAnimationFrame` or 50–100 ms), not on every token.
-
-| Approach             | Streaming feel        | Performance | Markdown during stream        |
-| -------------------- | --------------------- | ----------- | ----------------------------- |
-| Complete-only        | Yes (plain until end) | Best        | No — jump at end              |
-| Throttled live parse | Yes                   | Good        | Yes, with minor fence flicker |
-| Parse every token    | Yes                   | Poor        | Yes, unstable                 |
-
-- Render Markdown only for **assistant** messages in **Ask** mode.
-- Sanitize HTML (`marked` + DOMPurify or AST-to-components); never unsanitized `{@html}`.
-- Style with Tailwind Typography (`prose prose-sm dark:prose-invert`).
-- Optional: syntax highlight code blocks on `complete` (Shiki).
+- **Scope:** Assistant messages in **Ask** mode only (`chat-message.svelte` → `ChatMarkdown.svelte`). User bubbles, Learn mode, and errors stay plain text.
+- **Libraries:** `marked` (GFM) + `dompurify` in `src/lib/markdown/render-markdown.ts` (client-only).
+- **Streaming:** Re-parse on **`requestAnimationFrame`** while `status === 'streaming'` (at most ~60 renders/s). On `complete`, parse immediately without waiting for rAF.
+- **Output:** Sanitized HTML via `{@html}` inside `prose prose-sm dark:prose-invert` (`@tailwindcss/typography` in `layout.css`).
+- **Cursor:** Streaming caret rendered after the markdown block in `ChatMarkdown.svelte`.
 
 ### Alternatives considered
 
-- Complete-only — acceptable MVP, less like mainstream chat UIs.
+- Complete-only — simpler; rejected for ChatGPT-like live formatting.
+- Parse on every SSE token — rejected (performance).
 
 ### Consequences
 
-- Requires new dependency(s) and `ChatMarkdown.svelte` (or equivalent).
-- Document supersession here when status moves to Accepted.
+- Open code fences may flicker until closed during stream.
+- Syntax highlighting (Shiki) not included in v1.
+- Dependencies: `marked`, `dompurify`, `@tailwindcss/typography`.
 
 ---
 
@@ -378,4 +373,5 @@ Agent config files must stay small and synced across three tools; detailed ratio
 | Date       | Change                                                                                                                                  |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-05-31 | Initial `docs/decisions.md` — documents decisions through ChatPanel, dual API, SSE Ask, session store, and proposed markdown rendering. |
-| 2026-05-31 | ADR-013: added `.cursor/rules/decisions-log.mdc` — mandatory `docs/decisions.md` updates after Agent-mode implementation. |
+| 2026-05-31 | ADR-013: added `.cursor/rules/decisions-log.mdc` — mandatory `docs/decisions.md` updates after Agent-mode implementation.               |
+| 2026-05-31 | ADR-012 Accepted: Ask assistant markdown via `marked` + DOMPurify, rAF-throttled in `ChatMarkdown.svelte`.                              |
