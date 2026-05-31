@@ -47,16 +47,22 @@ src/
 │   │   ├── chat/          # Chat panel UI (ask mode + learn mode)
 │   │   └── editor/        # Monaco editor wrapper
 │   ├── server/
-│   │   ├── scaffold/      # Structured-output schema and system prompt
+│   │   ├── scaffold/      # Structured-output schema and system prompt (Learn)
+│   │   ├── chat/          # Ask-mode tutor system prompt
 │   │   └── anthropic-client.ts
+│   ├── session.svelte.ts  # Scaffold list + request status (Monaco consumes later)
+│   └── types/             # Client-safe shared types (scaffold, chat-message)
 │   └── mocks/             # Local fixture data for UI development
 └── routes/
     ├── api/
-    │   └── scaffold/      # POST /api/scaffold — structured JSON for learn mode
+    │   ├── scaffold/      # POST /api/scaffold — structured JSON (Learn)
+    │   └── chat/          # POST /api/chat — SSE plain-text tutor (Ask)
     └── +page.svelte       # Main app shell
 ```
 
 Server routes under `src/routes/api/` are thin proxies: parse request → call Anthropic → return response. Reusable logic lives in `src/lib/server/`. UI components live in `src/lib/components/<area>/`.
+
+**Architecture decisions** (context, alternatives, status): [`docs/decisions.md`](docs/decisions.md). Agent-facing invariants remain in [`CLAUDE.md`](CLAUDE.md).
 
 ---
 

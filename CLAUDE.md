@@ -16,6 +16,7 @@ These three files must stay semantically identical in their shared project assum
 | GitHub Copilot | `.github/copilot-instructions.md`     |
 
 - Changes to project configuration or design decisions must be applied to all three in the same edit batch.
+- **Detailed decision log** (context, alternatives, status): [`docs/decisions.md`](docs/decisions.md). Prefer updating that file for new architectural choices; add only short invariants here when agents must enforce them.
 
 ---
 
@@ -48,7 +49,7 @@ These three files must stay semantically identical in their shared project assum
 #### No direct browser API calls
 
 - The API key is **never in the client bundle** — it would be visible in the browser network tab
-- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** proxies (today: `scaffold` → `POST /api/scaffold`; **planned:** `chat` with its own handler and `src/lib/server/chat/` assets such as system prompt)
+- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** proxies: `scaffold` → `POST /api/scaffold`; `chat` → `POST /api/chat` (SSE streaming for Ask mode)
 - Key is stored as an environment variable in Vercel (`ANTHROPIC_API_KEY`)
 - Client calls only same-origin **`/api/...`** — never `api.anthropic.com` directly
 
@@ -56,12 +57,10 @@ These three files must stay semantically identical in their shared project assum
 Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 ```
 
-#### No streaming — typewriter effect instead
+#### Streaming vs REST
 
-- Claude API is called via **REST** (no streaming)
-- Streaming and structured JSON are incompatible: a partial JSON string cannot be parsed
-- The full JSON is returned at once; each scaffold’s `codeSnippet` is typed into Monaco with a typewriter effect
-- Visually identical to real token streaming (like Claude Code CLI), but simpler to implement
+- **`/api/scaffold` (Learn):** REST only — structured JSON cannot be parsed incrementally. The full JSON is returned at once; each scaffold’s `codeSnippet` is typed into Monaco with a client-side typewriter effect (~15 ms per character).
+- **`/api/chat` (Ask):** SSE streaming via `@anthropic-ai/sdk` `messages.stream()` through the SvelteKit proxy. ChatPanel uses message statuses (`loading`, `streaming`, `complete`, `error`).
 
 ```ts
 // Typewriter principle in Monaco
@@ -79,7 +78,7 @@ for (const char of scaffold.codeSnippet) {
 
 #### Model
 
-- `claude-sonnet-4-20250514` — same model as Claude Code CLI
+- Logical IDs: `claude-sonnet-4-5`, `claude-sonnet-4-6` (see `src/lib/server/anthropic-client.ts` and `ANTHROPIC_DEFAULT_MODEL`)
 
 ### State & Architecture
 
@@ -92,10 +91,10 @@ for (const char of scaffold.codeSnippet) {
 These conventions keep the codebase navigable as we add endpoints (for example **`/api/chat`**) and more UI. Prefer them for new files; refactor opportunistically when touching old paths.
 
 - **Svelte UI components:** `src/lib/components/<area>/` — one subdirectory per product area (`chat`, `editor`, future `questions`, …). Do not add new loose `*.svelte` files at `src/lib/` root unless they are tiny one-offs. When an area grows large (many components plus `*.svelte.ts` and helpers), consider promoting it to `src/lib/features/<name>/` instead of deepening `components/` indefinitely.
-- **HTTP API (SvelteKit routes):** `src/routes/api/<endpoint>/+server.ts` — **one folder per HTTP surface**. Today: `scaffold` (`POST /api/scaffold`). Planned: `chat` (`POST /api/chat` or similar) with its own handler; keep handlers thin (parse body → call Anthropic → return).
+- **HTTP API (SvelteKit routes):** `src/routes/api/<endpoint>/+server.ts` — **one folder per HTTP surface**. `scaffold` (`POST /api/scaffold`, REST JSON), `chat` (`POST /api/chat`, SSE). Keep handlers thin (parse body → call Anthropic → return).
 - **Server-only library code:** `src/lib/server/` — must never be imported from client components. Use **subfolders per endpoint or concern** alongside shared files at the `server/` root:
   - **`src/lib/server/scaffold/`** — structured-output JSON schema, `output-schema.ts` validation, `system-prompt.md` for the scaffold API.
-  - **Planned: `src/lib/server/chat/`** — chat-specific system prompt(s), optional schema or message shaping for the chat route (separate from scaffold pedagogy).
+  - **`src/lib/server/chat/`** — Ask-mode tutor system prompt (plain text, separate from scaffold pedagogy).
   - **Shared:** `anthropic-client.ts` and similar cross-route modules stay at `src/lib/server/` until multiple shared modules justify a `src/lib/server/shared/` folder.
 - **Routes vs `lib`:** `src/routes/` defines URLs, layouts, and thin `+server.ts` handlers. Reusable UI and domain logic live under `src/lib/`.
 
