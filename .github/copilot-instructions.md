@@ -20,6 +20,7 @@ These three files must stay semantically identical in their shared project assum
 
 - Changes to project configuration or design decisions must be applied to all three in the same edit batch.
 - **Detailed decision log:** [`docs/decisions.md`](../docs/decisions.md) — context, alternatives, ADR status.
+- **After implementing features or architecture:** update `docs/decisions.md` in the same edit batch (ADR status, index, changelog). Sync `CLAUDE.md` only for short new invariants.
 
 ---
 

@@ -17,6 +17,7 @@ These three files must stay semantically identical in their shared project assum
 
 - Changes to project configuration or design decisions must be applied to all three in the same edit batch.
 - **Detailed decision log** (context, alternatives, status): [`docs/decisions.md`](docs/decisions.md). Prefer updating that file for new architectural choices; add only short invariants here when agents must enforce them.
+- **After Agent-mode implementation** (including work that executed a Plan or answered design questions in Ask): update `docs/decisions.md` in the same batch (see `.cursor/rules/decisions-log.mdc`). Move ADRs from Proposed → Accepted when shipped; add a changelog line.
 
 ---
 

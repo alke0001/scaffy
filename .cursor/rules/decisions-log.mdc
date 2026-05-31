@@ -1,0 +1,42 @@
+---
+description: Keep docs/decisions.md in sync after Agent-mode implementation (from Plan/Ask)
+alwaysApply: true
+---
+
+# Architecture Decision Log — mandatory updates
+
+When you **finish Agent-mode work** that implemented or materially changed behavior (especially after **Plan** or **Ask** produced a design), update [`docs/decisions.md`](../../docs/decisions.md) in the **same edit batch** before considering the task done.
+
+## When to update `docs/decisions.md`
+
+Update when the change affects any of:
+
+- API routes (`src/routes/api/**`), server prompts/schemas (`src/lib/server/**`)
+- Global or cross-pane state (`*.svelte.ts`, session/editor/questions)
+- Chat/Monaco flows, streaming, message lifecycle, modes (Learn/Ask)
+- Security boundaries (keys, sanitization, client vs server)
+- Dependencies chosen for architectural reasons (e.g. markdown parser)
+
+**Skip** for: typos, formatting-only, isolated CSS, comments-only, or tests that do not reflect a new design choice.
+
+## What to write
+
+1. **Existing ADR** — set `Status` to `Accepted` / `Superseded`, revise **Decision** and **Consequences** to match the code.
+2. **New ADR** — next ID (`ADR-014`, …), sections: Context, Decision, Alternatives considered, Consequences.
+3. **Index table** — add or update the row at the top of `docs/decisions.md`.
+4. **Changelog** — one line at the bottom with date and summary.
+
+Keep agent config files **short**: do not paste full ADRs into `CLAUDE.md`. Add or adjust a **one-line invariant** there only if agents must enforce it on every turn (then sync `.cursor/rules/design-decisions.mdc` and `.github/copilot-instructions.md` per `agent-config-sync.mdc`).
+
+## Plan / Ask → Agent handoff
+
+If the user executed a **plan** or prior **Ask** thread defined the approach:
+
+- Compare implementation to the plan; if the shipped design differs, document the **actual** decision in `docs/decisions.md`.
+- Move related entries from **Proposed** → **Accepted** when code is merged in the workspace.
+
+## Checklist before “done”
+
+- [ ] `docs/decisions.md` reflects what was built
+- [ ] Proposed ADRs touched by the work are updated
+- [ ] Agent invariants synced only when necessary (`CLAUDE.md` batch)

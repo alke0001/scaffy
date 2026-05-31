@@ -355,10 +355,12 @@ Agent config files must stay small and synced across three tools; detailed ratio
 | Operational      | `docs/*.md` (e.g. test prompts)                                                      | Runbooks, fixtures                          |
 
 - New architectural choices: add or update a section here; add a **one-line pointer** in `CLAUDE.md` only when agents need to know the rule exists.
+- **Enforcement:** [`.cursor/rules/decisions-log.mdc`](../.cursor/rules/decisions-log.mdc) (`alwaysApply: true`) — agents must update this file when finishing **Agent-mode** implementation (including work that followed **Plan** or **Ask**): ADR status, index, changelog.
 
 ### Consequences
 
 - Reduces drift between “essay in three agent files” vs “undocumented code comment.”
+- Plan/Ask → Agent handoffs should end with ADR status matching shipped code.
 
 ---
 
@@ -376,3 +378,4 @@ Agent config files must stay small and synced across three tools; detailed ratio
 | Date       | Change                                                                                                                                  |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-05-31 | Initial `docs/decisions.md` — documents decisions through ChatPanel, dual API, SSE Ask, session store, and proposed markdown rendering. |
+| 2026-05-31 | ADR-013: added `.cursor/rules/decisions-log.mdc` — mandatory `docs/decisions.md` updates after Agent-mode implementation. |

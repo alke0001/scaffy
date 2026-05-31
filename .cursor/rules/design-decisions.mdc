@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Scaffy — Design Decisions
 
-- **Detailed decision log:** [`docs/decisions.md`](../../docs/decisions.md) — context, alternatives, ADR status. Update there first for new architecture; sync only short invariants here.
+- **Detailed decision log:** [`docs/decisions.md`](../../docs/decisions.md) — context, alternatives, ADR status. Update there first for new architecture; sync only short invariants here. **Mandatory after Agent-mode implementation** — see `decisions-log.mdc`.
 
 ## App Vision
 - **Name:** Scaffy — *"AI that teaches you to build good code, not just builds for you."*

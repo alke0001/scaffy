@@ -62,7 +62,7 @@ src/
 
 Server routes under `src/routes/api/` are thin proxies: parse request → call Anthropic → return response. Reusable logic lives in `src/lib/server/`. UI components live in `src/lib/components/<area>/`.
 
-**Architecture decisions** (context, alternatives, status): [`docs/decisions.md`](docs/decisions.md). Agent-facing invariants remain in [`CLAUDE.md`](CLAUDE.md).
+**Architecture decisions** (context, alternatives, status): [`docs/decisions.md`](docs/decisions.md). Agent-facing invariants remain in [`CLAUDE.md`](CLAUDE.md). Cursor agents update the decision log after implementation (`.cursor/rules/decisions-log.mdc`).
 
 ---
 
