@@ -39,7 +39,7 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 
 ### Streaming vs REST
 - **`/api/scaffold` (Learn):** REST only — structured JSON cannot be parsed incrementally. The full JSON is returned at once; each scaffold’s `codeSnippet` is typed into Monaco via `editor.executeEdits()` at ~15 ms per character (client-side typewriter, not API streaming).
-- **`/api/chat` (Ask):** **SSE streaming** via `@anthropic-ai/sdk` `messages.stream()` proxied through the SvelteKit route. Chat UI uses explicit message statuses (`loading`, `streaming`, `complete`, `error`).
+- **`/api/chat` (Ask):** **SSE streaming**; scaffolded Socratic tutor (concept ladder: UI → Runes → syntax); temperature 0.55; max_tokens 2048; history cap 30 messages server-side.
 
 ### Model
 - Logical IDs: `claude-sonnet-4-5`, `claude-sonnet-4-6` (`anthropic-client.ts`, `ANTHROPIC_DEFAULT_MODEL`).

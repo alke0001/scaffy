@@ -167,9 +167,11 @@ Ask is free-form Q&A; users expect token-by-token replies like other chat produc
 
 - `client.messages.stream()` in `src/routes/api/chat/+server.ts`.
 - Proxy emits **SSE** (`text/event-stream`): events `ready`, `text` (delta), `done`, `error`.
-- **Temperature ~0.7**, `max_tokens` 2048.
-- **No** structured output schema; plain text tutor system prompt in `src/lib/server/chat/system-prompt.md`.
+- **Temperature 0.55**, **`max_tokens` 2048** (teaching replies; ladder: UI concept → Runes → syntax).
+- **History cap:** last **30 messages** (~15 user/assistant turns) in `buildMessages()` — cost and context control; focused use per open question, not long threads.
+- **No** structured output schema; **scaffolded Socratic** tutor prompt in `src/lib/server/chat/system-prompt.md` (teach mental model first, then questions + small steps; not interrogation-only; topic-agnostic for any scaffold lesson; no MC spoilers).
 - **Prompt rules:** min 10 characters; **no** `<`/`{`/`;` heuristic (code questions allowed).
+- **Lesson context** (current scaffold/knowledge check) — planned later; not in API body yet.
 - Client: `src/lib/api/chat-stream.ts` appends deltas; `request.signal` / `AbortController` for cancel.
 
 ### Alternatives considered
@@ -180,7 +182,7 @@ Ask is free-form Q&A; users expect token-by-token replies like other chat produc
 ### Consequences
 
 - ChatPanel must handle `loading` → `streaming` → `complete` (ADR-008).
-- Markdown from Claude is currently shown as plain text (ADR-012).
+- Assistant replies rendered as Markdown in Ask mode (ADR-012).
 
 ---
 
@@ -463,3 +465,7 @@ flowchart TB
 | 2026-05-31 | ADR-012 Accepted: Ask assistant markdown via `marked` + DOMPurify, rAF-throttled in `ChatMarkdown.svelte`.                              |
 | 2026-05-31 | ADR-014 Accepted: Learning session persistence port; localStorage adapter first, Supabase adapter later via same interface.             |
 | 2026-05-31 | Nice-to-have: Lottie icons/animations noted in decisions.md and agent configs.                                                          |
+| 2026-05-31 | ADR-006: Ask tutor — Socratic system prompt, temperature 0.5, history capped to 30 messages (~15 turns).                            |
+| 2026-05-31 | ADR-006: tightened Socratic prompt — no full code on first "how do I" reply; snippets only after engagement or second ask.          |
+| 2026-05-31 | ADR-006: scaffolded Socratic prompt — beginner-first teaching, max 2 question-only turns, generic (not single exercise storyline).   |
+| 2026-05-31 | ADR-006: concept ladder (props → Runes explained → `$props` syntax); chat temperature 0.55.                                        |

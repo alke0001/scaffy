@@ -4,9 +4,13 @@ import { APIError } from '@anthropic-ai/sdk';
 import { client, resolveModel } from '$lib/server/anthropic-client.js';
 import systemPrompt from '$lib/server/chat/system-prompt.md?raw';
 
+/** Max prior user+assistant messages sent as history (≈15 turns). Keeps cost and context bounded. */
+const MAX_HISTORY_MESSAGES = 30;
+
 const CONFIG = {
 	maxOutputTokens: 2048,
-	temperature: 0.7,
+	/** Slightly warmer phrasing for teaching prose; structure still comes from the system prompt. */
+	temperature: 0.55,
 	systemPromptCacheTtl: '5m'
 } as const satisfies {
 	maxOutputTokens: number;
@@ -36,11 +40,13 @@ function buildMessages(
 	const messages: { role: 'user' | 'assistant'; content: string }[] = [];
 
 	if (Array.isArray(history)) {
+		const prior: { role: 'user' | 'assistant'; content: string }[] = [];
 		for (const entry of history) {
 			if (entry.role !== 'user' && entry.role !== 'assistant') continue;
 			if (typeof entry.content !== 'string' || entry.content.trim().length === 0) continue;
-			messages.push({ role: entry.role, content: entry.content.trim() });
+			prior.push({ role: entry.role, content: entry.content.trim() });
 		}
+		messages.push(...prior.slice(-MAX_HISTORY_MESSAGES));
 	}
 
 	messages.push({ role: 'user', content: trimmedPrompt });
