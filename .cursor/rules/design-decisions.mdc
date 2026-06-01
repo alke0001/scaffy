@@ -71,3 +71,4 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 - Authentication
 - A/B testing: scaffolding with friction vs. classic agentic coding
 - Event logging via Tinybird for analytics
+- Lottie animations/icons (loading, empty states, micro-feedback in UI)

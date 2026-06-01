@@ -13,21 +13,24 @@ This document records **why** Scaffy is built the way it is. It complements [`CL
 
 ## Index
 
-| ID                                                              | Title                                          | Status                     |
-| --------------------------------------------------------------- | ---------------------------------------------- | -------------------------- |
-| [ADR-001](#adr-001-product-vision-scaffolding--friction)        | Product vision: scaffolding + friction         | Accepted                   |
-| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)        | SPA: SvelteKit 5, no SSR for app shell         | Accepted                   |
-| [ADR-003](#adr-003-claude-only-via-server-api-routes)           | Claude only via server API routes              | Accepted                   |
-| [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask)    | Separate API endpoints for Learn and Ask       | Accepted                   |
-| [ADR-005](#adr-005-learn-scaffold-rest--structured-json)        | Learn: REST + structured JSON                  | Accepted                   |
-| [ADR-006](#adr-006-ask-chat-sse-streaming)                      | Ask: chat SSE streaming                        | Accepted                   |
-| [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership)     | ChatPanel dual mode and state ownership        | Accepted                   |
-| [ADR-008](#adr-008-chat-message-lifecycle-statuses)             | Chat message lifecycle statuses                | Accepted                   |
-| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later)    | Session store for scaffolds (Monaco later)     | Accepted                   |
-| [ADR-010](#adr-010-repository-layout-and-typescript)            | Repository layout and TypeScript               | Accepted                   |
-| [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned)     | Monaco typewriter and viewZones (planned)      | Accepted (not implemented) |
-| [ADR-012](#adr-012-ask-markdown-rendering-during-stream)        | Ask markdown rendering during stream           | Accepted                   |
-| [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd) | Documentation split: CLAUDE.md vs decisions.md | Accepted                   |
+ADR = Architecture Decision Record
+
+| ID                                                                        | Title                                                  | Status                             |
+| ------------------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------- |
+| [ADR-001](#adr-001-product-vision-scaffolding--friction)                  | Product vision: scaffolding + friction                 | Accepted                           |
+| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                  | SPA: SvelteKit 5, no SSR for app shell                 | Accepted                           |
+| [ADR-003](#adr-003-claude-only-via-server-api-routes)                     | Claude only via server API routes                      | Accepted                           |
+| [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask)              | Separate API endpoints for Learn and Ask               | Accepted                           |
+| [ADR-005](#adr-005-learn-scaffold-rest--structured-json)                  | Learn: REST + structured JSON                          | Accepted                           |
+| [ADR-006](#adr-006-ask-chat-sse-streaming)                                | Ask: chat SSE streaming                                | Accepted                           |
+| [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership)               | ChatPanel dual mode and state ownership                | Accepted                           |
+| [ADR-008](#adr-008-chat-message-lifecycle-statuses)                       | Chat message lifecycle statuses                        | Accepted                           |
+| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later)              | Session store for scaffolds (Monaco later)             | Accepted                           |
+| [ADR-010](#adr-010-repository-layout-and-typescript)                      | Repository layout and TypeScript                       | Accepted                           |
+| [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned)               | Monaco typewriter and viewZones (planned)              | Accepted (not implemented)         |
+| [ADR-012](#adr-012-ask-markdown-rendering-during-stream)                  | Ask markdown rendering during stream                   | Accepted                           |
+| [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd)           | Documentation split: CLAUDE.md vs decisions.md         | Accepted                           |
+| [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) | Learning session persistence port — localStorage first | Accepted (adapter not implemented) |
 
 ---
 
@@ -359,12 +362,95 @@ Agent config files must stay small and synced across three tools; detailed ratio
 
 ---
 
+## ADR-014: Learning session persistence port — localStorage first
+
+**Status:** Accepted (persistence **port and adapters are planned**; only [`session.svelte.ts`](../src/lib/session.svelte.ts) in-memory today — no `localStorage` or Supabase code yet)
+
+### Context
+
+Learning progress must survive reloads and back navigation ([`Projektsteckbrief_Scaffy.md`](../Projektsteckbrief_Scaffy.md): `/session/:id`, `/history`, step index, answered knowledge checks). We considered persisting directly in **Supabase** with **Google Auth** and **RLS** (cross-device, per-user rows). That path needs dashboard setup, OAuth redirects, env secrets on Vercel, and sync/error UX before the core learn loop is proven in the UI.
+
+[`session.svelte.ts`](../src/lib/session.svelte.ts) already holds **runtime** scaffold data for Learn; persistence is a separate concern from ChatPanel and Claude API routes.
+
+### Decision
+
+**Phase 1 — `localStorage` via a persistence port (adapter-friendly), not ad-hoc `localStorage` calls in components.**
+
+1. Define a small **port** (interface) for durable learning sessions, e.g. `LearningSessionStore`:
+   - `load(id)`, `save(session)`, `listHistory()` (and optional `delete(id)`)
+   - Uses shared domain types (e.g. `LearningSession` in `$lib/types/`), not raw scaffold JSON scattered in UI code.
+
+2. Implement **`LocalStorageSessionStore`** as the first **adapter** — wraps `localStorage` behind that interface.
+
+3. Keep **`session.svelte.ts`** as the **in-memory** source of truth while the user is on an active session (Monaco, questions, current step). The store triggers **debounced** `save()` on the port; on route enter (`/session/:id`), **`load()`** hydrates the runtime store.
+
+4. **Factory** (e.g. `createSessionStore()`) returns the active adapter so call sites depend on the port only — never `localStorage` or `@supabase/supabase-js` directly in Svelte components.
+
+**Phase 2 (later, optional) — `SupabaseSessionStore` adapter**
+
+- Same port methods; Supabase Auth (e.g. Google) + Postgres + **RLS** (`user_id = auth.uid()`).
+- Factory switches (or composes) adapters when the user is signed in — no rewrite of routes or `session.svelte.ts` consumers.
+- Optional: on first login, migrate local sessions from `localStorage` into Supabase (separate task, not required for Phase 1).
+
+**Sync failures (any adapter):** runtime state may advance before persist completes; expose `syncStatus` (`syncing` | `synced` | `error`) and retry — do not imply “saved” without a successful `save()`. After reload, **loaded data from the port wins** over stale memory.
+
+```mermaid
+flowchart TB
+  UI[Routes_ChatPanel_Monaco]
+  Runtime[session.svelte.ts]
+  Port[LearningSessionStore]
+  LS[LocalStorageSessionStore]
+  SB[SupabaseSessionStore_phase2]
+
+  UI --> Runtime
+  Runtime -->|debounced save_load| Port
+  Port --> LS
+  Port -.->|later| SB
+```
+
+### Why localStorage first (now)
+
+| Reason                   | Detail                                                                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Unblock product loop** | Step gating, `/session/:id`, `/history` testable without Supabase project or OAuth                                                |
+| **Lower setup cost**     | No Google Cloud OAuth client, Supabase redirect URLs, or `PUBLIC_*` / service keys for v1                                         |
+| **Aligns with SPA**      | Fits current anonymous, single-browser use; matches steckbrief “anonymous session id via `crypto.randomUUID()`” until auth exists |
+| **Avoid throwaway work** | Port + adapter boundary prevents a later Supabase migration from touching every component                                         |
+
+### Alternatives considered
+
+| Alternative                             | Why not now                                                                                                                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Supabase only from day one**          | Higher calendar and ops cost before Monaco/questions/history UI exist; auth blocks all testing                                                                           |
+| **Raw `localStorage` in components**    | Hard to swap to Supabase; violates single place for schema/versioning of stored JSON                                                                                     |
+| **TanStack Query as persistence layer** | [TanStack Query](https://tanstack.com/query/latest) helps cache/refetch **server** state; optional later for History when using Supabase — not a substitute for the port |
+| **Persist only in URL**                 | URL length limits; poor fit for full `scaffolds` JSON and answer history                                                                                                 |
+
+### Consequences
+
+- New code under something like `$lib/persistence/` (`LearningSessionStore`, `local-storage-session-store.ts`, `create-session-store.ts`).
+- **Do not** import `$lib/server/*` from persistence adapters on the client; Supabase adapter uses `@supabase/supabase-js` + anon key + user JWT when added.
+- Ask-mode chat history stays **out of scope** for this ADR unless explicitly extended (Learn session + progress only).
+- When `SupabaseSessionStore` ships: add ADR changelog line, implement adapter + factory branch, document env vars in `.env.example` — **supersede nothing in Phase 1 port shape** unless a breaking schema change is intentional.
+
+### Implementation checklist (for agents)
+
+- [ ] `LearningSession` type (id, prompt, scaffolds, `currentStep`, answered checks, timestamps)
+- [ ] `LearningSessionStore` interface
+- [ ] `LocalStorageSessionStore` (+ namespaced keys, JSON parse errors handled)
+- [ ] `createSessionStore()` — Phase 1 returns local adapter only
+- [ ] Wire load/save from `session.svelte.ts` or a thin `session-persistence.svelte.ts` helper
+- [ ] Routes `/session/:id`, `/history` use the port, not storage APIs directly
+
+---
+
 ## Planned / nice-to-have (not ADRs yet)
 
-- Authentication
+- Supabase adapter + Google Auth (see [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) Phase 2)
 - A/B test: scaffolding + friction vs classic agentic coding
 - Analytics (e.g. Tinybird)
-- Routes: `/` prompt home, `/session/:id`, `/history` with localStorage
+- Routes: `/` prompt home (if distinct from current shell)
+- **Lottie** animations/icons (e.g. loading, empty states, success feedback in chat or session UI)
 
 ---
 
@@ -375,3 +461,5 @@ Agent config files must stay small and synced across three tools; detailed ratio
 | 2026-05-31 | Initial `docs/decisions.md` — documents decisions through ChatPanel, dual API, SSE Ask, session store, and proposed markdown rendering. |
 | 2026-05-31 | ADR-013: added `.cursor/rules/decisions-log.mdc` — mandatory `docs/decisions.md` updates after Agent-mode implementation.               |
 | 2026-05-31 | ADR-012 Accepted: Ask assistant markdown via `marked` + DOMPurify, rAF-throttled in `ChatMarkdown.svelte`.                              |
+| 2026-05-31 | ADR-014 Accepted: Learning session persistence port; localStorage adapter first, Supabase adapter later via same interface.             |
+| 2026-05-31 | Nice-to-have: Lottie icons/animations noted in decisions.md and agent configs.                                                          |
