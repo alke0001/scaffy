@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import loader from '@monaco-editor/loader';
-	import scaffoldsData from '$lib/mocks/scaffolds-profile-card.json';
-
 	import type * as Monaco from 'monaco-editor';
+	import { scaffoldsStore, type Scaffold } from '$lib/stores/scaffolds.js';
 
 	type Question = {
 		question: string;
@@ -18,7 +17,10 @@
 	let editorContainer: HTMLDivElement;
 	let editor: Monaco.editor.IStandaloneCodeEditor;
 
-	const scaffolds = scaffoldsData.scaffolds;
+	let scaffolds: Scaffold[] = $state([]);
+	const unsubscribe = scaffoldsStore.subscribe((value) => {
+		scaffolds = value;
+	});
 
 	let currentIndex = $state(0);
 
@@ -35,6 +37,23 @@
 			theme: 'vs-dark',
 			automaticLayout: true
 		});
+	});
+
+	onDestroy(() => {
+		unsubscribe();
+	});
+
+	$effect(() => {
+		if (scaffolds.length === 0 && editor) {
+			editor.setValue('');
+			currentQuestion = null;
+		}
+	});
+
+	$effect(() => {
+		if (scaffolds.length > 0 && currentIndex >= scaffolds.length) {
+			currentIndex = 0;
+		}
 	});
 
 	function loadNextScaffold() {
@@ -70,20 +89,17 @@
 				<input
 					type="radio"
 					name="quiz"
-					on:change={answerQuestion}
+					onchange={answerQuestion}
 				/>
-
-				<span>
-					{option.id}) {option.text}
-				</span>
+				({option.id}) {option.text}
 			</label>
 		{/each}
 	</div>
 {/if}
 <br>
 <button
-	on:click={loadNextScaffold}
-	disabled={!answered}
+	onclick={loadNextScaffold}
+	disabled={!answered || scaffolds.length === 0}
 >
 	Nächstes Scaffold laden
 </button>
