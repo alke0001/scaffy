@@ -5,6 +5,8 @@ alwaysApply: true
 
 # Scaffy — Design Decisions
 
+- **Detailed decision log:** [`docs/decisions.md`](../../docs/decisions.md) — context, alternatives, ADR status. Update there first for new architecture; sync only short invariants here. **Mandatory after Agent-mode implementation** — see `decisions-log.mdc`.
+
 ## App Vision
 - **Name:** Scaffy — *"AI that teaches you to build good code, not just builds for you."*
 - **Core concept:** Scaffolding + Friction — AI generates code step by step; targeted questions block the next chunk until the user answers correctly.
@@ -27,7 +29,7 @@ alwaysApply: true
 
 ### No direct browser API calls
 - The API key must **never** appear in the client bundle.
-- Claude is reached only via SvelteKit **`src/routes/api/<endpoint>/+server.ts`** handlers (today `scaffold`; **`chat` planned**). Each endpoint may use its own system prompt and server assets under `src/lib/server/<endpoint>/`.
+- Claude is reached only via SvelteKit **`src/routes/api/<endpoint>/+server.ts`** handlers (`scaffold`, `chat`). Each endpoint may use its own system prompt and server assets under `src/lib/server/<endpoint>/`.
 - `ANTHROPIC_API_KEY` is injected via `import { ANTHROPIC_API_KEY } from '$env/static/private'`.
 - Client code calls only same-origin `/api/...` paths — never `api.anthropic.com`.
 
@@ -35,13 +37,12 @@ alwaysApply: true
 Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 ```
 
-### No streaming — typewriter effect instead
-- Claude API is called via **REST** (no streaming).
-- Streaming and structured JSON are incompatible; do not use SSE or chunked responses.
-- The full JSON is returned at once; each scaffold’s `codeSnippet` is typed into Monaco via `editor.executeEdits()` at ~15 ms per character.
+### Streaming vs REST
+- **`/api/scaffold` (Learn):** REST only — structured JSON cannot be parsed incrementally. The full JSON is returned at once; each scaffold’s `codeSnippet` is typed into Monaco via `editor.executeEdits()` at ~15 ms per character (client-side typewriter, not API streaming).
+- **`/api/chat` (Ask):** **SSE streaming**; scaffolded Socratic tutor (concept ladder: UI → Runes → syntax); temperature 0.55; max_tokens 2048; history cap 30 messages server-side.
 
 ### Model
-- Always use `claude-sonnet-4-20250514`.
+- Logical IDs: `claude-sonnet-4-5`, `claude-sonnet-4-6` (`anthropic-client.ts`, `ANTHROPIC_DEFAULT_MODEL`).
 
 ### Environment variables
 - `.env.local` — real key, never committed.
@@ -54,8 +55,8 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 
 ## Repository layout (source conventions)
 - **Svelte UI:** `src/lib/components/<area>/` (`chat`, `editor`, …). Avoid new loose `*.svelte` at `src/lib/` root. When an area grows large, consider `src/lib/features/<name>/` instead of ever-deeper `components/`.
-- **HTTP API:** `src/routes/api/<endpoint>/+server.ts` — one folder per surface (`scaffold` today; **`chat` planned** with its own handler and system prompt).
-- **Server-only library:** `src/lib/server/` — never imported from the client. Subfolders per concern: `scaffold/` (schema, validation, system prompt); **planned `chat/`** for chat-specific prompts/schemas. Shared modules (e.g. `anthropic-client.ts`) at `server/` root until a `shared/` subfolder is warranted.
+- **HTTP API:** `src/routes/api/<endpoint>/+server.ts` — one folder per surface (`scaffold` REST, `chat` SSE).
+- **Server-only library:** `src/lib/server/` — never imported from the client. Subfolders per endpoint: `scaffold/` (schema, validation, system prompt), `chat/` (Ask-mode tutor system prompt). Shared modules (e.g. `anthropic-client.ts`) at `server/` root until a `shared/` subfolder is warranted.
 
 ## Monaco Integration
 - Use `viewZones` for inline question components rendered between code lines.
@@ -70,3 +71,4 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 - Authentication
 - A/B testing: scaffolding with friction vs. classic agentic coding
 - Event logging via Tinybird for analytics
+- Lottie animations/icons (loading, empty states, micro-feedback in UI)

@@ -19,6 +19,8 @@ These three files must stay semantically identical in their shared project assum
 | GitHub Copilot | `.github/copilot-instructions.md`     |
 
 - Changes to project configuration or design decisions must be applied to all three in the same edit batch.
+- **Detailed decision log:** [`docs/decisions.md`](../docs/decisions.md) — context, alternatives, ADR status.
+- **After implementing features or architecture:** update `docs/decisions.md` in the same edit batch (ADR status, index, changelog). Sync `CLAUDE.md` only for short new invariants.
 
 ---
 
@@ -50,7 +52,7 @@ These three files must stay semantically identical in their shared project assum
 #### No direct browser API calls
 
 - The API key must **never** appear in the client bundle — it would be visible in the browser network tab.
-- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** handlers (today `scaffold`; **`chat` planned** with its own handler and `src/lib/server/chat/` assets such as system prompt).
+- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** handlers (`scaffold`, `chat` with SSE streaming for Ask mode).
 - `ANTHROPIC_API_KEY` is injected server-side via `import { ANTHROPIC_API_KEY } from '$env/static/private'`.
 - Client code calls only same-origin **`/api/...`** — never `api.anthropic.com` directly.
 
@@ -58,15 +60,14 @@ These three files must stay semantically identical in their shared project assum
 Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 ```
 
-#### No streaming — typewriter effect instead
+#### Streaming vs REST
 
-- Claude API is called via **REST** (no streaming, no SSE).
-- Streaming and structured JSON are incompatible; a partial JSON string cannot be parsed.
-- The full JSON is returned at once; each scaffold’s `codeSnippet` is typed into Monaco via `editor.executeEdits()` at ~15 ms per character.
+- **`/api/scaffold` (Learn):** REST only — structured JSON cannot be parsed incrementally. Typewriter effect is client-side in Monaco (`executeEdits()`, ~15 ms per character).
+- **`/api/chat` (Ask):** SSE streaming; scaffolded Socratic tutor (concept ladder, Runes before syntax); temperature 0.55; max_tokens 2048; history cap 30 messages server-side. ChatPanel statuses: `loading`, `streaming`, `complete`, `error`.
 
 #### Model
 
-- Always use `claude-sonnet-4-20250514`.
+- Logical IDs: `claude-sonnet-4-5`, `claude-sonnet-4-6` (`anthropic-client.ts`, `ANTHROPIC_DEFAULT_MODEL`).
 
 #### Environment variables
 
@@ -82,8 +83,8 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 ### Repository layout (source conventions)
 
 - **Svelte UI:** `src/lib/components/<area>/` (`chat`, `editor`, …). Avoid new loose `*.svelte` at `src/lib/` root. When an area grows large, consider `src/lib/features/<name>/` instead of ever-deeper `components/`.
-- **HTTP API:** `src/routes/api/<endpoint>/+server.ts` — one folder per surface (`scaffold` today; **`chat` planned** with its own handler and system prompt).
-- **Server-only library:** `src/lib/server/` — never imported from the client. Subfolders per concern: `scaffold/` (schema, validation, system prompt); **planned `chat/`** for chat-specific prompts/schemas. Shared modules (e.g. `anthropic-client.ts`) at `server/` root until a `shared/` subfolder is warranted.
+- **HTTP API:** `src/routes/api/<endpoint>/+server.ts` — one folder per surface (`scaffold` REST JSON, `chat` SSE).
+- **Server-only library:** `src/lib/server/` — never imported from the client. Subfolders: `scaffold/`, `chat/`. Shared modules (e.g. `anthropic-client.ts`) at `server/` root until a `shared/` subfolder is warranted.
 
 ### Monaco + Svelte Integration
 

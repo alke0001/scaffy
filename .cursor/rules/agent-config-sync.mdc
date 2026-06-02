@@ -5,6 +5,7 @@ alwaysApply: true
 
 # Agent Configuration Sync
 
-- `CLAUDE.md` is the single source of truth for project configuration and design decisions.
-- When design decisions or project configuration change in `CLAUDE.md`, update the corresponding `.cursor/rules/*.mdc` files and `.github/copilot-instructions.md` in the same edit batch.
+- `CLAUDE.md` is the single source of truth for **short** agent invariants (stack, API boundaries, layout).
+- **`docs/decisions.md`** is the detailed decision log (context, alternatives, ADR status). After Agent-mode implementation, update it per `decisions-log.mdc` — especially work that followed Plan or Ask mode.
+- When agent-facing invariants in `CLAUDE.md` change, update `.cursor/rules/design-decisions.mdc` and `.github/copilot-instructions.md` in the same edit batch.
 - Before finishing changes that touch agent settings, verify `.cursor/mcp.json` still includes the `svelte` server.

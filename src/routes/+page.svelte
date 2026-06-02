@@ -1,6 +1,6 @@
 <script lang="ts">
 	import AboutDialog from '$lib/components/about/about-dialog.svelte';
-	import ClaudeChatPanel from '$lib/components/chat/claude-chat-panel.svelte';
+	import ChatPanel from '$lib/components/chat/chat-panel.svelte';
 	import MonacoEditorPlaceholder from '$lib/components/editor/monaco-editor-placeholder.svelte';
 	import AppTitleBar from '$lib/components/shell/app-title-bar.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -45,7 +45,7 @@
 				<Resizable.Pane defaultSize={40} minSize={20} class="min-h-0">
 					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background">
 						<div class="min-h-0 flex-1 overflow-auto p-2">
-							<ClaudeChatPanel />
+							<ChatPanel />
 						</div>
 					</div>
 				</Resizable.Pane>
@@ -57,7 +57,7 @@
 				<MonacoEditorPlaceholder />
 			</section>
 			<section class="min-h-0 flex-[2] overflow-auto border-t border-border p-2">
-				<ClaudeChatPanel />
+				<ChatPanel />
 			</section>
 		</div>
 	</main>
