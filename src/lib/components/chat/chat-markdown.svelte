@@ -25,7 +25,6 @@
 	}
 
 	$effect(() => {
-		content;
 		const isStreaming = streaming;
 
 		if (!content) {

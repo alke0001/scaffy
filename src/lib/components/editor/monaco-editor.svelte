@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import loader from '@monaco-editor/loader';
 	import type * as Monaco from 'monaco-editor';
-	import { scaffoldsStore, type Scaffold } from '$lib/stores/scaffolds.js';
+	import { getScaffolds } from '$lib/session.svelte';
+	import type { Scaffold } from '$lib/types/scaffold';
+	import LearningCard from '$lib/components/editor/learning-card.svelte';
 
 	type Question = {
 		question: string;
@@ -17,16 +19,13 @@
 	let editorContainer: HTMLDivElement;
 	let editor: Monaco.editor.IStandaloneCodeEditor;
 
-	let scaffolds: Scaffold[] = $state([]);
-	const unsubscribe = scaffoldsStore.subscribe((value) => {
-		scaffolds = value;
-	});
+	let scaffolds: Scaffold[] = $derived(getScaffolds());
 
 	let currentIndex = $state(0);
 
 	let currentQuestion: Question | null = $state(null);
-
-	let answered = $state(true);
+	let selectedOption: string | null = $state(null);
+	let showLearningCard = $state(false);
 
 	onMount(async () => {
 		const monaco = await loader.init();
@@ -39,8 +38,10 @@
 		});
 	});
 
-	onDestroy(() => {
-		unsubscribe();
+	$effect(() => {
+		if (scaffolds.length > 0 && currentIndex === 0 && currentQuestion === null) {
+			loadNextScaffold();
+		}
 	});
 
 	$effect(() => {
@@ -50,33 +51,37 @@
 		}
 	});
 
-	$effect(() => {
-		if (scaffolds.length > 0 && currentIndex >= scaffolds.length) {
-			currentIndex = 0;
-		}
-	});
-
 	function loadNextScaffold() {
 		const scaffold = scaffolds[currentIndex];
 
-		if ( !scaffold ) return;//Todo was tun wenn scaffolds abgearbeitet
-		if ( scaffold.codeSnippet.trim().length == 0 )
-		{
+		if (!scaffold) return;
+		if (scaffold.codeSnippet.trim().length == 0) {
 			scaffold.codeSnippet = '//Bitte Frage beantworten';
 		}
 		editor.setValue(scaffold.codeSnippet);
 
+		selectedOption = null;
+		showLearningCard = false;
 		currentQuestion = scaffold.knowledgeCheck;
-
-		answered = false;
 
 		currentIndex++;
 	}
 
-	function answerQuestion() {
-		currentQuestion = null;
+	function handleOptionChange() {
+		if (!currentQuestion || showLearningCard) return;
 
-		answered = true;
+		if (selectedOption === currentQuestion.correctOptionId) {
+			currentQuestion = null;
+			loadNextScaffold();
+			return;
+		}
+
+		showLearningCard = true;
+	}
+
+	function acknowledgeError() {
+		showLearningCard = false;
+		selectedOption = null;
 	}
 </script>
 <div bind:this={editorContainer} class="editor"></div>
@@ -89,20 +94,22 @@
 				<input
 					type="radio"
 					name="quiz"
-					onchange={answerQuestion}
+					value={option.id}
+					bind:group={selectedOption}
+					onchange={handleOptionChange}
+					disabled={showLearningCard}
 				/>
 				({option.id}) {option.text}
 			</label>
 		{/each}
+
+		{#if showLearningCard}
+			<LearningCard message="Diese Antwort ist falsch" onUnderstand={acknowledgeError} />
+		{/if}
 	</div>
+{:else if scaffolds.length > 0 && currentIndex < scaffolds.length}
+	<button onclick={loadNextScaffold}>Weiter</button>
 {/if}
-<br>
-<button
-	onclick={loadNextScaffold}
-	disabled={!answered || scaffolds.length === 0}
->
-	Nächstes Scaffold laden
-</button>
 <style>
 	.editor {
 		height: 70vh;
