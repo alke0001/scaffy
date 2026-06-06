@@ -5,7 +5,7 @@
 	let {
 		content,
 		streaming = false,
-		showCursor = false
+		showCursor = false,
 	}: {
 		content: string;
 		streaming?: boolean;

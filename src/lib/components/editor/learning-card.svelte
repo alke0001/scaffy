@@ -1,7 +1,7 @@
 <script lang="ts">
 	let {
 		message = 'Diese Antwort ist falsch',
-		onUnderstand
+		onUnderstand,
 	}: {
 		message?: string;
 		onUnderstand: () => void;

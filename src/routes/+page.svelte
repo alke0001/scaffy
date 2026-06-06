@@ -14,7 +14,7 @@
 <div class="flex h-dvh w-full flex-col overflow-hidden bg-background">
 	<AppTitleBar>
 		{#snippet title()}
-			<h1 class="font-bold"> Scaffy </h1>
+			<h1 class="font-bold">Scaffy</h1>
 		{/snippet}
 		{#snippet actions()}
 			<Dialog.Root bind:open={aboutOpen}>

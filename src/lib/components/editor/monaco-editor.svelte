@@ -25,7 +25,7 @@
 			value: '',
 			language: 'html',
 			theme: 'vs-dark',
-			automaticLayout: true
+			automaticLayout: true,
 		});
 		editorReady = true;
 	});

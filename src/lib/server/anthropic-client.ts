@@ -9,7 +9,7 @@ export type LogicalModelId = (typeof ALLOWED_MODELS)[number];
 /** Anthropic API model strings (official IDs). */
 const MODEL_TO_API_ID: Record<LogicalModelId, string> = {
 	'claude-sonnet-4-5': 'claude-sonnet-4-5-20250929',
-	'claude-sonnet-4-6': 'claude-sonnet-4-6'
+	'claude-sonnet-4-6': 'claude-sonnet-4-6',
 };
 
 function isLogicalModelId(value: string): value is LogicalModelId {
@@ -23,7 +23,7 @@ function defaultLogicalFromEnv(fallback: LogicalModelId): LogicalModelId {
 	const trimmed = ANTHROPIC_DEFAULT_MODEL.trim();
 	if (!isLogicalModelId(trimmed)) {
 		throw new Error(
-			`ANTHROPIC_DEFAULT_MODEL must be one of ${ALLOWED_MODELS.join(', ')}; got: ${trimmed}`
+			`ANTHROPIC_DEFAULT_MODEL must be one of ${ALLOWED_MODELS.join(', ')}; got: ${trimmed}`,
 		);
 	}
 	return trimmed;

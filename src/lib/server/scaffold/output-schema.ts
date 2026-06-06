@@ -10,7 +10,7 @@ export type {
 	Scaffold,
 	ScaffoldOption,
 	KnowledgeCheck,
-	StructuredScaffoldOutput
+	StructuredScaffoldOutput,
 } from '$lib/types/scaffold';
 
 /** Immutable: pass as `output_config.format.schema` on `client.messages.create`. */
@@ -50,7 +50,7 @@ export function validateStructuredOutput(parsed: unknown): StructuredOutputValid
 	if (scaffolds.length > MAX_SCAFFOLDS) {
 		return {
 			ok: false,
-			message: `"scaffolds" must contain at most ${MAX_SCAFFOLDS} steps (merge remaining code into the last scaffold).`
+			message: `"scaffolds" must contain at most ${MAX_SCAFFOLDS} steps (merge remaining code into the last scaffold).`,
 		};
 	}
 
@@ -71,7 +71,7 @@ export function validateStructuredOutput(parsed: unknown): StructuredOutputValid
 		if (typeof c.codeSnippet !== 'string') {
 			return {
 				ok: false,
-				message: `${prefix}.codeSnippet must be a string (empty string allowed).`
+				message: `${prefix}.codeSnippet must be a string (empty string allowed).`,
 			};
 		}
 		if (typeof c.knowledgeCheck !== 'object' || c.knowledgeCheck === null) {
@@ -81,7 +81,7 @@ export function validateStructuredOutput(parsed: unknown): StructuredOutputValid
 		if (typeof k.question !== 'string' || k.question.trim().length === 0) {
 			return {
 				ok: false,
-				message: `${prefix}.knowledgeCheck.question must be a non-empty string.`
+				message: `${prefix}.knowledgeCheck.question must be a non-empty string.`,
 			};
 		}
 		if (!Array.isArray(k.options)) {
@@ -90,19 +90,19 @@ export function validateStructuredOutput(parsed: unknown): StructuredOutputValid
 		if (k.options.length < MIN_OPTIONS || k.options.length > MAX_OPTIONS) {
 			return {
 				ok: false,
-				message: `${prefix}.knowledgeCheck.options must have between ${MIN_OPTIONS} and ${MAX_OPTIONS} entries.`
+				message: `${prefix}.knowledgeCheck.options must have between ${MIN_OPTIONS} and ${MAX_OPTIONS} entries.`,
 			};
 		}
 		if (typeof k.correctOptionId !== 'string' || k.correctOptionId.trim().length === 0) {
 			return {
 				ok: false,
-				message: `${prefix}.knowledgeCheck.correctOptionId must be a non-empty string.`
+				message: `${prefix}.knowledgeCheck.correctOptionId must be a non-empty string.`,
 			};
 		}
 		if (typeof k.explanation !== 'string' || k.explanation.trim().length === 0) {
 			return {
 				ok: false,
-				message: `${prefix}.knowledgeCheck.explanation must be a non-empty string.`
+				message: `${prefix}.knowledgeCheck.explanation must be a non-empty string.`,
 			};
 		}
 
@@ -124,7 +124,7 @@ export function validateStructuredOutput(parsed: unknown): StructuredOutputValid
 			if (ids.has(idTrim)) {
 				return {
 					ok: false,
-					message: `${prefix}.knowledgeCheck.options uses duplicate id "${idTrim}".`
+					message: `${prefix}.knowledgeCheck.options uses duplicate id "${idTrim}".`,
 				};
 			}
 			ids.add(idTrim);
@@ -134,7 +134,7 @@ export function validateStructuredOutput(parsed: unknown): StructuredOutputValid
 		if (!ids.has(correct)) {
 			return {
 				ok: false,
-				message: `${prefix}.knowledgeCheck.correctOptionId "${correct}" must match one of the option ids.`
+				message: `${prefix}.knowledgeCheck.correctOptionId "${correct}" must match one of the option ids.`,
 			};
 		}
 	}

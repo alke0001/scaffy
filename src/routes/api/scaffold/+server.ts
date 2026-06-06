@@ -2,7 +2,10 @@ import { json, error, isHttpError } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { APIError } from '@anthropic-ai/sdk';
 import { client, resolveModel } from '$lib/server/anthropic-client.js';
-import { OUTPUT_JSON_SCHEMA, validateStructuredOutput } from '$lib/server/scaffold/output-schema.js';
+import {
+	OUTPUT_JSON_SCHEMA,
+	validateStructuredOutput,
+} from '$lib/server/scaffold/output-schema.js';
 import systemPrompt from '$lib/server/scaffold/system-prompt.md?raw';
 
 /**
@@ -64,14 +67,20 @@ export const POST: RequestHandler = async ({ request }) => {
 			max_tokens: CONFIG.maxOutputTokens,
 			temperature: CONFIG.temperature,
 			// cache_control caches the system prompt — avoids re-processing ~2500 tokens on every request
-			system: [{ type: 'text', text: systemPrompt.trim(), cache_control: { type: 'ephemeral', ttl: CONFIG.systemPromptCacheTtl } }],
+			system: [
+				{
+					type: 'text',
+					text: systemPrompt.trim(),
+					cache_control: { type: 'ephemeral', ttl: CONFIG.systemPromptCacheTtl },
+				},
+			],
 			messages: [{ role: 'user', content: trimmedPrompt }],
 			output_config: {
 				format: {
 					type: 'json_schema',
-					schema: OUTPUT_JSON_SCHEMA
-				}
-			}
+					schema: OUTPUT_JSON_SCHEMA,
+				},
+			},
 		});
 
 		if (message.stop_reason === 'refusal') {
@@ -80,7 +89,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		if (message.stop_reason === 'max_tokens') {
 			throw error(
 				502,
-				'Claude hit max_tokens before finishing structured output. Retry with a smaller request or higher max_tokens.'
+				'Claude hit max_tokens before finishing structured output. Retry with a smaller request or higher max_tokens.',
 			);
 		}
 
@@ -112,7 +121,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				status,
 				type: e.type,
 				requestID: e.requestID,
-				error: e.error
+				error: e.error,
 			});
 			if (status === 401) throw error(401, detail);
 			if (status === 403) throw error(403, detail);
