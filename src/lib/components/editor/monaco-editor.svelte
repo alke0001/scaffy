@@ -2,68 +2,67 @@
 	import { onMount } from 'svelte';
 	import loader from '@monaco-editor/loader';
 	import type * as Monaco from 'monaco-editor';
-	import { getScaffolds } from '$lib/session.svelte';
-	import type { Scaffold } from '$lib/types/scaffold';
+	import { getScaffolds } from '$lib/session.svelte.js';
+	import type { KnowledgeCheck } from '$lib/types/scaffold.js';
 	import LearningCard from '$lib/components/editor/learning-card.svelte';
 
-	type Question = {
-		question: string;
-		options: {
-			id: string;
-			text: string;
-		}[];
-		correctOptionId: string;
-		explanation: string;
-	};
+	let editorContainer = $state<HTMLDivElement | null>(null);
+	let editor = $state<Monaco.editor.IStandaloneCodeEditor | null>(null);
+	let editorReady = $state(false);
 
-	let editorContainer: HTMLDivElement;
-	let editor: Monaco.editor.IStandaloneCodeEditor;
-
-	let scaffolds: Scaffold[] = $derived(getScaffolds());
+	const scaffolds = $derived(getScaffolds());
 
 	let currentIndex = $state(0);
-
-	let currentQuestion: Question | null = $state(null);
-	let selectedOption: string | null = $state(null);
+	let currentQuestion = $state<KnowledgeCheck | null>(null);
+	let selectedOption = $state<string | null>(null);
 	let showLearningCard = $state(false);
 
 	onMount(async () => {
-		const monaco = await loader.init();
+		if (!editorContainer) return;
 
+		const monaco = await loader.init();
 		editor = monaco.editor.create(editorContainer, {
 			value: '',
 			language: 'html',
 			theme: 'vs-dark',
 			automaticLayout: true
 		});
+		editorReady = true;
 	});
 
 	$effect(() => {
-		if (scaffolds.length > 0 && currentIndex === 0 && currentQuestion === null) {
+		if (!editorReady || !editor || scaffolds.length === 0) return;
+
+		if (currentIndex === 0 && currentQuestion === null) {
 			loadNextScaffold();
 		}
 	});
 
 	$effect(() => {
-		if (scaffolds.length === 0 && editor) {
-			editor.setValue('');
-			currentQuestion = null;
-		}
+		if (scaffolds.length > 0 || !editor) return;
+
+		editor.setValue('');
+		currentIndex = 0;
+		currentQuestion = null;
+		selectedOption = null;
+		showLearningCard = false;
 	});
 
 	function loadNextScaffold() {
+		if (!editor) return;
+
 		const scaffold = scaffolds[currentIndex];
-
 		if (!scaffold) return;
-		if (scaffold.codeSnippet.trim().length == 0) {
-			scaffold.codeSnippet = '//Bitte Frage beantworten';
-		}
-		editor.setValue(scaffold.codeSnippet);
 
+		const code =
+			scaffold.codeSnippet.trim().length === 0
+				? '// Bitte Frage beantworten'
+				: scaffold.codeSnippet;
+
+		editor.setValue(code);
 		selectedOption = null;
 		showLearningCard = false;
 		currentQuestion = scaffold.knowledgeCheck;
-
 		currentIndex++;
 	}
 
@@ -84,6 +83,7 @@
 		selectedOption = null;
 	}
 </script>
+
 <div bind:this={editorContainer} class="editor"></div>
 {#if currentQuestion}
 	<div class="question-box">
@@ -104,12 +104,13 @@
 		{/each}
 
 		{#if showLearningCard}
-			<LearningCard message="Diese Antwort ist falsch" onUnderstand={acknowledgeError} />
+			<LearningCard message={currentQuestion.explanation} onUnderstand={acknowledgeError} />
 		{/if}
 	</div>
 {:else if scaffolds.length > 0 && currentIndex < scaffolds.length}
-	<button onclick={loadNextScaffold}>Weiter</button>
+	<button type="button" onclick={loadNextScaffold}>Weiter</button>
 {/if}
+
 <style>
 	.editor {
 		height: 70vh;
@@ -126,12 +127,13 @@
 		color: white;
 		cursor: pointer;
 	}
+
 	.question-box {
-	margin-top: 1rem;
-	padding: 1rem;
-	border-radius: 12px;
-	background: #1e1e1e;
-	color: white;
+		margin-top: 1rem;
+		padding: 1rem;
+		border-radius: 12px;
+		background: #1e1e1e;
+		color: white;
 	}
 
 	.option {
