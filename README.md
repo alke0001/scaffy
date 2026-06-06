@@ -53,12 +53,12 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 Use [VS Code](https://code.visualstudio.com/) or [Cursor](https://cursor.com/). When you open the repo, the editor should prompt you to install the workspace recommendations from [`.vscode/extensions.json`](.vscode/extensions.json):
 
-| Extension | ID | Purpose |
-| --------- | -- | ------- |
-| [Svelte for VS Code](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) | `svelte.svelte-vscode` | Svelte 5 syntax, runes, and TypeScript in `.svelte` files |
-| [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) | `esbenp.prettier-vscode` | Format on save (configured in `.vscode/settings.json`) |
-| [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) | `dbaeumer.vscode-eslint` | Lint feedback for TypeScript and Svelte |
-| [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss) | `bradlc.vscode-tailwindcss` | Autocomplete and previews for Tailwind classes |
+| Extension                                                                                                  | ID                          | Purpose                                                   |
+| ---------------------------------------------------------------------------------------------------------- | --------------------------- | --------------------------------------------------------- |
+| [Svelte for VS Code](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode)             | `svelte.svelte-vscode`      | Svelte 5 syntax, runes, and TypeScript in `.svelte` files |
+| [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)                     | `esbenp.prettier-vscode`    | Format on save (configured in `.vscode/settings.json`)    |
+| [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)                       | `dbaeumer.vscode-eslint`    | Lint feedback for TypeScript and Svelte                   |
+| [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss) | `bradlc.vscode-tailwindcss` | Autocomplete and previews for Tailwind classes            |
 
 Install all at once from the repo root:
 
@@ -129,6 +129,28 @@ Preview the production build locally:
 ```sh
 pnpm run preview
 ```
+
+---
+
+## Continuous Integration
+
+Every push and pull request targeting `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+
+```sh
+pnpm run ci
+pnpm run lint
+pnpm run check
+```
+
+`pnpm run ci` installs dependencies from `pnpm-lock.yaml` with a frozen lockfile (fails if the lockfile is out of sync with `package.json`).
+
+Run the same checks locally before opening a PR:
+
+```sh
+pnpm run ci && pnpm run lint && pnpm run check
+```
+
+**Branch protection (repo admin):** After CI has run at least once on `main`, open **GitHub → Settings → Branches → Add branch protection rule** for `main`, enable **Require status checks to pass before merging**, and select the **`ci`** check.
 
 ---
 
