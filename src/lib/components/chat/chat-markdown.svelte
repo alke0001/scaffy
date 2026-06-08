@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { renderMarkdown } from '$lib/markdown/render-markdown.js';
+	import { renderMarkdown } from '$lib/components/chat/render-markdown.js';
 
 	let {
 		content,
