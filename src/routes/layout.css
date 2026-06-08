@@ -73,6 +73,19 @@
 	--sidebar-accent-foreground: oklch(0.985 0 0);
 	--sidebar-border: oklch(1 0 0 / 10%);
 	--sidebar-ring: oklch(0.552 0.016 285.938);
+
+	/* Home screen (design mockup) */
+	--home-bg: #0b0b0b;
+	--home-card: #161616;
+	--home-border: oklch(1 0 0 / 12%);
+	--home-accent: #6ee7b7;
+	--home-accent-muted: color-mix(in srgb, #6ee7b7 40%, transparent);
+	--home-rule-highlight: #f082c5;
+	--home-label: oklch(0.705 0.015 286.067);
+	--logo-teal: #64d2b4;
+	--logo-green: #58eb94;
+	--logo-blue: #82cff0;
+	--logo-pink: #f082c5;
 }
 
 @theme inline {
@@ -108,6 +121,17 @@
 	--color-card: var(--card);
 	--color-foreground: var(--foreground);
 	--color-background: var(--background);
+	--color-home-bg: var(--home-bg);
+	--color-home-card: var(--home-card);
+	--color-home-border: var(--home-border);
+	--color-home-accent: var(--home-accent);
+	--color-home-accent-muted: var(--home-accent-muted);
+	--color-home-rule-highlight: var(--home-rule-highlight);
+	--color-home-label: var(--home-label);
+	--color-logo-teal: var(--logo-teal);
+	--color-logo-green: var(--logo-green);
+	--color-logo-blue: var(--logo-blue);
+	--color-logo-pink: var(--logo-pink);
 	--radius-sm: calc(var(--radius) * 0.6);
 	--radius-md: calc(var(--radius) * 0.8);
 	--radius-lg: var(--radius);
