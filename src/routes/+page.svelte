@@ -14,22 +14,22 @@
 		setActiveSessionId,
 	} from '$lib/session.svelte.js';
 
-let aboutOpen = $state(false);
-const sessions = $derived(getSessions());
-const activeSessionId = $derived(getActiveSessionId());
+	let aboutOpen = $state(false);
+	const sessions = $derived(getSessions());
+	const activeSessionId = $derived(getActiveSessionId());
 
-function selectSession(id: string) {
-	setActiveSessionId(id);
-}
+	function selectSession(id: string) {
+		setActiveSessionId(id);
+	}
 
-function deleteSessionTab(event: MouseEvent, id: string) {
-	event.stopPropagation();
-	deleteSession(id);
-}
+	function deleteSessionTab(event: MouseEvent, id: string) {
+		event.stopPropagation();
+		deleteSession(id);
+	}
 
-function truncatePrompt(prompt: string) {
-	return prompt.length > 28 ? `${prompt.slice(0, 28)}…` : prompt;
-}
+	function truncatePrompt(prompt: string) {
+		return prompt.length > 28 ? `${prompt.slice(0, 28)}…` : prompt;
+	}
 </script>
 
 <div class="flex h-dvh w-full flex-col overflow-hidden bg-background">
@@ -58,13 +58,13 @@ function truncatePrompt(prompt: string) {
 	</AppTitleBar>
 
 	<main class="min-h-0 flex-1">
-
-
 		<div class="hidden h-full md:block">
 			<Resizable.PaneGroup direction="horizontal" class="h-full">
 				<Resizable.Pane defaultSize={60} minSize={25} class="min-h-0">
 					<div class="h-full overflow-auto bg-background p-2">
-						<div class="session-tabs mb-2 flex min-h-12 items-center gap-2 overflow-x-auto px-2 text-sm">
+						<div
+							class="session-tabs mb-2 flex min-h-12 items-center gap-2 overflow-x-auto px-2 text-sm"
+						>
 							{#if sessions.length > 0}
 								{#each sessions as session (session.id)}
 									<div
@@ -87,7 +87,9 @@ function truncatePrompt(prompt: string) {
 											{truncatePrompt(session.prompt)}
 
 											{#if session.completed}
-												<span class="ml-2 inline-flex h-5 items-center rounded-full bg-emerald-500 px-2 text-[0.65rem] font-semibold text-slate-950">
+												<span
+													class="ml-2 inline-flex h-5 items-center rounded-full bg-emerald-500 px-2 text-[0.65rem] font-semibold text-slate-950"
+												>
 													✓
 												</span>
 											{:else}
@@ -117,7 +119,9 @@ function truncatePrompt(prompt: string) {
 									</div>
 								{/each}
 							{:else}
-								<div class="rounded-2xl border border-dashed border-slate-600 bg-slate-950/70 px-3 py-2 text-slate-400">
+								<div
+									class="rounded-2xl border border-dashed border-slate-600 bg-slate-950/70 px-3 py-2 text-slate-400"
+								>
 									Noch keine Session vorhanden. Erzeuge eine neue Session über den Lernmodus.
 								</div>
 							{/if}
@@ -138,13 +142,15 @@ function truncatePrompt(prompt: string) {
 
 		<div class="flex h-full flex-col md:hidden">
 			<section class="min-h-0 flex-3 overflow-hidden p-2">
-				<div class="session-tabs mb-2 flex min-h-12 items-center gap-2 overflow-x-auto px-2 text-sm">
+				<div
+					class="session-tabs mb-2 flex min-h-12 items-center gap-2 overflow-x-auto px-2 text-sm"
+				>
 					{#if sessions.length > 0}
 						{#each sessions as session (session.id)}
 							<div class="session-pill flex items-center gap-2 rounded-full border px-1 py-1">
 								<button
 									type="button"
-									class="min-w-0 flex-1 rounded-full px-3 py-1 text-left transition focus:outline-none focus:ring-2 focus:ring-indigo-500"
+									class="min-w-0 flex-1 rounded-full px-3 py-1 text-left transition focus:ring-2 focus:ring-indigo-500 focus:outline-none"
 									class:bg-indigo-600={session.id === activeSessionId}
 									class:text-white={session.id === activeSessionId}
 									class:border-transparent={session.id === activeSessionId}
@@ -158,12 +164,20 @@ function truncatePrompt(prompt: string) {
 								>
 									{truncatePrompt(session.prompt)}
 									{#if session.completed}
-										<span class="ml-2 inline-flex h-5 items-center rounded-full bg-emerald-500 px-2 text-[0.65rem] font-semibold text-slate-950">✓</span>
+										<span
+											class="ml-2 inline-flex h-5 items-center rounded-full bg-emerald-500 px-2 text-[0.65rem] font-semibold text-slate-950"
+											>✓</span
+										>
 									{:else}
-										<span class="ml-2 inline-block h-2 w-2 rounded-full bg-orange-400" title="Unvollständige Session"></span>
+										<span
+											class="ml-2 inline-block h-2 w-2 rounded-full bg-orange-400"
+											title="Unvollständige Session"
+										></span>
 									{/if}
-									{#if session.status === 'loading'}<span class="ml-2 text-slate-400">(Lädt)</span>{/if}
-									{#if session.status === 'error'}<span class="ml-2 text-rose-400">(Fehler)</span>{/if}
+									{#if session.status === 'loading'}<span class="ml-2 text-slate-400">(Lädt)</span
+										>{/if}
+									{#if session.status === 'error'}<span class="ml-2 text-rose-400">(Fehler)</span
+										>{/if}
 								</button>
 								<button
 									type="button"
@@ -176,7 +190,9 @@ function truncatePrompt(prompt: string) {
 							</div>
 						{/each}
 					{:else}
-						<div class="rounded-2xl border border-dashed border-slate-600 bg-slate-950/70 px-3 py-2 text-slate-400">
+						<div
+							class="rounded-2xl border border-dashed border-slate-600 bg-slate-950/70 px-3 py-2 text-slate-400"
+						>
 							Noch keine Session vorhanden. Erzeuge eine neue Session über den Lernmodus.
 						</div>
 					{/if}

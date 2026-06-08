@@ -12,11 +12,7 @@
 		updateMessage,
 		type ChatMode,
 	} from '$lib/chat/message-actions.js';
-	import {
-		setScaffoldError,
-		setScaffolds,
-		startScaffoldRequest,
-	} from '$lib/session.svelte.js';
+	import { setScaffoldError, setScaffolds, startScaffoldRequest } from '$lib/session.svelte.js';
 	import type { StructuredScaffoldOutput } from '$lib/types/scaffold.js';
 	import { isThreadBusy, type ChatMessage } from '$lib/types/chat-message.js';
 	import { Button } from '$lib/components/ui/button/index.js';

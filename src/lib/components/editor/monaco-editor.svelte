@@ -2,58 +2,58 @@
 	import { onMount } from 'svelte';
 	import loader from '@monaco-editor/loader';
 	import type * as Monaco from 'monaco-editor';
-import {
-	getActiveSession,
-	getScaffolds,
-	getSessionStatus,
-	markSessionCompleted,
-} from '$lib/session.svelte.js';
-import type { KnowledgeCheck } from '$lib/types/scaffold.js';
-import LearningCard from '$lib/components/editor/learning-card.svelte';
+	import {
+		getActiveSession,
+		getScaffolds,
+		getSessionStatus,
+		markSessionCompleted,
+	} from '$lib/session.svelte.js';
+	import type { KnowledgeCheck } from '$lib/types/scaffold.js';
+	import LearningCard from '$lib/components/editor/learning-card.svelte';
 
-let editorContainer = $state<HTMLDivElement | null>(null);
-let editor = $state<Monaco.editor.IStandaloneCodeEditor | null>(null);
-let editorReady = $state(false);
+	let editorContainer = $state<HTMLDivElement | null>(null);
+	let editor = $state<Monaco.editor.IStandaloneCodeEditor | null>(null);
+	let editorReady = $state(false);
 
-const activeSession = $derived(getActiveSession());
-const activeStatus = $derived(getSessionStatus());
-const scaffolds = $derived(getScaffolds());
+	const activeSession = $derived(getActiveSession());
+	const activeStatus = $derived(getSessionStatus());
+	const scaffolds = $derived(getScaffolds());
 
-let currentSessionId = $state<string | null>(null);
-let currentIndex = $state(0);
-let currentQuestion = $state<KnowledgeCheck | null>(null);
-let selectedOption = $state<string | null>(null);
-let showLearningCard = $state(false);
+	let currentSessionId = $state<string | null>(null);
+	let currentIndex = $state(0);
+	let currentQuestion = $state<KnowledgeCheck | null>(null);
+	let selectedOption = $state<string | null>(null);
+	let showLearningCard = $state(false);
 
-onMount(async () => {
-	if (!editorContainer) return;
+	onMount(async () => {
+		if (!editorContainer) return;
 
-	const monaco = await loader.init();
-	editor = monaco.editor.create(editorContainer, {
-		value: '',
-		language: 'html',
-		theme: 'vs-dark',
-		automaticLayout: true,
+		const monaco = await loader.init();
+		editor = monaco.editor.create(editorContainer, {
+			value: '',
+			language: 'html',
+			theme: 'vs-dark',
+			automaticLayout: true,
+		});
+		editorReady = true;
 	});
-	editorReady = true;
-});
 
-function resetEditorState() {
-	currentIndex = 0;
-	currentQuestion = null;
-	selectedOption = null;
-	showLearningCard = false;
-}
-
-$effect(() => {
-	if (!editorReady || !editor) return;
-
-	if (!activeSession || activeStatus === 'idle') {
-		editor.setValue('');
-		resetEditorState();
-		currentSessionId = null;
-		return;
+	function resetEditorState() {
+		currentIndex = 0;
+		currentQuestion = null;
+		selectedOption = null;
+		showLearningCard = false;
 	}
+
+	$effect(() => {
+		if (!editorReady || !editor) return;
+
+		if (!activeSession || activeStatus === 'idle') {
+			editor.setValue('');
+			resetEditorState();
+			currentSessionId = null;
+			return;
+		}
 
 		if (activeStatus === 'loading') {
 			editor.setValue('// Erzeuge Session…');
@@ -92,7 +92,10 @@ $effect(() => {
 		const scaffold = scaffolds[currentIndex];
 		if (!scaffold) return;
 
-		const code = scaffold.codeSnippet.trim().length === 0 ? '// Bitte Frage beantworten' : scaffold.codeSnippet;
+		const code =
+			scaffold.codeSnippet.trim().length === 0
+				? '// Bitte Frage beantworten'
+				: scaffold.codeSnippet;
 
 		editor.setValue(code);
 		selectedOption = null;

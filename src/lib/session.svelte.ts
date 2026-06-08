@@ -42,14 +42,13 @@ function restoreSessions() {
 	try {
 		const parsed = JSON.parse(rawSessions) as unknown;
 		if (Array.isArray(parsed)) {
-			sessions = parsed.filter(
-				(item): item is SessionRecord =>
-					Boolean(
-						item &&
-						typeof (item as SessionRecord).id === 'string' &&
-						typeof (item as SessionRecord).prompt === 'string' &&
-						Array.isArray((item as SessionRecord).scaffolds),
-					),
+			sessions = parsed.filter((item): item is SessionRecord =>
+				Boolean(
+					item &&
+					typeof (item as SessionRecord).id === 'string' &&
+					typeof (item as SessionRecord).prompt === 'string' &&
+					Array.isArray((item as SessionRecord).scaffolds),
+				),
 			);
 		}
 	} catch {
@@ -125,12 +124,12 @@ export function setScaffolds(next: Scaffold[], sessionId?: string): void {
 	sessions = sessions.map((session) =>
 		session.id === id
 			? {
-				...session,
-				scaffolds: next,
-				status: 'ready',
-				errorMessage: null,
-				completed: false,
-			}
+					...session,
+					scaffolds: next,
+					status: 'ready',
+					errorMessage: null,
+					completed: false,
+				}
 			: session,
 	);
 
@@ -148,10 +147,10 @@ export function setScaffoldError(message: string, sessionId?: string): void {
 	sessions = sessions.map((session) =>
 		session.id === id
 			? {
-				...session,
-				status: 'error',
-				errorMessage: message,
-			}
+					...session,
+					status: 'error',
+					errorMessage: message,
+				}
 			: session,
 	);
 
@@ -169,9 +168,9 @@ export function markSessionCompleted(sessionId?: string): void {
 	sessions = sessions.map((session) =>
 		session.id === id
 			? {
-				...session,
-				completed: true,
-			}
+					...session,
+					completed: true,
+				}
 			: session,
 	);
 
