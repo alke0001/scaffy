@@ -1,0 +1,60 @@
+---
+description: Where routes, feature views, and ui/ components belong — ask if unclear
+alwaysApply: true
+---
+
+# Routes vs feature views vs ui/ components
+
+When adding or moving Svelte UI, follow this split. **If placement is unclear, use AskQuestion before creating files.**
+
+## 1. Routes (`src/routes/`)
+
+- **URL = folder path.** Use SvelteKit names: `+page.svelte`, `+layout.svelte`, `+server.ts`.
+- **Keep `+page.svelte` thin** — import a view from `lib/`, do not build full screens inline.
+- Do **not** suffix route files with `-page`; the folder already defines the page.
+
+```svelte
+<!-- src/routes/history/+page.svelte -->
+<script lang="ts">
+  import HistoryPage from '$lib/components/history/history-page.svelte';
+</script>
+<HistoryPage />
+```
+
+## 2. Feature / area views (`src/lib/components/<area>/`)
+
+- One subdirectory per product area: `home/`, `history/`, `chat/`, `editor/`, `shell/`, …
+- **Domain context lives here:** copy, example data, wiring to stores/API, page-specific layout.
+- Name by **feature**, not route mechanics (`start-learning-session.svelte`, not `home-route.svelte`).
+- Optional `-page` suffix on lib components only when it helps signal “single-route view” (e.g. `history-page.svelte`).
+
+## 3. Generic UI (`src/lib/components/ui/`)
+
+- **Domain-agnostic** building blocks (shadcn-style): buttons, dialogs, `ChipGrid`, …
+- Props in, events out — **no product copy, no example lists, no API calls.**
+- Parent/feature component supplies labels, items, and handlers.
+
+```svelte
+<!-- ✅ ui/chip/chip-grid.svelte — generic -->
+<ChipGrid items={EXAMPLE_PROMPTS} onSelect={fillPrompt} />
+
+<!-- ❌ ui/ — hardcoded "Try one of these" or FastAPI examples inside ChipGrid -->
+```
+
+## 4. Static assets (`src/lib/assets/`)
+
+- Logos, icons, illustrations as `.svg` / images — import in feature views.
+- No Svelte wrapper unless the asset needs dynamic props or theme binding via CSS variables.
+
+## 5. Before creating a component — checklist
+
+| Question | If yes → |
+|----------|----------|
+| Tied to one URL/screen and product copy? | `lib/components/<area>/` |
+| Reusable on multiple screens, no domain text? | `lib/components/ui/` |
+| Only maps a URL to a view? | `routes/.../+page.svelte` (thin) |
+| Static image/logo? | `lib/assets/` |
+
+**Unclear?** Ask the user (area name, ui vs feature, route) — do not guess and drop files in the wrong folder.
+
+See **ADR-016** in `docs/decisions.md` for full context.

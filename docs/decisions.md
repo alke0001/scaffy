@@ -31,6 +31,8 @@ ADR = Architecture Decision Record
 | [ADR-012](#adr-012-ask-markdown-rendering-during-stream)                  | Ask markdown rendering during stream                   | Accepted                           |
 | [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd)           | Documentation split: CLAUDE.md vs decisions.md         | Accepted                           |
 | [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) | Learning session persistence port — localStorage first | Accepted (adapter not implemented) |
+| [ADR-015](#adr-015-home-vs-session-route-split)                            | Home vs session route split                            | Accepted                           |
+| [ADR-016](#adr-016-routes-feature-views-vs-ui-components)                 | Routes, feature views, vs ui/ components             | Accepted                           |
 
 ---
 
@@ -446,12 +448,101 @@ flowchart TB
 
 ---
 
+## ADR-015: Home vs session route split
+
+**Status:** Accepted
+
+### Context
+
+The app previously rendered Monaco + ChatPanel on `/`. The product needs a focused prompt-entry home screen (no editor) and a separate session workspace. A parallel branch adds localStorage session persistence and edits `session.svelte.ts`, `chat-panel.svelte`, and `monaco-editor.svelte` — this ADR ships a **merge-safe** route split without touching those modules.
+
+### Decision
+
+- **`/`** — `StartLearningSession` home: centered layout, logo, embedded `ChatPanel` (unchanged), example prompt chips, external **start session** button.
+- **`/session/[id]`** — existing editor split (Monaco left, ChatPanel right); 1:1 move from former root `+page.svelte`.
+- **`/history`** — placeholder `HistoryPage` component; list UI deferred to ADR-014 persistence branch.
+- **App shell:** `AppTitleBar` in root `+layout.svelte` — **home** and **history** nav buttons + About dialog (no route breadcrumb).
+- **Navigation (Phase 1):** `goto('/session/:id', { state: { prompt } })` via the History API — no new persistence store on this branch. Session route prefills `#chat-prompt` from `history.state`; user submits manually (no auto-start).
+- **Example chips:** copy text into the chat textarea via DOM (`#chat-prompt`) to avoid ChatPanel prop changes.
+- **Home design tokens:** `--home-*` and `--logo-*` CSS variables in `layout.css`.
+
+### Alternatives considered
+
+- Shared layout wrapping home + session — rejected; zero UI overlap between the two shells.
+- `session-bootstrap.svelte.ts` store — deferred to avoid merge conflicts with ADR-014 localStorage work.
+- ChatPanel `layout="home"` props — deferred; CSS hides message list and built-in submit on home only.
+
+### Consequences
+
+- Prompt survives navigation within the same tab session only (lost on reload until ADR-014 adapter lands).
+- Home polish (validation feedback, custom prompt card) follows after branch merge and ChatPanel refactor.
+- New files: `src/lib/components/home/*`, `src/routes/session/[id]/+page.svelte`, `src/routes/history/+page.svelte`, `src/lib/components/history/history-page.svelte`.
+
+---
+
+## ADR-016: Routes, feature views, vs ui/ components
+
+**Status:** Accepted
+
+### Context
+
+Scaffy grew separate surfaces (home, session, history) plus shared chrome (`AppTitleBar`) and shadcn-style primitives. Without a clear split, agents and contributors mix **route files**, **screen-specific views**, and **generic UI** (e.g. example prompt lists inside `ui/`, or fat `+page.svelte` files). SvelteKit already encodes URLs in `src/routes/`; duplicating “page” in filenames adds noise.
+
+### Decision
+
+**Four layers:**
+
+1. **`src/routes/` — routing only**
+   - Folder path = URL (`/`, `/history`, `/session/[id]`).
+   - `+page.svelte` stays **thin**: import one view component from `lib/`, render it.
+   - No `-page` suffix on route files; use SvelteKit conventions (`+page.svelte`, `+layout.svelte`).
+
+2. **`src/lib/components/<area>/` — feature / area views**
+   - Subdirectories by product area: `home/`, `history/`, `chat/`, `editor/`, `shell/`, …
+   - Holds **domain context**: user-facing copy, example data, store/API wiring, screen layout.
+   - Names describe the **feature** (`start-learning-session.svelte`, `history-page.svelte`), not the URL tree.
+   - `-page` suffix on lib components is **optional** when it signals “view for a single route.”
+
+3. **`src/lib/components/ui/` — generic UI primitives**
+   - Domain-agnostic, reusable controls (aligned with shadcn-svelte).
+   - **Props in, events out** — no hardcoded product strings, example lists, or fetches.
+   - Example: `ChipGrid` accepts `items` + `onSelect`; `start-learning-session.svelte` passes `EXAMPLE_PROMPTS` and `fillPrompt`.
+
+4. **`src/lib/assets/` — static media**
+   - SVGs, images (e.g. `scaffy-logo.svg`). Import from feature views.
+   - Avoid a Svelte wrapper unless dynamic sizing or CSS-variable theming inside the SVG is required.
+
+**Agent rule:** When adding a component, if it is unclear whether it belongs in `ui/` vs `<area>/`, **ask the user before creating the file** (see `.cursor/rules/component-layout.mdc`).
+
+### Examples (this repo)
+
+| Piece | Location | Why |
+| ----- | -------- | --- |
+| `/` route shell | `routes/+page.svelte` → `StartLearningSession` | Thin route |
+| Home screen | `components/home/start-learning-session.svelte` | Copy, ChatPanel wiring, examples |
+| Chip grid | `components/ui/chip/chip-grid.svelte` | Generic; no “Try one of these” inside |
+| Logo | `lib/assets/scaffy-logo.svg` | Static asset |
+| App chrome | `components/shell/app-title-bar.svelte` | Cross-route shell, not `ui/` |
+
+### Alternatives considered
+
+- **Fat `+page.svelte` with all markup** — rejected; hard to test and reuse.
+- **Everything under `ui/`** — rejected; leaks domain into primitives.
+- **`-page` on all route views in `lib/`** — optional convention only; routes themselves stay `+page.svelte`.
+
+### Consequences
+
+- Extends [ADR-010](#adr-010-repository-layout-and-typescript); does not replace it.
+- New Cursor rule: `component-layout.mdc` (`alwaysApply: true`).
+- Promote large areas to `src/lib/features/<name>/` when `components/<area>/` outgrows maintainability (unchanged from ADR-010).
+
+---
+
 ## Planned / nice-to-have (not ADRs yet)
 
 - Supabase adapter + Google Auth (see [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) Phase 2)
 - A/B test: scaffolding + friction vs classic agentic coding
 - Analytics (e.g. Tinybird)
-- Routes: `/` prompt home (if distinct from current shell)
 - **Lottie** animations/icons (e.g. loading, empty states, success feedback in chat or session UI)
 
 ---
@@ -468,4 +559,4 @@ flowchart TB
 | 2026-05-31 | ADR-006: Ask tutor — Socratic system prompt, temperature 0.5, history capped to 30 messages (~15 turns).                                |
 | 2026-05-31 | ADR-006: tightened Socratic prompt — no full code on first "how do I" reply; snippets only after engagement or second ask.              |
 | 2026-05-31 | ADR-006: scaffolded Socratic prompt — beginner-first teaching, max 2 question-only turns, generic (not single exercise storyline).      |
-| 2026-05-31 | ADR-006: concept ladder (props → Runes explained → `$props` syntax); chat temperature 0.55.                                             |
+| 2026-06-08 | ADR-016 Accepted: routes vs feature views vs ui/ components; `component-layout.mdc` for agents. |

@@ -82,7 +82,11 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 
 ### Repository layout (source conventions)
 
-- **Svelte UI:** `src/lib/components/<area>/` (`chat`, `editor`, …). Avoid new loose `*.svelte` at `src/lib/` root. When an area grows large, consider `src/lib/features/<name>/` instead of ever-deeper `components/`.
+- **Routes:** `src/routes/**/+page.svelte` thin — import view from `lib/`; URL = folder (no `-page` suffix on route files).
+- **Feature views:** `src/lib/components/<area>/` (`home`, `history`, `chat`, `editor`, `shell`, …) — domain copy, data, wiring.
+- **Generic UI:** `src/lib/components/ui/` — domain-agnostic primitives; props in, events out; no product example lists inside.
+- **Assets:** `src/lib/assets/` — static SVG/images; avoid Svelte wrappers unless dynamic/themed.
+- **Unclear placement?** Ask before creating components (ADR-016, `component-layout.mdc`).
 - **HTTP API:** `src/routes/api/<endpoint>/+server.ts` — one folder per surface (`scaffold` REST JSON, `chat` SSE).
 - **Server-only library:** `src/lib/server/` — never imported from the client. Subfolders: `scaffold/`, `chat/`. Shared modules (e.g. `anthropic-client.ts`) at `server/` root until a `shared/` subfolder is warranted.
 
