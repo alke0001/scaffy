@@ -79,6 +79,7 @@ The session UI is highly interactive (Monaco, chat, resizable panes). SEO for th
 
 - All learning UI state is client-side or via `fetch` to `/api/...`.
 - Deployment fits Vercel adapter patterns already in the repo.
+- **No search indexing:** `static/robots.txt` (`Disallow: /`) plus `<meta name="robots" content="noindex, nofollow">` in `app.html`.
 
 ---
 
@@ -321,7 +322,7 @@ Claude Ask replies are often Markdown (`**bold**`, fenced code). Plain `whitespa
 ### Decision
 
 - **Scope:** Assistant messages in **Ask** mode only (`chat-message.svelte` → `ChatMarkdown.svelte`). User bubbles, Learn mode, and errors stay plain text.
-- **Libraries:** `marked` (GFM) + `dompurify` in `src/lib/markdown/render-markdown.ts` (client-only).
+- **Libraries:** `marked` (GFM) + `dompurify` in `src/lib/components/chat/render-markdown.ts` (client-only; co-located with `ChatMarkdown.svelte`).
 - **Streaming:** Re-parse on **`requestAnimationFrame`** while `status === 'streaming'` (at most ~60 renders/s). On `complete`, parse immediately without waiting for rAF.
 - **Output:** Sanitized HTML via `{@html}` inside `prose prose-sm dark:prose-invert` (`@tailwindcss/typography` in `layout.css`).
 - **Cursor:** Streaming caret rendered after the markdown block in `ChatMarkdown.svelte`.
@@ -561,3 +562,5 @@ Scaffy grew separate surfaces (home, session, history) plus shared chrome (`AppT
 | 2026-05-31 | ADR-006: tightened Socratic prompt — no full code on first "how do I" reply; snippets only after engagement or second ask.              |
 | 2026-05-31 | ADR-006: scaffolded Socratic prompt — beginner-first teaching, max 2 question-only turns, generic (not single exercise storyline).      |
 | 2026-06-08 | ADR-016 Accepted: routes vs feature views vs ui/ components; `component-layout.mdc` for agents. |
+| 2026-06-08 | ADR-012: `render-markdown.ts` co-located under `src/lib/components/chat/`. |
+| 2026-06-08 | ADR-002: block crawlers (`robots.txt`) and `noindex` meta — app is not for public SEO. |
