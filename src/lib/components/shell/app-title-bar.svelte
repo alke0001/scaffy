@@ -3,7 +3,7 @@
 
 	let {
 		title,
-		actions
+		actions,
 	}: {
 		title?: Snippet;
 		actions?: Snippet;

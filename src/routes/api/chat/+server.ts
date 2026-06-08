@@ -11,7 +11,7 @@ const CONFIG = {
 	maxOutputTokens: 2048,
 	/** Slightly warmer phrasing for teaching prose; structure still comes from the system prompt. */
 	temperature: 0.55,
-	systemPromptCacheTtl: '5m'
+	systemPromptCacheTtl: '5m',
 } as const satisfies {
 	maxOutputTokens: number;
 	temperature: number;
@@ -35,7 +35,7 @@ function encodeSse(payload: Record<string, unknown>): Uint8Array {
 
 function buildMessages(
 	trimmedPrompt: string,
-	history: ChatHistoryEntry[] | undefined
+	history: ChatHistoryEntry[] | undefined,
 ): { role: 'user' | 'assistant'; content: string }[] {
 	const messages: { role: 'user' | 'assistant'; content: string }[] = [];
 
@@ -86,12 +86,12 @@ export const POST: RequestHandler = async ({ request }) => {
 						{
 							type: 'text',
 							text: systemPrompt.trim(),
-							cache_control: { type: 'ephemeral', ttl: CONFIG.systemPromptCacheTtl }
-						}
+							cache_control: { type: 'ephemeral', ttl: CONFIG.systemPromptCacheTtl },
+						},
 					],
-					messages
+					messages,
 				},
-				{ signal: request.signal }
+				{ signal: request.signal },
 			);
 
 			controller.enqueue(encodeSse({ type: 'ready' }));
@@ -120,14 +120,14 @@ export const POST: RequestHandler = async ({ request }) => {
 				controller.enqueue(encodeSse({ type: 'error', message }));
 				controller.close();
 			}
-		}
+		},
 	});
 
 	return new Response(stream, {
 		headers: {
 			'Content-Type': 'text/event-stream',
 			'Cache-Control': 'no-cache',
-			Connection: 'keep-alive'
-		}
+			Connection: 'keep-alive',
+		},
 	});
 };

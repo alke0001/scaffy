@@ -33,13 +33,13 @@ function parseSseLine(line: string): ChatStreamEvent | null {
 export async function streamChatReply(
 	body: ChatRequestBody,
 	callbacks: ChatStreamCallbacks,
-	signal?: AbortSignal
+	signal?: AbortSignal,
 ): Promise<void> {
 	const res = await fetch('/api/chat', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(body),
-		signal
+		signal,
 	});
 
 	if (!res.ok) {

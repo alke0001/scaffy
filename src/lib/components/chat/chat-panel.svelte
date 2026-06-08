@@ -10,13 +10,13 @@
 		removeMessage,
 		toChatHistory,
 		updateMessage,
-		type ChatMode
+		type ChatMode,
 	} from '$lib/chat/message-actions.js';
 	import {
 		setScaffoldError,
 		setScaffolds,
 		startScaffoldRequest,
-		getScaffolds
+		getScaffolds,
 	} from '$lib/session.svelte.js';
 	import type { StructuredScaffoldOutput } from '$lib/types/scaffold.js';
 	import { isThreadBusy, type ChatMessage } from '$lib/types/chat-message.js';
@@ -36,11 +36,11 @@
 	function failAssistant(
 		messages: ChatMessage[],
 		assistantId: string,
-		errorMessage: string
+		errorMessage: string,
 	): ChatMessage[] {
 		return updateMessage(messages, assistantId, {
 			status: 'error',
-			errorMessage
+			errorMessage,
 		});
 	}
 
@@ -54,7 +54,7 @@
 			const data = await fetchJson<StructuredScaffoldOutput>('/api/scaffold', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ prompt: text })
+				body: JSON.stringify({ prompt: text }),
 			});
 			setScaffolds(data.scaffolds);
 			learnMessages = removeMessage(learnMessages, assistant.id);
@@ -93,7 +93,7 @@
 						gotFirstToken = true;
 						askMessages = updateMessage(askMessages, assistant.id, {
 							status: 'streaming',
-							content: ''
+							content: '',
 						});
 					}
 					askMessages = appendToMessage(askMessages, assistant.id, delta);
@@ -111,9 +111,9 @@
 					}
 					askMessages = failAssistant(askMessages, assistant.id, message);
 					askAbort = null;
-				}
+				},
 			},
-			signal
+			signal,
 		);
 	}
 

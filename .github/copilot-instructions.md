@@ -3,7 +3,7 @@
 ## Project Configuration
 
 - **Language**: TypeScript
-- **Package Manager**: npm
+- **Package Manager**: pnpm
 - **Framework**: SvelteKit 5, SPA mode (no SSR/SSG)
 - **Add-ons**: prettier, eslint, tailwindcss, shadcn-svelte
 - **Deployment**: Vercel

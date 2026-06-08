@@ -2,19 +2,19 @@ import {
 	createMessageId,
 	type ChatMessage,
 	type ChatMessageRole,
-	type ChatMessageStatus
+	type ChatMessageStatus,
 } from '$lib/types/chat-message';
 
 export function createUserMessage(
 	content: string,
-	status: ChatMessageStatus = 'complete'
+	status: ChatMessageStatus = 'complete',
 ): ChatMessage {
 	return {
 		id: createMessageId(),
 		role: 'user',
 		content,
 		status,
-		createdAt: Date.now()
+		createdAt: Date.now(),
 	};
 }
 
@@ -24,14 +24,14 @@ export function createAssistantPlaceholder(): ChatMessage {
 		role: 'assistant',
 		content: '',
 		status: 'loading',
-		createdAt: Date.now()
+		createdAt: Date.now(),
 	};
 }
 
 export function updateMessage(
 	messages: ChatMessage[],
 	id: string,
-	patch: Partial<Pick<ChatMessage, 'content' | 'status' | 'errorMessage'>>
+	patch: Partial<Pick<ChatMessage, 'content' | 'status' | 'errorMessage'>>,
 ): ChatMessage[] {
 	return messages.map((m) => (m.id === id ? { ...m, ...patch } : m));
 }
@@ -46,7 +46,7 @@ export function appendToMessage(messages: ChatMessage[], id: string, delta: stri
 
 /** History for /api/chat: completed user/assistant turns only. */
 export function toChatHistory(
-	messages: ChatMessage[]
+	messages: ChatMessage[],
 ): { role: 'user' | 'assistant'; content: string }[] {
 	return messages
 		.filter((m) => m.status === 'complete' && (m.role === 'user' || m.role === 'assistant'))

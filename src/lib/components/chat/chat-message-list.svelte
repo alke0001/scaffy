@@ -5,7 +5,7 @@
 
 	let {
 		messages,
-		mode = 'ask'
+		mode = 'ask',
 	}: {
 		messages: ChatMessage[];
 		mode?: ChatMode;
@@ -25,7 +25,7 @@
 	}
 
 	$effect(() => {
-		messages;
+		void messages.length;
 		scheduleScroll();
 	});
 </script>

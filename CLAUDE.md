@@ -1,7 +1,7 @@
 ## Project Configuration
 
 - **Language**: TypeScript
-- **Package Manager**: npm
+- **Package Manager**: pnpm
 - **Add-ons**: prettier, eslint, tailwindcss, sveltekit-adapter, mcp
 - **MCP Servers (.cursor/mcp.json)**: svelte, vercel
 

@@ -3,7 +3,7 @@
 	import type { ChatMode } from '$lib/chat/message-actions.js';
 
 	let {
-		mode = $bindable('learn' as ChatMode)
+		mode = $bindable('learn' as ChatMode),
 	}: {
 		mode?: ChatMode;
 	} = $props();

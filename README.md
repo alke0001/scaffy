@@ -10,12 +10,25 @@ Scaffy generates code step by step and uses targeted questions to block the next
 
 ## Getting Started
 
-**Prerequisites:** Node.js 20+, npm
+**Prerequisites:** Node.js 20+ and [pnpm](https://pnpm.io/) 9.x
+
+Install pnpm if it is not already on your PATH:
+
+```sh
+# Option A — Corepack (bundled with Node 20+)
+corepack enable
+corepack prepare pnpm@9.15.9 --activate
+
+# Option B — global install (e.g. when Corepack is unavailable)
+npm install -g pnpm@9.15.9
+```
+
+Then clone and install dependencies:
 
 ```sh
 git clone https://github.com/alke/scaffy.git
 cd scaffy
-npm install
+pnpm install
 ```
 
 Copy the environment template and add your API key (see [Environment Setup](#environment-setup)):
@@ -31,10 +44,32 @@ Copy-Item .env.example .env.local
 Start the dev server:
 
 ```sh
-npm run dev
+pnpm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### Recommended editor extensions
+
+Use [VS Code](https://code.visualstudio.com/) or [Cursor](https://cursor.com/). When you open the repo, the editor should prompt you to install the workspace recommendations from [`.vscode/extensions.json`](.vscode/extensions.json):
+
+| Extension                                                                                                  | ID                          | Purpose                                                   |
+| ---------------------------------------------------------------------------------------------------------- | --------------------------- | --------------------------------------------------------- |
+| [Svelte for VS Code](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode)             | `svelte.svelte-vscode`      | Svelte 5 syntax, runes, and TypeScript in `.svelte` files |
+| [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)                     | `esbenp.prettier-vscode`    | Format on save (configured in `.vscode/settings.json`)    |
+| [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)                       | `dbaeumer.vscode-eslint`    | Lint feedback for TypeScript and Svelte                   |
+| [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss) | `bradlc.vscode-tailwindcss` | Autocomplete and previews for Tailwind classes            |
+
+Install all at once from the repo root:
+
+```sh
+code --install-extension svelte.svelte-vscode
+code --install-extension esbenp.prettier-vscode
+code --install-extension dbaeumer.vscode-eslint
+code --install-extension bradlc.vscode-tailwindcss
+```
+
+On Cursor, replace `code` with `cursor`.
 
 ---
 
@@ -86,14 +121,36 @@ cp .env.example .env.local   # then edit .env.local
 ## Building
 
 ```sh
-npm run build
+pnpm run build
 ```
 
 Preview the production build locally:
 
 ```sh
-npm run preview
+pnpm run preview
 ```
+
+---
+
+## Continuous Integration
+
+Every push and pull request targeting `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+
+```sh
+pnpm run ci
+pnpm run lint
+pnpm run check
+```
+
+`pnpm run ci` installs dependencies from `pnpm-lock.yaml` with a frozen lockfile (fails if the lockfile is out of sync with `package.json`). CI copies [`.env.test`](.env.test) to `.env` before install so `svelte-kit sync` can generate `$env/static/private` types (no real API key in Actions).
+
+Run the same checks locally before opening a PR:
+
+```sh
+pnpm run ci && pnpm run lint && pnpm run check
+```
+
+**Branch protection (repo admin):** After CI has run at least once on `main`, open **GitHub → Settings → Branches → Add branch protection rule** for `main`, enable **Require status checks to pass before merging**, and select the **`ci`** check.
 
 ---
 
@@ -107,7 +164,7 @@ Project → Settings → Environment Variables → add `ANTHROPIC_API_KEY` (Prod
 **Via Vercel CLI:**
 
 ```sh
-npm i -g vercel
+pnpm add -g vercel
 vercel link
 
 vercel env add ANTHROPIC_API_KEY production

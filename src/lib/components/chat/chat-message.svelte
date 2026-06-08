@@ -6,7 +6,7 @@
 
 	let {
 		message,
-		mode = 'ask'
+		mode = 'ask',
 	}: {
 		message: ChatMessage;
 		mode?: ChatMode;
@@ -17,7 +17,7 @@
 	const showCursor = $derived(message.status === 'streaming');
 	const isError = $derived(message.status === 'error');
 	const useAskMarkdown = $derived(
-		mode === 'ask' && !isUser && !isError && !showSpinner && Boolean(message.content)
+		mode === 'ask' && !isUser && !isError && !showSpinner && Boolean(message.content),
 	);
 </script>
 
