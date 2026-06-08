@@ -102,6 +102,7 @@ export function startScaffoldRequest(prompt: string): string {
 	const session: SessionRecord = {
 		id,
 		prompt,
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		createdAt: new Date().toISOString(),
 		scaffolds: [],
 		status: 'loading',
