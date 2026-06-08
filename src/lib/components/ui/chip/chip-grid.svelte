@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Button } from '$lib/components/ui/button/index.js';
 	import { cn } from '$lib/utils.js';
 
 	let {
@@ -14,12 +15,13 @@
 
 <div class={cn('grid grid-cols-1 gap-2 sm:grid-cols-2', className)}>
 	{#each items as item (item)}
-		<button
+		<Button
 			type="button"
-			class="rounded-lg border border-dashed border-home-border bg-home-card px-4 py-3 text-left text-sm text-foreground transition-colors hover:border-home-accent/50 hover:text-home-accent"
+			variant="ghost"
+			class="h-auto w-full justify-start whitespace-normal rounded-lg border border-dashed border-home-border bg-home-card px-4 py-3 text-left text-sm font-normal text-foreground shadow-none transition-colors hover:!border-home-accent/50 hover:!bg-home-card hover:!text-home-accent dark:hover:!bg-home-card active:translate-y-0"
 			onclick={() => onSelect(item)}
 		>
 			{item}
-		</button>
+		</Button>
 	{/each}
 </div>

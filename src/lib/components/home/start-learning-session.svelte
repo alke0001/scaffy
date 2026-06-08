@@ -2,6 +2,8 @@
 	import { goto } from '$app/navigation';
 	import ChatPanel from '$lib/components/chat/chat-panel.svelte';
 	import { ChipGrid } from '$lib/components/ui/chip/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Card from '$lib/components/ui/card/index.js';
 	import scaffyLogo from '$lib/assets/scaffy-logo.svg';
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 	import { onMount } from 'svelte';
@@ -67,29 +69,34 @@
 		</header>
 
 		<div class="mb-4 w-full max-w-2xl">
-			<div
-				class="home-chat-panel rounded-xl border border-home-border bg-home-card p-4 sm:p-5"
+			<!-- shadcn Card: shared surface styling (radius, ring, bg) for the prompt shell; home tokens override defaults -->
+			<Card.Root
+				class="gap-0 border-home-border bg-home-card py-0 shadow-none ring-1 ring-home-border"
 			>
-				<p
-					class="mb-3 text-xs font-medium tracking-widest text-home-label uppercase"
-				>
-					Your prompt
-				</p>
-				<div class="home-chat-panel__body min-h-[220px]">
-					<ChatPanel />
-				</div>
-			</div>
+				<!-- Card.Content: consistent padding wrapper; ChatPanel stays domain-only inside -->
+				<Card.Content class="p-4 sm:p-5">
+					<p
+						class="mb-3 text-xs font-medium tracking-widest text-home-label uppercase"
+					>
+						Your prompt
+					</p>
+					<div class="home-chat-panel__body min-h-[220px]">
+						<ChatPanel />
+					</div>
+				</Card.Content>
+			</Card.Root>
 
 			<div class="mt-4 flex justify-end">
-				<button
+				<Button
 					type="button"
+					variant="outline"
 					disabled={!canStart}
-					class="inline-flex items-center gap-2 rounded-full border border-home-accent px-4 py-2 text-sm text-home-accent transition-opacity disabled:cursor-not-allowed disabled:border-home-accent-muted disabled:text-home-accent-muted"
+					class="rounded-full border-home-accent text-home-accent hover:bg-home-accent/10 hover:text-home-accent disabled:border-home-accent-muted disabled:text-home-accent-muted disabled:opacity-100"
 					onclick={startSession}
 				>
 					start session
 					<CornerDownLeft class="size-4" aria-hidden="true" />
-				</button>
+				</Button>
 			</div>
 
 			<p class="mt-3 text-center text-xs text-muted-foreground">
@@ -113,26 +120,26 @@
 
 <style>
 	/* Hide message list and built-in submit on home — external start button handles navigation */
-	.home-chat-panel :global(section[aria-label='Chat panel']) {
+	.home-chat-panel__body :global(section[aria-label='Chat panel']) {
 		gap: 0;
 		height: auto;
 		min-height: 0;
 	}
 
-	.home-chat-panel :global(section[aria-label='Chat panel'] > :nth-child(2)) {
+	.home-chat-panel__body :global(section[aria-label='Chat panel'] > :nth-child(2)) {
 		display: none;
 	}
 
-	.home-chat-panel :global(form button[type='submit']) {
+	.home-chat-panel__body :global(form button[type='submit']) {
 		display: none;
 	}
 
-	.home-chat-panel :global(form) {
+	.home-chat-panel__body :global(form) {
 		border-top: none;
 		padding-top: 0;
 	}
 
-	.home-chat-panel :global(textarea#chat-prompt) {
+	.home-chat-panel__body :global(textarea#chat-prompt) {
 		min-height: 140px;
 		border-color: var(--home-border);
 		background: var(--home-bg);
