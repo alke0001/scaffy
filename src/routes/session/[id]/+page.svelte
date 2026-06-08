@@ -46,7 +46,7 @@
 			<section class="min-h-0 flex-3 overflow-hidden p-2">
 				<MonacoEditor />
 			</section>
-			<section class="min-h-0 flex-[2] overflow-auto border-t border-border p-2">
+			<section class="min-h-0 flex-2 overflow-auto border-t border-border p-2">
 				<ChatPanel />
 			</section>
 		</div>
