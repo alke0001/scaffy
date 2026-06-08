@@ -30,8 +30,9 @@ When adding or moving Svelte UI, follow this split. **If placement is unclear, u
 
 ## 3. Generic UI (`src/lib/components/ui/`)
 
-- **Domain-agnostic** building blocks (shadcn-style): buttons, dialogs, `ChipGrid`, …
-- Props in, events out — **no product copy, no example lists, no API calls.**
+- **Domain-agnostic** building blocks aligned with **shadcn-svelte** (Button, Card, Dialog, …).
+- Compose from existing shadcn primitives before raw `<button>` / custom markup; add new shadcn components via `pnpm dlx shadcn-svelte@latest add <name>` when needed.
+- **Props in, events out** — no hardcoded product strings, example lists, or API calls.
 - Parent/feature component supplies labels, items, and handlers.
 
 ```svelte

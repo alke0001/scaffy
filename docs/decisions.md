@@ -504,9 +504,10 @@ Scaffy grew separate surfaces (home, session, history) plus shared chrome (`AppT
    - `-page` suffix on lib components is **optional** when it signals “view for a single route.”
 
 3. **`src/lib/components/ui/` — generic UI primitives**
-   - Domain-agnostic, reusable controls (aligned with shadcn-svelte).
+   - Domain-agnostic, reusable controls built on **shadcn-svelte** (Button, Card, Dialog, Toggle Group, …).
+   - Prefer composing from installed shadcn components; add via `pnpm dlx shadcn-svelte@latest add <name>` before hand-rolling markup.
    - **Props in, events out** — no hardcoded product strings, example lists, or fetches.
-   - Example: `ChipGrid` accepts `items` + `onSelect`; `start-learning-session.svelte` passes `EXAMPLE_PROMPTS` and `fillPrompt`.
+   - Example: `ChipGrid` uses shadcn `Button`; `start-learning-session.svelte` uses `Card` + `Button` with home token overrides.
 
 4. **`src/lib/assets/` — static media**
    - SVGs, images (e.g. `scaffy-logo.svg`). Import from feature views.
