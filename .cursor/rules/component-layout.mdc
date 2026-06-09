@@ -36,10 +36,10 @@ When adding or moving Svelte UI, follow this split. **If placement is unclear, u
 - Parent/feature component supplies labels, items, and handlers.
 
 ```svelte
-<!-- ✅ ui/chip/chip-grid.svelte — generic -->
-<ChipGrid items={EXAMPLE_PROMPTS} onSelect={fillPrompt} />
+<!-- ✅ ui/chip/chip-grid.svelte — generic; parent supplies ChipItem { label, prompt } -->
+<ChipGrid items={HOME_EXAMPLE_PROMPTS} onSelect={fillPrompt} />
 
-<!-- ❌ ui/ — hardcoded "Try one of these" or FastAPI examples inside ChipGrid -->
+<!-- ❌ ui/ — hardcoded example lists or product copy inside ChipGrid -->
 ```
 
 ## 4. Static assets (`src/lib/assets/`)

@@ -9,7 +9,6 @@
 		getSessions,
 		setActiveSessionId,
 	} from '$lib/session.svelte.js';
-	import { tick } from 'svelte';
 
 	interface Props {
 		sessionId: string;
@@ -17,28 +16,11 @@
 
 	let { sessionId }: Props = $props();
 
-	let promptPrefilled = $state(false);
-
 	$effect(() => {
 		const sessions = getSessions();
 		if (sessions.some((session) => session.id === sessionId)) {
 			setActiveSessionId(sessionId);
 		}
-	});
-
-	$effect(() => {
-		if (promptPrefilled) return;
-		const state = history.state as { prompt?: string } | undefined;
-		if (!state?.prompt) return;
-
-		void (async () => {
-			await tick();
-			const el = document.getElementById('chat-prompt') as HTMLTextAreaElement | null;
-			if (!el || el.value.trim().length > 0) return;
-			el.value = state.prompt!;
-			el.dispatchEvent(new Event('input', { bubbles: true }));
-			promptPrefilled = true;
-		})();
 	});
 
 	function selectSession(id: string) {
@@ -74,7 +56,7 @@
 				<Resizable.Pane defaultSize={40} minSize={20} class="min-h-0">
 					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background">
 						<div class="min-h-0 flex-1 overflow-auto p-2">
-							<ChatPanel {sessionId} />
+							<ChatPanel mode="ask" />
 						</div>
 					</div>
 				</Resizable.Pane>
@@ -87,7 +69,7 @@
 				<MonacoEditor />
 			</section>
 			<section class="min-h-0 flex-2 overflow-auto border-t border-border p-2">
-				<ChatPanel {sessionId} />
+				<ChatPanel mode="ask" />
 			</section>
 		</div>
 	</main>

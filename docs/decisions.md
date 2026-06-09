@@ -199,11 +199,10 @@ The session view needs a prompt/response loop beside Monaco without tight coupli
 
 ### Decision
 
-- **`ChatPanel.svelte`** owns **local** chat UI state: `learnMessages`, `askMessages`, mode toggle (`learn` | `ask`), prompt input.
-- **Learn** calls `/api/scaffold`; on success writes scaffolds via **`session.svelte.ts`**, not into chat bubbles.
-- **Ask** calls `/api/chat` stream; assistant text stays in `askMessages`.
-- **Separate histories** per mode when switching toggle.
-- **Learn success UX:** user message + loading placeholder; on success **remove** assistant placeholder (no success assistant bubble).
+- **`ChatPanel.svelte`** owns **local** chat UI state: messages, prompt input. **`mode`** is a required prop (`learn` | `ask`) set by the parent — no in-panel toggle.
+- **`/` (home):** `ChatPanel` with `mode="learn"` and `promptOnly` — textarea only; **start session** calls `requestScaffold` then navigates to `/session/:id`. Scaffold + learning progress live in Monaco + session store (left pane).
+- **`/session/[id]`:** `mode="ask"` — SSE tutor via `/api/chat` in the right pane; **independent** of scaffold submission (no Generate lesson on session).
+- **Ask** assistant text stays in `messages`; **Learn** success removes the loading placeholder (no success bubble).
 - **Learn error UX:** assistant placeholder becomes `error` with message.
 - Communication with Monaco is **only** through the session store (and future `editor` / `questions` stores), not props between panes.
 
@@ -459,12 +458,12 @@ The app previously rendered Monaco + ChatPanel on `/`. The product needs a focus
 
 ### Decision
 
-- **`/`** — `StartLearningSession` home: centered layout, logo, embedded `ChatPanel` (unchanged), example prompt chips, external **start session** button.
-- **`/session/[id]`** — `SessionWorkspace`: editor split (Monaco left, ChatPanel right) plus **session tabs** from PR #21 (`SessionTabs`); URL `:id` syncs with `setActiveSessionId` when the session exists in localStorage.
-- **`/history`** — placeholder `HistoryPage` component; list UI deferred to ADR-014 persistence branch.
+- **`/`** — `StartLearningSession`: learn/scaffold only (`promptOnly` + **start session** → `requestScaffold`).
+- **`/session/[id]`** — `SessionWorkspace`: **Monaco + tabs (learn progress)** left; **`ChatPanel mode="ask"`** right (SSE tutor, unrelated to scaffold).
+- **`/history`** — `HistoryPage`: list of `getSessions()` from localStorage; select opens `/session/:id`.
 - **App shell:** `AppTitleBar` in root `+layout.svelte` — **home** and **history** nav buttons + About dialog (no route breadcrumb).
-- **Navigation:** `goto('/session/:id', { state: { prompt } })`; session route prefills `#chat-prompt` from `history.state`; user submits manually (no auto-start).
-- **Session id alignment:** `ChatPanel` accepts optional `sessionId`; `startScaffoldRequest(prompt, preferredId?)` uses the route id so Home navigation and localStorage tabs stay consistent.
+- **Navigation:** **start session** on home calls `requestScaffold` and `goto('/session/:id')`.
+- **Session id alignment:** `startScaffoldRequest(prompt, preferredId?)` uses the route id so Home navigation and localStorage tabs stay consistent.
 - **Example chips:** copy text into the chat textarea via DOM (`#chat-prompt`) to avoid ChatPanel prop changes.
 - **Home design tokens:** `--home-*` and `--logo-*` CSS variables in `layout.css`.
 
@@ -565,4 +564,5 @@ Scaffy grew separate surfaces (home, session, history) plus shared chrome (`AppT
 | 2026-06-08 | ADR-016 Accepted: routes vs feature views vs ui/ components; `component-layout.mdc` for agents. |
 | 2026-06-08 | ADR-012: `render-markdown.ts` co-located under `src/lib/components/chat/`. |
 | 2026-06-08 | ADR-015: session tabs from main integrated into `SessionWorkspace`; route id wired to `startScaffoldRequest`. |
+| 2026-06-08 | ADR-015: history page lists localStorage sessions; click opens `/session/:id`. |
 | 2026-06-08 | ADR-002: block crawlers (`robots.txt`) and `noindex` meta — app is not for public SEO. |
