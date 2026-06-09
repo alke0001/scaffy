@@ -12,12 +12,7 @@
 		updateMessage,
 		type ChatMode,
 	} from '$lib/chat/message-actions.js';
-	import {
-		setScaffoldError,
-		setScaffolds,
-		startScaffoldRequest,
-		getScaffolds,
-	} from '$lib/session.svelte.js';
+	import { setScaffoldError, setScaffolds, startScaffoldRequest } from '$lib/session.svelte.js';
 	import type { StructuredScaffoldOutput } from '$lib/types/scaffold.js';
 	import { isThreadBusy, type ChatMessage } from '$lib/types/chat-message.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -48,7 +43,7 @@
 		const assistant = createAssistantPlaceholder();
 		learnMessages = [...learnMessages, createUserMessage(text), assistant];
 
-		startScaffoldRequest();
+		const sessionId = startScaffoldRequest(text);
 
 		try {
 			const data = await fetchJson<StructuredScaffoldOutput>('/api/scaffold', {
@@ -56,14 +51,14 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ prompt: text }),
 			});
-			setScaffolds(data.scaffolds);
+			setScaffolds(data.scaffolds, sessionId);
 			learnMessages = removeMessage(learnMessages, assistant.id);
 			if (import.meta.env.DEV) {
-				console.log('[chat-panel] scaffold ready', getScaffolds().length, 'steps');
+				console.log('[chat-panel] scaffold ready', data.scaffolds.length, 'steps');
 			}
 		} catch (e) {
 			const message = e instanceof Error ? e.message : 'Request failed.';
-			setScaffoldError(message);
+			setScaffoldError(message, sessionId);
 			learnMessages = failAssistant(learnMessages, assistant.id, message);
 		}
 	}

@@ -2,7 +2,12 @@
 	import { onMount } from 'svelte';
 	import loader from '@monaco-editor/loader';
 	import type * as Monaco from 'monaco-editor';
-	import { getScaffolds } from '$lib/session.svelte.js';
+	import {
+		getActiveSession,
+		getScaffolds,
+		getSessionStatus,
+		markSessionCompleted,
+	} from '$lib/session.svelte.js';
 	import type { KnowledgeCheck } from '$lib/types/scaffold.js';
 	import LearningCard from '$lib/components/editor/learning-card.svelte';
 
@@ -10,8 +15,11 @@
 	let editor = $state<Monaco.editor.IStandaloneCodeEditor | null>(null);
 	let editorReady = $state(false);
 
+	const activeSession = $derived(getActiveSession());
+	const activeStatus = $derived(getSessionStatus());
 	const scaffolds = $derived(getScaffolds());
 
+	let currentSessionId = $state<string | null>(null);
 	let currentIndex = $state(0);
 	let currentQuestion = $state<KnowledgeCheck | null>(null);
 	let selectedOption = $state<string | null>(null);
@@ -30,22 +38,52 @@
 		editorReady = true;
 	});
 
-	$effect(() => {
-		if (!editorReady || !editor || scaffolds.length === 0) return;
-
-		if (currentIndex === 0 && currentQuestion === null) {
-			loadNextScaffold();
-		}
-	});
-
-	$effect(() => {
-		if (scaffolds.length > 0 || !editor) return;
-
-		editor.setValue('');
+	function resetEditorState() {
 		currentIndex = 0;
 		currentQuestion = null;
 		selectedOption = null;
 		showLearningCard = false;
+	}
+
+	$effect(() => {
+		if (!editorReady || !editor) return;
+
+		if (!activeSession || activeStatus === 'idle') {
+			editor.setValue('');
+			resetEditorState();
+			currentSessionId = null;
+			return;
+		}
+
+		if (activeStatus === 'loading') {
+			editor.setValue('// Erzeuge Session…');
+			resetEditorState();
+			currentSessionId = activeSession.id;
+			return;
+		}
+
+		if (activeSession.completed) {
+			const lastCode = scaffolds.at(-1)?.codeSnippet ?? '';
+			editor.setValue(lastCode);
+			currentIndex = scaffolds.length;
+			currentQuestion = null;
+			selectedOption = null;
+			showLearningCard = false;
+			currentSessionId = activeSession.id;
+			return;
+		}
+
+		const sessionSwitched = activeSession.id !== currentSessionId;
+		if (sessionSwitched) {
+			currentSessionId = activeSession.id;
+			resetEditorState();
+		}
+
+		if (sessionSwitched || currentQuestion === null) {
+			if (scaffolds.length > 0) {
+				loadNextScaffold();
+			}
+		}
 	});
 
 	function loadNextScaffold() {
@@ -71,7 +109,15 @@
 
 		if (selectedOption === currentQuestion.correctOptionId) {
 			currentQuestion = null;
+			if (currentIndex >= scaffolds.length) {
+				markSessionCompleted();
+				return;
+			}
+
 			loadNextScaffold();
+			if (currentIndex >= scaffolds.length && !currentQuestion) {
+				markSessionCompleted();
+			}
 			return;
 		}
 
