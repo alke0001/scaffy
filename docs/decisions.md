@@ -565,3 +565,4 @@ Scaffy grew separate surfaces (home, session, history) plus shared chrome (`AppT
 | 2026-06-08 | ADR-016 Accepted: routes vs feature views vs ui/ components; `component-layout.mdc` for agents. |
 | 2026-06-08 | ADR-012: `render-markdown.ts` co-located under `src/lib/components/chat/`. |
 | 2026-06-08 | ADR-015: session tabs from main integrated into `SessionWorkspace`; route id wired to `startScaffoldRequest`. |
+| 2026-06-08 | ADR-002: block crawlers (`robots.txt`) and `noindex` meta — app is not for public SEO. |
