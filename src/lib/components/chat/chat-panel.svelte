@@ -17,6 +17,12 @@
 	import { isThreadBusy, type ChatMessage } from '$lib/types/chat-message.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 
+	interface Props {
+		sessionId?: string;
+	}
+
+	let { sessionId }: Props = $props();
+
 	let mode = $state<ChatMode>('learn');
 	let learnMessages = $state<ChatMessage[]>([]);
 	let askMessages = $state<ChatMessage[]>([]);
@@ -43,7 +49,7 @@
 		const assistant = createAssistantPlaceholder();
 		learnMessages = [...learnMessages, createUserMessage(text), assistant];
 
-		const sessionId = startScaffoldRequest(text);
+		const resolvedSessionId = startScaffoldRequest(text, sessionId);
 
 		try {
 			const data = await fetchJson<StructuredScaffoldOutput>('/api/scaffold', {
@@ -51,14 +57,14 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ prompt: text }),
 			});
-			setScaffolds(data.scaffolds, sessionId);
+			setScaffolds(data.scaffolds, resolvedSessionId);
 			learnMessages = removeMessage(learnMessages, assistant.id);
 			if (import.meta.env.DEV) {
 				console.log('[chat-panel] scaffold ready', data.scaffolds.length, 'steps');
 			}
 		} catch (e) {
 			const message = e instanceof Error ? e.message : 'Request failed.';
-			setScaffoldError(message, sessionId);
+			setScaffoldError(message, resolvedSessionId);
 			learnMessages = failAssistant(learnMessages, assistant.id, message);
 		}
 	}

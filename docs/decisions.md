@@ -455,15 +455,16 @@ flowchart TB
 
 ### Context
 
-The app previously rendered Monaco + ChatPanel on `/`. The product needs a focused prompt-entry home screen (no editor) and a separate session workspace. A parallel branch adds localStorage session persistence and edits `session.svelte.ts`, `chat-panel.svelte`, and `monaco-editor.svelte` — this ADR ships a **merge-safe** route split without touching those modules.
+The app previously rendered Monaco + ChatPanel on `/`. The product needs a focused prompt-entry home screen (no editor) and a separate session workspace. PR #21 merged localStorage session tabs on `/`; this ADR splits routes while **preserving** tab UI and store behavior on `/session/[id]`.
 
 ### Decision
 
 - **`/`** — `StartLearningSession` home: centered layout, logo, embedded `ChatPanel` (unchanged), example prompt chips, external **start session** button.
-- **`/session/[id]`** — existing editor split (Monaco left, ChatPanel right); 1:1 move from former root `+page.svelte`.
+- **`/session/[id]`** — `SessionWorkspace`: editor split (Monaco left, ChatPanel right) plus **session tabs** from PR #21 (`SessionTabs`); URL `:id` syncs with `setActiveSessionId` when the session exists in localStorage.
 - **`/history`** — placeholder `HistoryPage` component; list UI deferred to ADR-014 persistence branch.
 - **App shell:** `AppTitleBar` in root `+layout.svelte` — **home** and **history** nav buttons + About dialog (no route breadcrumb).
-- **Navigation (Phase 1):** `goto('/session/:id', { state: { prompt } })` via the History API — no new persistence store on this branch. Session route prefills `#chat-prompt` from `history.state`; user submits manually (no auto-start).
+- **Navigation:** `goto('/session/:id', { state: { prompt } })`; session route prefills `#chat-prompt` from `history.state`; user submits manually (no auto-start).
+- **Session id alignment:** `ChatPanel` accepts optional `sessionId`; `startScaffoldRequest(prompt, preferredId?)` uses the route id so Home navigation and localStorage tabs stay consistent.
 - **Example chips:** copy text into the chat textarea via DOM (`#chat-prompt`) to avoid ChatPanel prop changes.
 - **Home design tokens:** `--home-*` and `--logo-*` CSS variables in `layout.css`.
 
@@ -475,9 +476,9 @@ The app previously rendered Monaco + ChatPanel on `/`. The product needs a focus
 
 ### Consequences
 
-- Prompt survives navigation within the same tab session only (lost on reload until ADR-014 adapter lands).
-- Home polish (validation feedback, custom prompt card) follows after branch merge and ChatPanel refactor.
-- New files: `src/lib/components/home/*`, `src/routes/session/[id]/+page.svelte`, `src/routes/history/+page.svelte`, `src/lib/components/history/history-page.svelte`.
+- Prompt survives navigation within the same tab session only (lost on reload until full ADR-014 port; inline localStorage in `session.svelte.ts` already persists sessions).
+- Tab select navigates via `goto('/session/:id')`; closing the last tab returns to `/`.
+- New files: `src/lib/components/home/*`, `src/lib/components/session/*`, `src/routes/session/[id]/+page.svelte`, `src/routes/history/+page.svelte`, `src/lib/components/history/history-page.svelte`.
 
 ---
 
@@ -563,4 +564,4 @@ Scaffy grew separate surfaces (home, session, history) plus shared chrome (`AppT
 | 2026-05-31 | ADR-006: scaffolded Socratic prompt — beginner-first teaching, max 2 question-only turns, generic (not single exercise storyline).      |
 | 2026-06-08 | ADR-016 Accepted: routes vs feature views vs ui/ components; `component-layout.mdc` for agents. |
 | 2026-06-08 | ADR-012: `render-markdown.ts` co-located under `src/lib/components/chat/`. |
-| 2026-06-08 | ADR-002: block crawlers (`robots.txt`) and `noindex` meta — app is not for public SEO. |
+| 2026-06-08 | ADR-015: session tabs from main integrated into `SessionWorkspace`; route id wired to `startScaffoldRequest`. |
