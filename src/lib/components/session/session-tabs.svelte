@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { deleteSession, getActiveSessionId, getSessions } from '$lib/session.svelte.js';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 
 	interface Props {
 		onSelectSession: (id: string) => void;
@@ -10,6 +13,13 @@
 
 	const sessions = $derived(getSessions());
 	const activeSessionId = $derived(getActiveSessionId());
+	const pathname = $derived(page.url.pathname);
+	const isHome = $derived(pathname === '/');
+
+	function goHome() {
+		if (isHome) return;
+		goto(resolve('/'));
+	}
 
 	function truncatePrompt(prompt: string) {
 		return prompt.length > 28 ? `${prompt.slice(0, 28)}…` : prompt;
@@ -25,8 +35,8 @@
 		onDeleteSession?.(id);
 	}
 </script>
-
-<div class="session-tabs mb-2 flex min-h-12 items-center gap-2 overflow-x-auto px-2 text-sm">
+<!-- class="session-tabs mb-2 flex min-h-12 items-center gap-2 overflow-x-auto px-2 text-sm" SO war die klasse vom Button vorher. Weiß net ob änderungen sinnvoll. So verändert sich die tab größe halt nimmer. Find ich persönlich besser-->
+<div class="session-tabs mb-2 flex flex-nowrap items-center gap-2 overflow-x-auto px-2 text-sm">
 	{#if sessions.length > 0}
 		{#each sessions as session (session.id)}
 			<div
@@ -41,9 +51,10 @@
 				class:text-orange-300={session.id !== activeSessionId && !session.completed}
 				class:border-orange-500={session.id !== activeSessionId && !session.completed}
 			>
+			<!-- class="flex items-center px-3 py-1 focus:outline-none" SO war die klasse vom Button vorher. Weiß net ob änderungen sinnvoll. So verändert sich die tab größe halt nimmer. Find ich persönlich besser-->
 				<button
 					type="button"
-					class="flex items-center px-3 py-1 focus:outline-none"
+					class="flex-none w-40 flex items-center px-3 py-1 truncate focus:outline-none"
 					onclick={() => handleSelect(session.id)}
 				>
 					{truncatePrompt(session.prompt)}
@@ -87,4 +98,12 @@
 			Noch keine Session vorhanden. Erzeuge eine neue Session über den Lernmodus.
 		</div>
 	{/if}
+	<button
+		class="flex-none w-10 h-10 flex items-center justify-center shrink-0 ml-2"
+		onclick={goHome}
+		disabled={isHome}
+		aria-label="New session"
+	>
+		+
+	</button>
 </div>
