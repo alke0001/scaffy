@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import loader from '@monaco-editor/loader';
 	import type * as Monaco from 'monaco-editor';
 	import {
@@ -13,12 +13,17 @@
 
 	let editorContainer = $state<HTMLDivElement | null>(null);
 	let editor = $state<Monaco.editor.IStandaloneCodeEditor | null>(null);
+	let monacoApi = $state<typeof import('monaco-editor') | null>(null);
+	let questionOverlay = $state<HTMLDivElement | null>(null);
 	let editorReady = $state(false);
+	let overlayTop = $state(0);
+	let scrollSubscription = $state<Monaco.IDisposable | null>(null);
+	let layoutSubscription = $state<Monaco.IDisposable | null>(null);
+	let contentSubscription = $state<Monaco.IDisposable | null>(null);
 
 	const activeSession = $derived(getActiveSession());
 	const activeStatus = $derived(getSessionStatus());
 	const scaffolds = $derived(getScaffolds());
-
 	let currentSessionId = $state<string | null>(null);
 	let currentIndex = $state(0);
 	let currentQuestion = $state<KnowledgeCheck | null>(null);
@@ -29,13 +34,26 @@
 		if (!editorContainer) return;
 
 		const monaco = await loader.init();
-		editor = monaco.editor.create(editorContainer, {
+		monacoApi = monaco;
+		const createdEditor = monaco.editor.create(editorContainer, {
 			value: '',
 			language: 'html',
 			theme: 'vs-dark',
 			automaticLayout: true,
 		});
+		editor = createdEditor;
+
+		scrollSubscription = createdEditor.onDidScrollChange(() => updateQuestionPosition());
+		layoutSubscription = createdEditor.onDidLayoutChange(() => updateQuestionPosition());
+		contentSubscription = createdEditor.onDidChangeModelContent(() => updateQuestionPosition());
+
 		editorReady = true;
+	});
+
+	onDestroy(() => {
+		scrollSubscription?.dispose();
+		layoutSubscription?.dispose();
+		contentSubscription?.dispose();
 	});
 
 	function resetEditorState() {
@@ -43,6 +61,27 @@
 		currentQuestion = null;
 		selectedOption = null;
 		showLearningCard = false;
+		overlayTop = 0;
+	}
+
+	function updateQuestionPosition() {
+		if (!editor || !editorContainer || !currentQuestion || !monacoApi) return;
+		const model = editor.getModel();
+		if (!model) return;
+
+		const lastLine = model.getLineCount();
+		const lineHeight = editor.getOption(monacoApi.editor.EditorOption.lineHeight);
+		const contentTop = editor.getTopForLineNumber(lastLine) + lineHeight - editor.getScrollTop();
+		const editorHeight = editor.getLayoutInfo().height;
+		const overlayHeight = questionOverlay?.offsetHeight ?? 0;
+		const margin = 12;
+
+		let top = Math.max(margin, contentTop);
+		if (top + overlayHeight + margin > editorHeight) {
+			top = Math.max(margin, editorHeight - overlayHeight - margin);
+		}
+
+		overlayTop = top;
 	}
 
 	$effect(() => {
@@ -86,7 +125,7 @@
 		}
 	});
 
-	function loadNextScaffold() {
+	async function loadNextScaffold() {
 		if (!editor) return;
 
 		const scaffold = scaffolds[currentIndex];
@@ -102,6 +141,9 @@
 		showLearningCard = false;
 		currentQuestion = scaffold.knowledgeCheck;
 		currentIndex++;
+
+		await tick();
+		updateQuestionPosition();
 	}
 
 	function handleOptionChange() {
@@ -130,39 +172,58 @@
 	}
 </script>
 
-<div bind:this={editorContainer} class="editor"></div>
-{#if currentQuestion}
-	<div class="question-box">
-		<h2>{currentQuestion.question}</h2>
+<div class="editor-wrapper">
+	<div bind:this={editorContainer} class="editor"></div>
 
-		{#each currentQuestion.options as option (option.id)}
-			<label class="option">
-				<input
-					type="radio"
-					name="quiz"
-					value={option.id}
-					bind:group={selectedOption}
-					onchange={handleOptionChange}
-					disabled={showLearningCard}
-				/>
-				({option.id}) {option.text}
-			</label>
-		{/each}
+	{#if currentQuestion}
+		<div bind:this={questionOverlay} class="question-overlay" style="top: {overlayTop}px;">
+			<div class="question-box">
+				<h2>{currentQuestion.question}</h2>
 
-		{#if showLearningCard}
-			<LearningCard message={currentQuestion.explanation} onUnderstand={acknowledgeError} />
-		{/if}
-	</div>
-{:else if scaffolds.length > 0 && currentIndex < scaffolds.length}
+				{#each currentQuestion.options as option (option.id)}
+					<label class="option">
+						<input
+							type="radio"
+							name="quiz"
+							value={option.id}
+							bind:group={selectedOption}
+							onchange={handleOptionChange}
+							disabled={showLearningCard}
+						/>
+						({option.id}) {option.text}
+					</label>
+				{/each}
+
+				{#if showLearningCard}
+					<LearningCard message={currentQuestion.explanation} onUnderstand={acknowledgeError} />
+				{/if}
+			</div>
+		</div>
+	{/if}
+</div>
+
+{#if !currentQuestion && scaffolds.length > 0 && currentIndex < scaffolds.length}
 	<button type="button" onclick={loadNextScaffold}>Weiter</button>
 {/if}
 
 <style>
+	.editor-wrapper {
+		position: relative;
+	}
+
 	.editor {
 		height: 70vh;
 		width: 100%;
 		border-radius: 12px;
 		overflow: hidden;
+	}
+
+	.question-overlay {
+		position: absolute;
+		left: 1rem;
+		right: 1rem;
+		z-index: 10;
+		pointer-events: auto;
 	}
 
 	button {
