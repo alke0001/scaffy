@@ -97,8 +97,11 @@ export function getSessionError(): string | null {
 	return errorMessage;
 }
 
-export function startScaffoldRequest(prompt: string): string {
-	const id = createSessionId();
+export function startScaffoldRequest(prompt: string, preferredId?: string): string {
+	const id =
+		preferredId && !sessions.some((session) => session.id === preferredId)
+			? preferredId
+			: createSessionId();
 	const session: SessionRecord = {
 		id,
 		prompt,
