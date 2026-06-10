@@ -29,7 +29,8 @@
 
 	function openSession(id: string) {
 		setActiveSessionId(id);
-		goto(resolve('/session/[id]', { id }));	}
+		goto(resolve('/session/[id]', { id }));
+	}
 </script>
 
 <div class="flex h-full flex-col overflow-auto bg-home-bg px-4 py-8 text-foreground">
