@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import ChatPanel from '$lib/components/chat/chat-panel.svelte';
 	import { HOME_EXAMPLE_PROMPTS } from '$lib/components/home/example-prompts.js';
 	import { requestScaffold } from '$lib/learn/request-scaffold.js';
@@ -44,7 +45,7 @@
 		const id = crypto.randomUUID();
 
 		void requestScaffold(prompt, id);
-		await goto(`/session/${id}`);
+		await goto(resolve('/session/[id]', { id }));
 		isStarting = false;
 	}
 

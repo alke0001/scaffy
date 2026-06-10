@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import ChatPanel from '$lib/components/chat/chat-panel.svelte';
 	import MonacoEditor from '$lib/components/editor/monaco-editor.svelte';
 	import SessionTabs from '$lib/components/session/session-tabs.svelte';
@@ -21,19 +22,19 @@
 
 	function selectSession(id: string) {
 		if (id === sessionId) return;
-		goto(`/session/${id}`);
+		goto(resolve('/session/[id]', { id }));
 	}
 
 	function handleDeleteSession(deletedId: string) {
 		const sessions = getSessions();
 		if (sessions.length === 0) {
-			goto('/');
+			goto(resolve('/'));
 			return;
 		}
 
 		if (deletedId === sessionId) {
 			const nextId = getActiveSessionId() ?? sessions[0]?.id;
-			if (nextId) goto(`/session/${nextId}`);
+			if (nextId) goto(resolve('/session/[id]', { id: nextId }));
 		}
 	}
 </script>

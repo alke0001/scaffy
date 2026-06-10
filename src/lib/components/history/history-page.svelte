@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import type { SessionRecord } from '$lib/session.svelte.js';
 	import { getSessions, setActiveSessionId } from '$lib/session.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -28,8 +29,7 @@
 
 	function openSession(id: string) {
 		setActiveSessionId(id);
-		goto(`/session/${id}`);
-	}
+		goto(resolve('/session/[id]', { id }));	}
 </script>
 
 <div class="flex h-full flex-col overflow-auto bg-home-bg px-4 py-8 text-foreground">

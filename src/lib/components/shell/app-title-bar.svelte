@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import CircleHelp from '@lucide/svelte/icons/circle-help';
 
@@ -14,12 +15,12 @@
 
 	function goHome() {
 		if (isHome) return;
-		goto('/');
+		goto(resolve('/'));
 	}
 
 	function goHistory() {
 		if (isHistory) return;
-		goto('/history');
+		goto(resolve('/history'));
 	}
 </script>
 
