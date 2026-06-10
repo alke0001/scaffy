@@ -23,9 +23,7 @@
 	}
 </script>
 
-<header
-	class="flex h-10 shrink-0 items-center justify-between border-b border-home-border px-4"
->
+<header class="flex h-10 shrink-0 items-center justify-between border-b border-home-border px-4">
 	<span class="text-sm text-muted-foreground">scaffy</span>
 
 	<div class="flex items-center gap-2">

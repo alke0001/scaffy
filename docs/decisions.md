@@ -31,8 +31,8 @@ ADR = Architecture Decision Record
 | [ADR-012](#adr-012-ask-markdown-rendering-during-stream)                  | Ask markdown rendering during stream                   | Accepted                           |
 | [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd)           | Documentation split: CLAUDE.md vs decisions.md         | Accepted                           |
 | [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) | Learning session persistence port — localStorage first | Accepted (adapter not implemented) |
-| [ADR-015](#adr-015-home-vs-session-route-split)                            | Home vs session route split                            | Accepted                           |
-| [ADR-016](#adr-016-routes-feature-views-vs-ui-components)                 | Routes, feature views, vs ui/ components             | Accepted                           |
+| [ADR-015](#adr-015-home-vs-session-route-split)                           | Home vs session route split                            | Accepted                           |
+| [ADR-016](#adr-016-routes-feature-views-vs-ui-components)                 | Routes, feature views, vs ui/ components               | Accepted                           |
 
 ---
 
@@ -518,13 +518,13 @@ Scaffy grew separate surfaces (home, session, history) plus shared chrome (`AppT
 
 ### Examples (this repo)
 
-| Piece | Location | Why |
-| ----- | -------- | --- |
-| `/` route shell | `routes/+page.svelte` → `StartLearningSession` | Thin route |
-| Home screen | `components/home/start-learning-session.svelte` | Copy, ChatPanel wiring, examples |
-| Chip grid | `components/ui/chip/chip-grid.svelte` | Generic; no “Try one of these” inside |
-| Logo | `lib/assets/scaffy-logo.svg` | Static asset |
-| App chrome | `components/shell/app-title-bar.svelte` | Cross-route shell, not `ui/` |
+| Piece           | Location                                        | Why                                   |
+| --------------- | ----------------------------------------------- | ------------------------------------- |
+| `/` route shell | `routes/+page.svelte` → `StartLearningSession`  | Thin route                            |
+| Home screen     | `components/home/start-learning-session.svelte` | Copy, ChatPanel wiring, examples      |
+| Chip grid       | `components/ui/chip/chip-grid.svelte`           | Generic; no “Try one of these” inside |
+| Logo            | `lib/assets/scaffy-logo.svg`                    | Static asset                          |
+| App chrome      | `components/shell/app-title-bar.svelte`         | Cross-route shell, not `ui/`          |
 
 ### Alternatives considered
 
@@ -561,8 +561,8 @@ Scaffy grew separate surfaces (home, session, history) plus shared chrome (`AppT
 | 2026-05-31 | ADR-006: Ask tutor — Socratic system prompt, temperature 0.5, history capped to 30 messages (~15 turns).                                |
 | 2026-05-31 | ADR-006: tightened Socratic prompt — no full code on first "how do I" reply; snippets only after engagement or second ask.              |
 | 2026-05-31 | ADR-006: scaffolded Socratic prompt — beginner-first teaching, max 2 question-only turns, generic (not single exercise storyline).      |
-| 2026-06-08 | ADR-016 Accepted: routes vs feature views vs ui/ components; `component-layout.mdc` for agents. |
-| 2026-06-08 | ADR-012: `render-markdown.ts` co-located under `src/lib/components/chat/`. |
-| 2026-06-08 | ADR-015: session tabs from main integrated into `SessionWorkspace`; route id wired to `startScaffoldRequest`. |
-| 2026-06-08 | ADR-015: history page lists localStorage sessions; click opens `/session/:id`. |
-| 2026-06-08 | ADR-002: block crawlers (`robots.txt`) and `noindex` meta — app is not for public SEO. |
+| 2026-06-08 | ADR-016 Accepted: routes vs feature views vs ui/ components; `component-layout.mdc` for agents.                                         |
+| 2026-06-08 | ADR-012: `render-markdown.ts` co-located under `src/lib/components/chat/`.                                                              |
+| 2026-06-08 | ADR-015: session tabs from main integrated into `SessionWorkspace`; route id wired to `startScaffoldRequest`.                           |
+| 2026-06-08 | ADR-015: history page lists localStorage sessions; click opens `/session/:id`.                                                          |
+| 2026-06-08 | ADR-002: block crawlers (`robots.txt`) and `noindex` meta — app is not for public SEO.                                                  |

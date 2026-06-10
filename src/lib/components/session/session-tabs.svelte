@@ -1,9 +1,5 @@
 <script lang="ts">
-	import {
-		deleteSession,
-		getActiveSessionId,
-		getSessions,
-	} from '$lib/session.svelte.js';
+	import { deleteSession, getActiveSessionId, getSessions } from '$lib/session.svelte.js';
 
 	interface Props {
 		onSelectSession: (id: string) => void;

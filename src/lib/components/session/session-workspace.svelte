@@ -4,11 +4,7 @@
 	import MonacoEditor from '$lib/components/editor/monaco-editor.svelte';
 	import SessionTabs from '$lib/components/session/session-tabs.svelte';
 	import * as Resizable from '$lib/components/ui/resizable/index.js';
-	import {
-		getActiveSessionId,
-		getSessions,
-		setActiveSessionId,
-	} from '$lib/session.svelte.js';
+	import { getActiveSessionId, getSessions, setActiveSessionId } from '$lib/session.svelte.js';
 
 	interface Props {
 		sessionId: string;

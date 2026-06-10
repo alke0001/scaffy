@@ -25,14 +25,14 @@
 							type="button"
 							variant="ghost"
 							{...props}
-							class="h-auto w-full justify-start whitespace-normal rounded-lg border border-dashed border-home-border bg-home-card px-4 py-3 text-left text-sm font-normal text-foreground shadow-none transition-colors hover:!border-home-accent/50 hover:!bg-home-card hover:!text-home-accent dark:hover:!bg-home-card active:translate-y-0"
+							class="h-auto w-full justify-start rounded-lg border border-dashed border-home-border bg-home-card px-4 py-3 text-left text-sm font-normal whitespace-normal text-foreground shadow-none transition-colors hover:!border-home-accent/50 hover:!bg-home-card hover:!text-home-accent active:translate-y-0 dark:hover:!bg-home-card"
 							onclick={() => onSelect(item.prompt)}
 						>
 							{item.label}
 						</Button>
 					{/snippet}
 				</Tooltip.Trigger>
-				<Tooltip.Content side="top" class="max-w-sm whitespace-normal text-left leading-relaxed">
+				<Tooltip.Content side="top" class="max-w-sm text-left leading-relaxed whitespace-normal">
 					{item.prompt}
 				</Tooltip.Content>
 			</Tooltip.Root>
