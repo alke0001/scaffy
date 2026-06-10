@@ -35,6 +35,7 @@
 		onDeleteSession?.(id);
 	}
 </script>
+
 <!-- class="session-tabs mb-2 flex min-h-12 items-center gap-2 overflow-x-auto px-2 text-sm" SO war die klasse vom Button vorher. Weiß net ob änderungen sinnvoll. So verändert sich die tab größe halt nimmer. Find ich persönlich besser-->
 <div class="session-tabs mb-2 flex flex-nowrap items-center gap-2 overflow-x-auto px-2 text-sm">
 	{#if sessions.length > 0}
@@ -51,10 +52,10 @@
 				class:text-orange-300={session.id !== activeSessionId && !session.completed}
 				class:border-orange-500={session.id !== activeSessionId && !session.completed}
 			>
-			<!-- class="flex items-center px-3 py-1 focus:outline-none" SO war die klasse vom Button vorher. Weiß net ob änderungen sinnvoll. So verändert sich die tab größe halt nimmer. Find ich persönlich besser-->
+				<!-- class="flex items-center px-3 py-1 focus:outline-none" SO war die klasse vom Button vorher. Weiß net ob änderungen sinnvoll. So verändert sich die tab größe halt nimmer. Find ich persönlich besser-->
 				<button
 					type="button"
-					class="flex-none w-40 flex items-center px-3 py-1 truncate focus:outline-none"
+					class="flex w-40 flex-none items-center truncate px-3 py-1 focus:outline-none"
 					onclick={() => handleSelect(session.id)}
 				>
 					{truncatePrompt(session.prompt)}
@@ -99,7 +100,7 @@
 		</div>
 	{/if}
 	<button
-		class="flex-none w-10 h-10 flex items-center justify-center shrink-0 ml-2"
+		class="ml-2 flex h-10 w-10 flex-none shrink-0 items-center justify-center"
 		onclick={goHome}
 		disabled={isHome}
 		aria-label="New session"
