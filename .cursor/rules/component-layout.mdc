@@ -30,10 +30,11 @@ When adding or moving Svelte UI, follow this split. **If placement is unclear, u
 
 ## 3. Generic UI (`src/lib/components/ui/`)
 
-- **Domain-agnostic** building blocks aligned with **shadcn-svelte** (Button, Card, Dialog, …).
-- Compose from existing shadcn primitives before raw `<button>` / custom markup; add new shadcn components via `pnpm dlx shadcn-svelte@latest add <name>` when needed.
+- **Domain-agnostic** building blocks aligned with **shadcn-svelte** (Button, Card, Dialog, ScrollArea, …).
+- **Install via CLI first:** `pnpm dlx shadcn-svelte@latest add <name>` — do not hand-roll primitives that shadcn provides.
+- **Custom `ui/` only when:** composing shadcn parts (e.g. `ChipGrid`) or a documented exception in `docs/decisions.md` (see **ADR-017**).
 - **Props in, events out** — no hardcoded product strings, example lists, or API calls.
-- Parent/feature component supplies labels, items, and handlers.
+- Barrel `index.ts` per folder: export `Root` + named alias (`ScrollArea`, `Button`, …).
 
 ```svelte
 <!-- ✅ ui/chip/chip-grid.svelte — generic; parent supplies ChipItem { label, prompt } -->
