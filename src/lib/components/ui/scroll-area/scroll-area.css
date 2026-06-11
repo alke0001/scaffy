@@ -1,0 +1,119 @@
+/**
+ * ScrollArea scrollbar inset + native-scroll-x for markdown <pre>. ADR-017.
+ */
+:root {
+	--scaffy-scrollbar-inset: 0.375rem;
+	--scaffy-scrollbar-size: 0.375rem;
+	--scaffy-scrollbar-visible-opacity: 0.72;
+	--scaffy-scrollbar-fade-in-duration: 140ms;
+	--scaffy-scrollbar-fade-in-ease: cubic-bezier(0.16, 1, 0.3, 1);
+	--scaffy-scrollbar-fade-out-duration: 520ms;
+	--scaffy-scrollbar-fade-out-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-slot='scroll-area-scrollbar'] {
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity var(--scaffy-scrollbar-fade-out-duration)
+		var(--scaffy-scrollbar-fade-out-ease);
+}
+
+@starting-style {
+	[data-slot='scroll-area-scrollbar'][data-state='visible'] {
+		opacity: 0;
+	}
+}
+
+[data-slot='scroll-area-scrollbar'][data-state='visible'] {
+	opacity: var(--scaffy-scrollbar-visible-opacity);
+	pointer-events: auto;
+	transition: opacity var(--scaffy-scrollbar-fade-in-duration) var(--scaffy-scrollbar-fade-in-ease);
+}
+
+[data-slot='scroll-area-scrollbar'][data-orientation='vertical'] {
+	top: var(--scaffy-scrollbar-inset) !important;
+	right: var(--scaffy-scrollbar-inset) !important;
+	bottom: calc(
+		var(--bits-scroll-area-corner-height, 0px) + var(--scaffy-scrollbar-inset)
+	) !important;
+	box-sizing: border-box;
+	width: var(--scaffy-scrollbar-size) !important;
+	height: auto !important;
+	padding: 0 !important;
+	border: 0 !important;
+}
+
+[data-slot='scroll-area-scrollbar'][data-orientation='horizontal'] {
+	left: var(--scaffy-scrollbar-inset) !important;
+	right: calc(var(--bits-scroll-area-corner-width, 0px) + var(--scaffy-scrollbar-inset)) !important;
+	bottom: var(--scaffy-scrollbar-inset) !important;
+	box-sizing: border-box;
+	height: var(--scaffy-scrollbar-size) !important;
+	width: auto !important;
+	padding: 0 !important;
+	border: 0 !important;
+}
+
+[data-slot='scroll-area-thumb'] {
+	box-sizing: border-box;
+	flex: 0 0 auto !important;
+}
+
+[data-slot='scroll-area-scrollbar'][data-orientation='vertical'] [data-slot='scroll-area-thumb'] {
+	width: 100% !important;
+	max-width: var(--scaffy-scrollbar-size) !important;
+}
+
+[data-slot='scroll-area-scrollbar'][data-orientation='horizontal'] [data-slot='scroll-area-thumb'] {
+	height: 100% !important;
+	max-height: var(--scaffy-scrollbar-size) !important;
+}
+
+.native-scroll-x {
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.native-scroll-x:hover {
+	scrollbar-width: thin;
+	scrollbar-color: color-mix(
+			in oklch,
+			var(--muted-foreground) calc(var(--scaffy-scrollbar-visible-opacity) * 100%),
+			transparent
+		)
+		transparent;
+}
+
+.native-scroll-x::-webkit-scrollbar {
+	height: calc(var(--scaffy-scrollbar-size) + 2 * var(--scaffy-scrollbar-inset));
+}
+
+.native-scroll-x::-webkit-scrollbar-track {
+	background: transparent;
+	margin-inline: var(--scaffy-scrollbar-inset);
+}
+
+.native-scroll-x::-webkit-scrollbar-thumb {
+	background-color: color-mix(
+		in oklch,
+		var(--muted-foreground) calc(var(--scaffy-scrollbar-visible-opacity) * 100%),
+		transparent
+	);
+	border: var(--scaffy-scrollbar-inset) solid transparent;
+	background-clip: padding-box;
+	border-radius: 9999px;
+	opacity: 1;
+	transition:
+		opacity var(--scaffy-scrollbar-fade-out-duration) var(--scaffy-scrollbar-fade-out-ease),
+		background-color var(--scaffy-scrollbar-fade-out-duration) var(--scaffy-scrollbar-fade-out-ease);
+}
+
+.native-scroll-x:hover::-webkit-scrollbar-thumb {
+	transition-duration: var(--scaffy-scrollbar-fade-in-duration);
+	transition-timing-function: var(--scaffy-scrollbar-fade-in-ease);
+}
+
+.native-scroll-x:not(:hover)::-webkit-scrollbar-thumb {
+	opacity: 0;
+	background-color: transparent;
+}

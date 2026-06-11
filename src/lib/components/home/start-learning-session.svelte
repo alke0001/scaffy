@@ -6,6 +6,7 @@
 	import { requestScaffold } from '$lib/learn/request-scaffold.js';
 	import { ChipGrid } from '$lib/components/ui/chip/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import scaffyLogo from '$lib/assets/scaffy-logo.svg';
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
@@ -57,7 +58,7 @@
 	});
 </script>
 
-<div class="flex h-full flex-col overflow-auto bg-home-bg text-foreground">
+<ScrollArea orientation="vertical" class="h-full bg-home-bg text-foreground">
 	<main class="flex flex-1 flex-col items-center px-4 py-10 sm:py-16">
 		<header class="mb-10 flex flex-col items-center gap-4 text-center">
 			<div class="flex items-center gap-3">
@@ -117,7 +118,7 @@
 			<ChipGrid items={HOME_EXAMPLE_PROMPTS} onSelect={fillPrompt} />
 		</section>
 	</main>
-</div>
+</ScrollArea>
 
 <style>
 	.home-chat-panel__body :global(textarea#chat-prompt) {

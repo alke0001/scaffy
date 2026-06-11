@@ -37,7 +37,7 @@ importers:
         specifier: ^3.12.1
         version: 3.12.2
       '@lucide/svelte':
-        specifier: ^1.16.0
+        specifier: ^1.17.0
         version: 1.17.0(svelte@5.56.2(@typescript-eslint/types@8.60.1))
       '@sveltejs/adapter-vercel':
         specifier: ^6.3.3

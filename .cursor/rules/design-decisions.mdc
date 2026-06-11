@@ -56,7 +56,7 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 ## Repository layout (source conventions)
 - **Routes:** `src/routes/**/+page.svelte` thin — import view from `lib/`; URL = folder (no `-page` suffix on route files).
 - **Feature views:** `src/lib/components/<area>/` (`home`, `history`, `chat`, `editor`, `shell`, …) — domain copy, data, wiring.
-- **Generic UI:** `src/lib/components/ui/` — domain-agnostic primitives on **shadcn-svelte**; compose before raw markup; `shadcn-svelte add` for new primitives.
+- **Generic UI:** `src/lib/components/ui/` — domain-agnostic primitives on **shadcn-svelte**; install via `shadcn-svelte add` before hand-rolling (ADR-017); custom `ui/` only when composing shadcn or documented in `docs/decisions.md`.
 - **Assets:** `src/lib/assets/` — static SVG/images; avoid Svelte wrappers unless dynamic/themed.
 - **Unclear placement?** Ask before creating components (ADR-016, `component-layout.mdc`).
 - **HTTP API:** `src/routes/api/<endpoint>/+server.ts` — one folder per surface (`scaffold` REST, `chat` SSE).

@@ -5,6 +5,7 @@
 	import MonacoEditor from '$lib/components/editor/monaco-editor.svelte';
 	import SessionTabs from '$lib/components/session/session-tabs.svelte';
 	import * as Resizable from '$lib/components/ui/resizable/index.js';
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import { getActiveSessionId, getSessions, setActiveSessionId } from '$lib/session.svelte.js';
 
 	interface Props {
@@ -44,17 +45,17 @@
 		<div class="hidden h-full md:block">
 			<Resizable.PaneGroup direction="horizontal" class="h-full">
 				<Resizable.Pane defaultSize={60} minSize={25} class="min-h-0">
-					<div class="h-full overflow-auto bg-background p-2">
+					<ScrollArea orientation="vertical" class="h-full bg-background p-2">
 						<SessionTabs onSelectSession={selectSession} onDeleteSession={handleDeleteSession} />
 						<MonacoEditor />
-					</div>
+					</ScrollArea>
 				</Resizable.Pane>
 				<Resizable.Handle class="cursor-col-resize hover:bg-border/80" />
 				<Resizable.Pane defaultSize={40} minSize={20} class="min-h-0">
 					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-						<div class="min-h-0 flex-1 overflow-auto p-2">
+						<ScrollArea orientation="vertical" class="min-h-0 flex-1 p-2">
 							<ChatPanel mode="ask" />
-						</div>
+						</ScrollArea>
 					</div>
 				</Resizable.Pane>
 			</Resizable.PaneGroup>
@@ -65,9 +66,9 @@
 				<SessionTabs onSelectSession={selectSession} onDeleteSession={handleDeleteSession} />
 				<MonacoEditor />
 			</section>
-			<section class="min-h-0 flex-2 overflow-auto border-t border-border p-2">
+			<ScrollArea orientation="vertical" class="min-h-0 flex-2 border-t border-border p-2">
 				<ChatPanel mode="ask" />
-			</section>
+			</ScrollArea>
 		</div>
 	</main>
 </div>
