@@ -16,5 +16,7 @@ export function renderMarkdown(source: string): string {
 	const raw = marked.parse(source, { async: false });
 	if (typeof raw !== 'string') return '';
 
-	return DOMPurify.sanitize(raw, { USE_PROFILES: { html: true } });
+	const withScrollablePre = raw.replaceAll('<pre>', '<pre class="native-scroll-x">');
+
+	return DOMPurify.sanitize(withScrollablePre, { USE_PROFILES: { html: true } });
 }

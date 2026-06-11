@@ -61,7 +61,4 @@
 	.chat-markdown :global(p:last-child) {
 		margin-bottom: 0;
 	}
-	.chat-markdown :global(pre) {
-		overflow-x: auto;
-	}
 </style>

@@ -3,6 +3,7 @@
 @import 'tw-animate-css';
 @import 'shadcn-svelte/tailwind.css';
 @import '@fontsource-variable/inter';
+@import '../lib/components/ui/scroll-area/scroll-area.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -151,21 +152,4 @@
 	html {
 		@apply font-sans;
 	}
-}
-* {
-	scrollbar-width: thin;
-	scrollbar-color: #3f3f46 transparent;
-}
-
-*::-webkit-scrollbar {
-	width: 10px;
-}
-
-*::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-	background-color: #3f3f46;
-	border-radius: 999px;
 }

@@ -4,6 +4,7 @@
 	import type { SessionRecord } from '$lib/session.svelte.js';
 	import { getSessions, setActiveSessionId } from '$lib/session.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 
 	const sessions = $derived(getSessions());
 
@@ -33,7 +34,7 @@
 	}
 </script>
 
-<div class="flex h-full flex-col overflow-auto bg-home-bg px-4 py-8 text-foreground">
+<ScrollArea orientation="vertical" class="h-full bg-home-bg px-4 py-8 text-foreground">
 	<header class="mx-auto w-full max-w-2xl">
 		<h1 class="text-lg font-medium">History</h1>
 		<p class="mt-1 text-sm text-muted-foreground">Past learning sessions from this browser.</p>
@@ -72,4 +73,4 @@
 			{/each}
 		</ul>
 	{/if}
-</div>
+</ScrollArea>

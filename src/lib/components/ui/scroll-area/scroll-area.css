@@ -1,0 +1,47 @@
+/**
+ * ScrollArea scrollbar inset + native-scroll-x for markdown <pre>. ADR-017.
+ */
+:root {
+	--scaffy-scrollbar-inset: 0.5rem;
+	--scaffy-scrollbar-size: 0.625rem;
+}
+
+[data-slot='scroll-area-scrollbar'][data-orientation='vertical'] {
+	top: var(--scaffy-scrollbar-inset) !important;
+	right: var(--scaffy-scrollbar-inset) !important;
+	bottom: calc(
+		var(--bits-scroll-area-corner-height, 0px) + var(--scaffy-scrollbar-inset)
+	) !important;
+	width: var(--scaffy-scrollbar-size) !important;
+	height: auto !important;
+}
+
+[data-slot='scroll-area-scrollbar'][data-orientation='horizontal'] {
+	left: var(--scaffy-scrollbar-inset) !important;
+	right: calc(var(--bits-scroll-area-corner-width, 0px) + var(--scaffy-scrollbar-inset)) !important;
+	bottom: var(--scaffy-scrollbar-inset) !important;
+	height: var(--scaffy-scrollbar-size) !important;
+	width: auto !important;
+}
+
+.native-scroll-x {
+	overflow-x: auto;
+	scrollbar-width: thin;
+	scrollbar-color: var(--muted-foreground) transparent;
+}
+
+.native-scroll-x::-webkit-scrollbar {
+	height: var(--scaffy-scrollbar-size);
+}
+
+.native-scroll-x::-webkit-scrollbar-track {
+	background: transparent;
+	margin-inline: var(--scaffy-scrollbar-inset);
+}
+
+.native-scroll-x::-webkit-scrollbar-thumb {
+	background-color: var(--muted-foreground);
+	border: calc(var(--scaffy-scrollbar-inset) / 2) solid transparent;
+	background-clip: padding-box;
+	border-radius: 9999px;
+}
