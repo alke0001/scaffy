@@ -7,7 +7,7 @@ marked.setOptions({
 });
 
 /**
- * Parse Markdown and sanitize HTML for {@html} in the Ask-mode chat only.
+ * Parse Markdown and sanitize HTML for {@html} in client components.
  * Client-only: imports DOMPurify (browser). Do not call from server routes.
  */
 export function renderMarkdown(source: string): string {
@@ -17,6 +17,9 @@ export function renderMarkdown(source: string): string {
 	if (typeof raw !== 'string') return '';
 
 	const withScrollablePre = raw.replaceAll('<pre>', '<pre class="native-scroll-x">');
+	const withScrollableTable = withScrollablePre
+		.replaceAll('<table>', '<div class="overflow-x-auto rounded-md border"><table>')
+		.replaceAll('</table>', '</table></div>');
 
-	return DOMPurify.sanitize(withScrollablePre, { USE_PROFILES: { html: true } });
+	return DOMPurify.sanitize(withScrollableTable, { USE_PROFILES: { html: true } });
 }
