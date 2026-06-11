@@ -1,0 +1,35 @@
+---
+description: Format new/changed files with Prettier; run ESLint before finishing
+alwaysApply: true
+---
+
+# Format & Lint (Agent workflow)
+
+When you **create or substantially edit** files in this repo:
+
+## 1. Prettier — immediately after writing
+
+Format every new or changed file right after it is written:
+
+```bash
+pnpm exec prettier --write <path>…
+```
+
+- Pass **explicit paths** (created/edited files), not the whole repo, unless many files changed.
+- Applies to source, config, and markdown files Prettier supports in this project.
+
+## 2. ESLint — before marking the task done
+
+Run a short lint check on the same touched paths:
+
+```bash
+pnpm exec eslint <path>…
+```
+
+- Fix auto-fixable issues in the same edit batch.
+- Resolve remaining errors; do not leave new lint failures from your changes.
+
+## When to skip
+
+- Read-only tasks (reviews, explanations, questions).
+- Changes limited to files outside Prettier/ESLint scope (e.g. binary assets).
