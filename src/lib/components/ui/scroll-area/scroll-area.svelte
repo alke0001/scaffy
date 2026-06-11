@@ -7,7 +7,8 @@
 		ref = $bindable(null),
 		viewportRef = $bindable(null),
 		class: className,
-		type = 'always',
+		type = 'hover',
+		scrollHideDelay = 0,
 		orientation = 'vertical',
 		scrollbarXClasses = '',
 		scrollbarYClasses = '',
@@ -24,6 +25,7 @@
 <ScrollAreaPrimitive.Root
 	bind:ref
 	{type}
+	{scrollHideDelay}
 	data-slot="scroll-area"
 	class={cn('relative min-h-0 min-w-0 overflow-hidden', className)}
 	{...restProps}

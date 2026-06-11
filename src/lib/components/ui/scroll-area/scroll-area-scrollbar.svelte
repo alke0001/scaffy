@@ -17,7 +17,7 @@
 	data-orientation={orientation}
 	{orientation}
 	class={cn(
-		'flex touch-none p-px transition-colors select-none data-horizontal:h-2.5 data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-t-transparent data-vertical:h-full data-vertical:w-2.5 data-vertical:border-l data-vertical:border-l-transparent',
+		'flex touch-none transition-colors select-none data-horizontal:h-full data-horizontal:w-full data-horizontal:flex-col data-vertical:h-full data-vertical:w-full',
 		className,
 	)}
 	{...restProps}
@@ -25,6 +25,6 @@
 	{@render children?.()}
 	<ScrollAreaPrimitive.Thumb
 		data-slot="scroll-area-thumb"
-		class="relative flex-1 rounded-full bg-muted-foreground"
+		class="relative w-full min-w-0 rounded-full bg-muted-foreground/70"
 	/>
 </ScrollAreaPrimitive.Scrollbar>

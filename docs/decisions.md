@@ -322,7 +322,7 @@ Claude Ask replies are often Markdown (`**bold**`, fenced code). Plain `whitespa
 ### Decision
 
 - **Scope:** Assistant messages in **Ask** mode only (`chat-message.svelte` → `ChatMarkdown.svelte`). User bubbles, Learn mode, and errors stay plain text.
-- **Libraries:** `marked` (GFM) + `dompurify` in `src/lib/components/chat/render-markdown.ts` (client-only; co-located with `ChatMarkdown.svelte`).
+- **Libraries:** `marked` (GFM) + `dompurify` in `src/lib/components/ui/markdown/render-markdown.ts` (client-only). Shared by `MarkdownContent.svelte` (static copy, e.g. About dialog) and `ChatMarkdown.svelte` (Ask streaming).
 - **Streaming:** Re-parse on **`requestAnimationFrame`** while `status === 'streaming'` (at most ~60 renders/s). On `complete`, parse immediately without waiting for rAF.
 - **Output:** Sanitized HTML via `{@html}` inside `prose prose-sm dark:prose-invert` (`@tailwindcss/typography` in `layout.css`).
 - **Cursor:** Streaming caret rendered after the markdown block in `ChatMarkdown.svelte`.
@@ -555,13 +555,13 @@ ADR-016 already says to add shadcn components via CLI before hand-rolling; this 
 
 1. **`ScrollArea` is shadcn-svelte** — installed via `pnpm dlx shadcn-svelte@latest add scroll-area`. Files live under `src/lib/components/ui/scroll-area/` (`scroll-area.svelte`, `scroll-area-scrollbar.svelte`, `index.ts`). Feature code imports `{ ScrollArea }` and uses `orientation` (`vertical` | `horizontal` | `both`). Programmatic scroll uses `bind:viewportRef` (bits-ui viewport), not `bind:ref` on the root.
 
-2. **Scrollbar styling (single source)** — `scroll-area.css` (imported from `layout.css`) defines `--scaffy-scrollbar-inset` / `--scaffy-scrollbar-size` and inset rules for vertical and horizontal `[data-slot='scroll-area-scrollbar']` so thumbs stay inside rounded parents (dialogs). `scroll-area-scrollbar.svelte` holds thumb/track classes only; do not per-page overrides. Root default `type="always"` so overflow regions show the custom scrollbar consistently.
+2. **Scrollbar styling (single source)** — `scroll-area.css` (imported from `layout.css`) defines `--scaffy-scrollbar-inset` / `--scaffy-scrollbar-size` and inset rules for vertical and horizontal `[data-slot='scroll-area-scrollbar']` so thumbs stay inside rounded parents (dialogs). `scroll-area-scrollbar.svelte` holds thumb/track classes only; do not per-page overrides. Root default `type="hover"` (bits-ui) — scrollbar fades in on pointer enter, hides after leave (Cursor-like); pass `type="always"` only when a surface must keep the gutter visible.
 
 3. **Layout** — `ScrollArea` carries size/flex classes only; **content padding** belongs on inner wrappers so the scrollbar gutter is uniform. Root keeps `overflow-hidden min-h-0` for flex/grid parents.
 
 4. **Custom `ui/` components** — allowed when they **compose** shadcn primitives without a matching registry item (e.g. `ChipGrid` uses Button + Tooltip) or when an ADR documents an exception. New bare primitives that shadcn provides → CLI first.
 
-5. **Markdown `<pre>` exception** — sanitized HTML from `render-markdown.ts` cannot wrap code blocks in Svelte. Those blocks use **`native-scroll-x`** (`native-scroll.css`, same CSS variables). Native OS scrollbar is acceptable here only.
+5. **Markdown `<pre>` exception** — sanitized HTML from `ui/markdown/render-markdown.ts` cannot wrap code blocks in Svelte. Those blocks use **`native-scroll-x`** (`scroll-area.css`, same CSS variables). Native OS scrollbar is acceptable here only.
 
 6. **`index.ts` barrel** — every `ui/<name>/` folder exports `Root` plus a PascalCase alias, matching shadcn convention.
 
@@ -605,3 +605,5 @@ ADR-016 already says to add shadcn components via CLI before hand-rolling; this 
 | 2026-06-08 | ADR-015: history page lists localStorage sessions; click opens `/session/:id`.                                                          |
 | 2026-06-10 | ADR-017: shadcn ScrollArea replaces custom scroll wrapper; `native-scroll-x` CSS only for markdown `<pre>`. |
 | 2026-06-10 | ADR-017: centralized `scroll-area.css` inset + default `type="always"`; content padding off ScrollArea root. |
+| 2026-06-10 | ADR-012: shared `ui/markdown/` (`MarkdownContent`, `render-markdown.ts`); About intro in `about-content.md`, FAQ in `about-faq.ts`. |
+| 2026-06-10 | ADR-017: ScrollArea default `type="hover"`; slimmer inset thumb; symmetric gutter via track width = thumb width. |
