@@ -4,6 +4,7 @@
 @import 'shadcn-svelte/tailwind.css';
 @import '@fontsource-variable/inter';
 @import '../lib/components/ui/scroll-area/scroll-area.css';
+@import '../lib/components/ui/resizable/resizable-handle.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -65,6 +66,9 @@
 	--scaffy-cyan: #6fc3df;
 	--scaffy-blue: #5b9bf5;
 	--scaffy-amber: #f4b860;
+
+	/* Structural chrome dividers (non-interactive) — keep quieter than resize/hover affordances */
+	--scaffy-divider: color-mix(in oklab, var(--border) 14%, transparent);
 
 	/* Logo palette — consumed by scaffy-logo.svelte (inline SVG; img cannot read page CSS vars) */
 	--scaffy-logo-teal: #64d2b4;
@@ -133,6 +137,7 @@
 	--color-scaffy-cyan: var(--scaffy-cyan);
 	--color-scaffy-blue: var(--scaffy-blue);
 	--color-scaffy-amber: var(--scaffy-amber);
+	--color-scaffy-divider: var(--scaffy-divider);
 
 	/* Logo palette */
 	--color-scaffy-logo-teal: var(--scaffy-logo-teal);

@@ -50,7 +50,7 @@
 						<MonacoEditor />
 					</ScrollArea>
 				</Resizable.Pane>
-				<Resizable.Handle class="cursor-col-resize hover:bg-border/80" />
+				<Resizable.Handle />
 				<Resizable.Pane defaultSize={40} minSize={20} class="min-h-0">
 					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background">
 						<ScrollArea orientation="vertical" class="min-h-0 flex-1 p-2">
@@ -66,7 +66,7 @@
 				<SessionTabs onSelectSession={selectSession} onDeleteSession={handleDeleteSession} />
 				<MonacoEditor />
 			</section>
-			<ScrollArea orientation="vertical" class="min-h-0 flex-2 border-t border-border p-2">
+			<ScrollArea orientation="vertical" class="min-h-0 flex-2 border-t border-scaffy-divider p-2">
 				<ChatPanel mode="ask" />
 			</ScrollArea>
 		</div>

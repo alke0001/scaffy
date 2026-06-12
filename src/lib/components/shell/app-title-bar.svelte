@@ -25,7 +25,9 @@
 	}
 </script>
 
-<header class="flex shrink-0 items-center justify-between border-b border-border px-4 py-2.5">
+<header
+	class="flex shrink-0 items-center justify-between border-b border-scaffy-divider px-4 py-2.5"
+>
 	<div class="flex items-center gap-3">
 		<ScaffyLogo interactive onclick={goHome} />
 		<span class="text-3xl tracking-tight text-foreground lowercase">scaffy</span>

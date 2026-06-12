@@ -1,0 +1,75 @@
+/**
+ * Pane resize handle — subtle cyan at rest, bold on hover/drag.
+ * Static chrome dividers use --scaffy-divider (grey, ~14% border) and stay quieter.
+ */
+:root {
+	--scaffy-resize-hit-size: 0.5625rem;
+	--scaffy-resize-line-idle: 1px;
+	--scaffy-resize-line-active: 3px;
+	--scaffy-resize-line-idle-opacity: 0.38;
+	--scaffy-resize-line-active-opacity: 1;
+	--scaffy-resize-fade-in-duration: 140ms;
+	--scaffy-resize-fade-in-ease: cubic-bezier(0.16, 1, 0.3, 1);
+	--scaffy-resize-fade-out-duration: 520ms;
+	--scaffy-resize-fade-out-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-slot='resizable-handle'] {
+	position: relative;
+	flex-shrink: 0;
+	width: var(--scaffy-resize-hit-size);
+	background: transparent !important;
+	cursor: col-resize;
+	touch-action: none;
+}
+
+[data-slot='resizable-handle'][data-direction='vertical'] {
+	width: 100%;
+	height: var(--scaffy-resize-hit-size);
+	cursor: row-resize;
+}
+
+[data-slot='resizable-handle']::before {
+	content: '';
+	position: absolute;
+	inset-block: 0;
+	left: 50%;
+	translate: -50% 0;
+	width: var(--scaffy-resize-line-idle);
+	border-radius: 999px;
+	background: var(--ring);
+	opacity: var(--scaffy-resize-line-idle-opacity);
+	pointer-events: none;
+	transition:
+		width var(--scaffy-resize-fade-out-duration) var(--scaffy-resize-fade-out-ease),
+		height var(--scaffy-resize-fade-out-duration) var(--scaffy-resize-fade-out-ease),
+		opacity var(--scaffy-resize-fade-out-duration) var(--scaffy-resize-fade-out-ease),
+		box-shadow var(--scaffy-resize-fade-out-duration) var(--scaffy-resize-fade-out-ease);
+}
+
+[data-slot='resizable-handle'][data-direction='vertical']::before {
+	inset-block: auto;
+	inset-inline: 0;
+	top: 50%;
+	left: 0;
+	width: auto;
+	height: var(--scaffy-resize-line-idle);
+	translate: 0 -50%;
+}
+
+[data-slot='resizable-handle']:hover::before,
+[data-slot='resizable-handle']:active::before,
+[data-slot='resizable-handle']:focus-visible::before {
+	width: var(--scaffy-resize-line-active);
+	opacity: var(--scaffy-resize-line-active-opacity);
+	box-shadow: 0 0 14px color-mix(in oklab, var(--ring) 45%, transparent);
+	transition-duration: var(--scaffy-resize-fade-in-duration);
+	transition-timing-function: var(--scaffy-resize-fade-in-ease);
+}
+
+[data-slot='resizable-handle'][data-direction='vertical']:hover::before,
+[data-slot='resizable-handle'][data-direction='vertical']:active::before,
+[data-slot='resizable-handle'][data-direction='vertical']:focus-visible::before {
+	width: auto;
+	height: var(--scaffy-resize-line-active);
+}

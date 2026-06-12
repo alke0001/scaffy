@@ -131,7 +131,7 @@
 	{/if}
 
 	<form
-		class="flex shrink-0 flex-col gap-2 border-t border-border pt-3"
+		class="flex shrink-0 flex-col gap-2 border-t border-scaffy-divider pt-3"
 		class:border-t-0={promptOnly}
 		class:pt-0={promptOnly}
 		onsubmit={onSubmit}
