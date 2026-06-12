@@ -6,7 +6,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import CircleHelp from '@lucide/svelte/icons/circle-help';
-	import scaffyLogo from '$lib/assets/scaffy-logo.svg';
+	import ScaffyLogo from '$lib/assets/scaffy-logo.svelte';
 
 	let aboutOpen = $state(false);
 
@@ -25,10 +25,10 @@
 	}
 </script>
 
-<header class="flex h-10 shrink-0 items-center justify-between border-b border-home-border px-4">
-	<div class="flex items-center gap-2">
-		<img src={scaffyLogo} alt="" width="52" height="52" class="shrink-0" />
-		<span class="text-sm text-muted-foreground">scaffy</span>
+<header class="flex shrink-0 items-center justify-between border-b border-border px-4 py-2.5">
+	<div class="flex items-center gap-3">
+		<ScaffyLogo interactive onclick={goHome} />
+		<span class="text-3xl tracking-tight text-foreground lowercase">scaffy</span>
 	</div>
 
 	<div class="flex items-center gap-2">

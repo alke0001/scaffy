@@ -25,7 +25,7 @@
 							type="button"
 							variant="ghost"
 							{...props}
-							class="h-auto w-full justify-start rounded-lg border border-dashed border-home-border bg-home-card px-4 py-3 text-left text-sm font-normal whitespace-normal text-foreground shadow-none transition-colors hover:!border-home-accent/50 hover:!bg-home-card hover:!text-home-accent active:translate-y-0 dark:hover:!bg-home-card"
+							class="h-auto w-full justify-start rounded-lg border border-dashed border-border bg-card px-4 py-3 text-left text-sm font-normal whitespace-normal text-foreground shadow-none transition-colors hover:border-primary/50! hover:bg-card! hover:text-primary! active:translate-y-0 dark:hover:bg-card!"
 							onclick={() => onSelect(item.prompt)}
 						>
 							{item.label}

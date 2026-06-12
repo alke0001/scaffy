@@ -466,7 +466,7 @@ The app previously rendered Monaco + ChatPanel on `/`. The product needs a focus
 - **Navigation:** **start session** on home calls `requestScaffold` and `goto('/session/:id')`.
 - **Session id alignment:** `startScaffoldRequest(prompt, preferredId?)` uses the route id so Home navigation and localStorage tabs stay consistent.
 - **Example chips:** copy text into the chat textarea via DOM (`#chat-prompt`) to avoid ChatPanel prop changes.
-- **Home design tokens:** `--home-*` and `--logo-*` CSS variables in `layout.css`.
+- **Design tokens:** shadcn semantic vars + `--scaffy-*` accents in `layout.css` (`@theme inline` → Tailwind utilities). Logo uses inline `scaffy-logo.svelte` bound to `--scaffy-logo-*` / `--card`.
 
 ### Alternatives considered
 
@@ -512,7 +512,7 @@ Scaffy grew separate surfaces (home, session, history) plus shared chrome (`AppT
    - Example: `ChipGrid` uses shadcn `Button`; `start-learning-session.svelte` uses `Card` + `Button` with home token overrides.
 
 4. **`src/lib/assets/` — static media**
-   - SVGs, images (e.g. `scaffy-logo.svg`). Import from feature views.
+   - SVGs, images; themed logo as `scaffy-logo.svelte` (CSS vars). Import from feature views.
    - Avoid a Svelte wrapper unless dynamic sizing or CSS-variable theming inside the SVG is required.
 
 **Agent rule:** When adding a component, if it is unclear whether it belongs in `ui/` vs `<area>/`, **ask the user before creating the file** (see `.cursor/rules/component-layout.mdc`).
@@ -524,7 +524,7 @@ Scaffy grew separate surfaces (home, session, history) plus shared chrome (`AppT
 | `/` route shell | `routes/+page.svelte` → `StartLearningSession`  | Thin route                            |
 | Home screen     | `components/home/start-learning-session.svelte` | Copy, ChatPanel wiring, examples      |
 | Chip grid       | `components/ui/chip/chip-grid.svelte`           | Generic; no “Try one of these” inside |
-| Logo            | `lib/assets/scaffy-logo.svg`                    | Static asset                          |
+| Logo            | `lib/assets/scaffy-logo.svelte`                 | Themed inline SVG (`--scaffy-logo-*`) |
 | App chrome      | `components/shell/app-title-bar.svelte`         | Cross-route shell, not `ui/`          |
 
 ### Alternatives considered
@@ -607,3 +607,4 @@ ADR-016 already says to add shadcn components via CLI before hand-rolling; this 
 | 2026-06-10 | ADR-017: centralized `scroll-area.css` inset + default `type="always"`; content padding off ScrollArea root.                            |
 | 2026-06-10 | ADR-012: shared `ui/markdown/` (`MarkdownContent`, `render-markdown.ts`); About intro in `about-content.md`, FAQ in `about-faq.ts`.     |
 | 2026-06-10 | ADR-017: ScrollArea default `type="hover"`; slimmer inset thumb; symmetric gutter via track width = thumb width.                        |
+| 2026-06-11 | Design tokens: `scaffy-logo.svelte` uses CSS vars; session incomplete dot `bg-scaffy-amber`; ADR-015/016 token docs synced.             |

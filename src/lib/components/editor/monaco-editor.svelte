@@ -177,27 +177,15 @@
 
 	{#if currentQuestion}
 		<div bind:this={questionOverlay} class="question-overlay" style="top: {overlayTop}px;">
-			<div class="question-box">
-				<h2>{currentQuestion.question}</h2>
-
-				{#each currentQuestion.options as option (option.id)}
-					<label class="option">
-						<input
-							type="radio"
-							name="quiz"
-							value={option.id}
-							bind:group={selectedOption}
-							onchange={handleOptionChange}
-							disabled={showLearningCard}
-						/>
-						({option.id}) {option.text}
-					</label>
-				{/each}
-
-				{#if showLearningCard}
-					<LearningCard message={currentQuestion.explanation} onUnderstand={acknowledgeError} />
-				{/if}
-			</div>
+			<LearningCard
+				question={currentQuestion}
+				chunkIndex={currentIndex}
+				chunkTotal={scaffolds.length}
+				bind:selectedOption
+				showFeedback={showLearningCard}
+				onAnswer={handleOptionChange}
+				onUnderstand={acknowledgeError}
+			/>
 		</div>
 	{/if}
 </div>
@@ -220,8 +208,8 @@
 
 	.question-overlay {
 		position: absolute;
-		left: 1rem;
-		right: 1rem;
+		left: 1.625rem;
+		right: 1.75rem;
 		z-index: 10;
 		pointer-events: auto;
 	}
@@ -230,24 +218,10 @@
 		padding: 0.75rem 1rem;
 		border: none;
 		border-radius: 8px;
-		background: #4f46e5;
-		color: white;
+		background: var(--primary);
+		color: var(--primary-foreground);
 		cursor: pointer;
-	}
-
-	.question-box {
-		margin-top: 1rem;
-		padding: 1rem;
-		border-radius: 12px;
-		background: #1e1e1e;
-		color: white;
-	}
-
-	.option {
-		display: flex;
-		gap: 0.5rem;
-		margin-top: 0.75rem;
-		cursor: pointer;
+		font-weight: 600;
 	}
 
 	button:disabled {
