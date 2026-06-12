@@ -52,10 +52,8 @@
 				</Resizable.Pane>
 				<Resizable.Handle />
 				<Resizable.Pane defaultSize={40} minSize={20} class="min-h-0">
-					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-						<ScrollArea orientation="vertical" class="min-h-0 flex-1 p-2">
-							<ChatPanel mode="ask" />
-						</ScrollArea>
+					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background p-2">
+						<ChatPanel mode="ask" />
 					</div>
 				</Resizable.Pane>
 			</Resizable.PaneGroup>
@@ -66,9 +64,9 @@
 				<SessionTabs onSelectSession={selectSession} onDeleteSession={handleDeleteSession} />
 				<MonacoEditor />
 			</section>
-			<ScrollArea orientation="vertical" class="min-h-0 flex-2 border-t border-scaffy-divider p-2">
+			<div class="flex min-h-0 flex-2 flex-col overflow-hidden border-t border-scaffy-divider p-2">
 				<ChatPanel mode="ask" />
-			</ScrollArea>
+			</div>
 		</div>
 	</main>
 </div>

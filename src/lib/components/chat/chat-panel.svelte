@@ -139,7 +139,7 @@
 		<label class="sr-only" for="chat-prompt">Message</label>
 		<textarea
 			id="chat-prompt"
-			class="min-h-24 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+			class="min-h-24 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none"
 			class:min-h-[140px]={promptOnly}
 			bind:value={prompt}
 			disabled={threadBusy}
