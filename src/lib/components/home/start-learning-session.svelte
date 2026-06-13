@@ -80,9 +80,7 @@
 					<p class="mb-4 text-center text-sm text-muted-foreground">
 						Describe what you want to build in plain language.
 					</p>
-					<div class="home-chat-panel__body">
-						<ChatPanel mode="learn" promptOnly />
-					</div>
+					<ChatPanel mode="learn" promptOnly />
 				</Card.Content>
 			</Card.Root>
 
@@ -117,10 +115,3 @@
 		</section>
 	</main>
 </ScrollArea>
-
-<style>
-	.home-chat-panel__body :global(textarea#chat-prompt) {
-		border-color: var(--border);
-		background: var(--background);
-	}
-</style>

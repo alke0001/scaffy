@@ -15,7 +15,7 @@
 	} = $props();
 </script>
 
-<Tooltip.Provider delayDuration={300}>
+<Tooltip.Provider>
 	<div class={cn('grid grid-cols-1 gap-2 sm:grid-cols-2', className)}>
 		{#each items as item (item.prompt)}
 			<Tooltip.Root>

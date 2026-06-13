@@ -5,6 +5,7 @@
 @import '@fontsource-variable/inter';
 @import '../lib/components/ui/scroll-area/scroll-area.css';
 @import '../lib/components/ui/resizable/resizable-handle.css';
+@import '../lib/components/ui/tooltip/tooltip.css';
 
 @custom-variant dark (&:is(.dark *));
 

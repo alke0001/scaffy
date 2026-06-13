@@ -1,0 +1,25 @@
+/**
+ * Subtle tooltips — delayed fade, no zoom (Cursor / VS Code style). ADR-017 companion.
+ */
+:root {
+	--scaffy-tooltip-delay: 650ms;
+	--scaffy-tooltip-skip-delay: 120ms;
+	--scaffy-tooltip-fade-in: 180ms;
+	--scaffy-tooltip-fade-out: 120ms;
+}
+
+[data-slot='tooltip-content'] {
+	border: 1px solid color-mix(in oklab, var(--border) 55%, transparent);
+	background: var(--popover);
+	color: var(--muted-foreground);
+	box-shadow: 0 4px 16px color-mix(in oklab, var(--background) 40%, transparent);
+}
+
+[data-slot='tooltip-content'][data-state='delayed-open'],
+[data-slot='tooltip-content'][data-state='instant-open'] {
+	animation-duration: var(--scaffy-tooltip-fade-in) !important;
+}
+
+[data-slot='tooltip-content'][data-state='closed'] {
+	animation-duration: var(--scaffy-tooltip-fade-out) !important;
+}
