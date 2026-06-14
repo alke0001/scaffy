@@ -15,12 +15,12 @@
 </script>
 
 <div
-	class="flex flex-col gap-3 px-1 py-2"
+	class="flex flex-col gap-4 px-1 py-2"
 	role="log"
 	aria-live="polite"
 	aria-relevant="additions text"
 >
-	<div class="flex flex-col gap-3" role="list">
+	<div class="flex flex-col gap-4" role="list">
 		{#each messages as message (message.id)}
 			<ChatMessageView {message} {mode} />
 		{:else}

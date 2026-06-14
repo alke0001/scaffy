@@ -17,6 +17,7 @@
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import Send from '@lucide/svelte/icons/send';
+	import AskChatHeader from '$lib/components/chat/ask-chat-header.svelte';
 
 	const MIN_PROMPT_LENGTH = 10;
 	const ASK_PLACEHOLDER = 'Ask scaffy a question about the code (min. 10 characters)';
@@ -261,6 +262,7 @@
 >
 	{#if isAskSession}
 		{#if hasMessages}
+			<AskChatHeader />
 			<ScrollArea bind:viewportRef={scrollViewport} orientation="vertical" class="min-h-0 flex-1">
 				<ChatMessageList {messages} mode="ask" showEmptyState={false} />
 			</ScrollArea>
