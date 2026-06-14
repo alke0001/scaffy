@@ -15,7 +15,7 @@
 		chunkTotal: number;
 		selectedOption?: string | null;
 		showFeedback?: boolean;
-		onAnswer: () => void;
+		onAnswer: (optionId: string) => void;
 		onUnderstand: () => void;
 	} = $props();
 </script>
@@ -41,8 +41,8 @@
 					type="radio"
 					name="knowledge-check"
 					value={option.id}
-					bind:group={selectedOption}
-					onchange={onAnswer}
+					checked={selectedOption === option.id}
+					onchange={() => onAnswer(option.id)}
 					disabled={showFeedback}
 					class="knowledge-check-input"
 				/>

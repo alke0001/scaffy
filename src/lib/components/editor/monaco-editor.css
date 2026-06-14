@@ -1,0 +1,98 @@
+/**
+ * Monaco editor scrollbars — match ScrollArea tokens (ADR-017). Scrolling stays inside Monaco only.
+ */
+.scaffy-monaco-editor .monaco-scrollable-element > .scrollbar {
+	background: transparent !important;
+	border-radius: 999px;
+}
+
+.scaffy-monaco-editor .monaco-scrollable-element > .scrollbar.vertical {
+	width: calc(var(--scaffy-scrollbar-size) + 2 * var(--scaffy-scrollbar-inset)) !important;
+}
+
+.scaffy-monaco-editor .monaco-scrollable-element > .scrollbar.horizontal {
+	height: calc(var(--scaffy-scrollbar-size) + 2 * var(--scaffy-scrollbar-inset)) !important;
+}
+
+.scaffy-monaco-editor .monaco-scrollable-element > .scrollbar > .slider {
+	border-radius: 999px !important;
+	background: color-mix(
+		in oklch,
+		var(--muted-foreground) calc(var(--scaffy-scrollbar-visible-opacity) * 100%),
+		transparent
+	) !important;
+	transition:
+		opacity var(--scaffy-scrollbar-fade-out-duration) var(--scaffy-scrollbar-fade-out-ease),
+		background-color var(--scaffy-scrollbar-fade-out-duration) var(--scaffy-scrollbar-fade-out-ease);
+}
+
+.scaffy-monaco-editor:hover .monaco-scrollable-element > .scrollbar > .slider,
+.scaffy-monaco-editor .monaco-scrollable-element > .scrollbar.active > .slider {
+	transition-duration: var(--scaffy-scrollbar-fade-in-duration);
+	transition-timing-function: var(--scaffy-scrollbar-fade-in-ease);
+}
+
+.scaffy-monaco-editor .monaco-scrollable-element > .scrollbar.vertical > .slider {
+	width: var(--scaffy-scrollbar-size) !important;
+	left: var(--scaffy-scrollbar-inset) !important;
+}
+
+.scaffy-monaco-editor .monaco-scrollable-element > .scrollbar.horizontal > .slider {
+	height: var(--scaffy-scrollbar-size) !important;
+	top: var(--scaffy-scrollbar-inset) !important;
+}
+
+.scaffy-monaco-editor .monaco-editor,
+.scaffy-monaco-editor .monaco-editor .overflow-guard {
+	border-radius: 0.75rem;
+}
+
+/* Knowledge check — Monaco viewZone (scrolls with editor content) */
+.scaffy-knowledge-check-view-zone {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 100%;
+	padding: 0.75rem 1rem 1rem 0;
+	pointer-events: auto;
+	position: relative;
+	z-index: 2;
+}
+
+.scaffy-monaco-editor .view-zones .scaffy-knowledge-check-view-zone {
+	width: calc(100% - 1rem);
+}
+
+.scaffy-monaco-editor .view-zones {
+	pointer-events: none;
+}
+
+.scaffy-monaco-editor .view-zones .scaffy-knowledge-check-view-zone,
+.scaffy-monaco-editor .view-zones .scaffy-knowledge-check-view-zone * {
+	pointer-events: auto;
+}
+
+/* Read-only edit hint — portaled to body, above app chrome */
+.scaffy-readonly-hint {
+	position: fixed;
+	z-index: var(--scaffy-monaco-overlay-z, 100);
+	max-width: min(22rem, calc(100vw - 1.5rem));
+	padding: 0.5rem 0.75rem;
+	border: 1px solid color-mix(in oklab, var(--border) 55%, transparent);
+	border-radius: 0.5rem;
+	background: var(--popover);
+	color: var(--foreground);
+	box-shadow: 0 8px 24px color-mix(in oklab, var(--background) 35%, transparent);
+	pointer-events: none;
+	transform: translate(-50%, -100%);
+}
+
+.scaffy-readonly-hint--below {
+	transform: translate(-50%, 0);
+}
+
+.scaffy-readonly-hint__text {
+	margin: 0;
+	font-family: var(--font-sans, 'Inter Variable', sans-serif);
+	font-size: 0.75rem;
+	line-height: 1.45;
+}

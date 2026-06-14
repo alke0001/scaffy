@@ -27,7 +27,7 @@ ADR = Architecture Decision Record
 | [ADR-008](#adr-008-chat-message-lifecycle-statuses)                       | Chat message lifecycle statuses                        | Accepted                           |
 | [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later)              | Session store for scaffolds (Monaco later)             | Accepted                           |
 | [ADR-010](#adr-010-repository-layout-and-typescript)                      | Repository layout and TypeScript                       | Accepted                           |
-| [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned)               | Monaco typewriter and viewZones (planned)              | Accepted (not implemented)         |
+| [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned)               | Monaco typewriter and viewZones (planned)              | Accepted (viewZone shipped)        |
 | [ADR-012](#adr-012-ask-markdown-rendering-during-stream)                  | Ask markdown rendering during stream                   | Accepted                           |
 | [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd)           | Documentation split: CLAUDE.md vs decisions.md         | Accepted                           |
 | [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) | Learning session persistence port — localStorage first | Accepted (adapter not implemented) |
@@ -290,24 +290,27 @@ Code uses logical IDs `claude-sonnet-4-5` | `claude-sonnet-4-6` mapped in `anthr
 
 ---
 
-## ADR-011: Monaco typewriter and viewZones (planned)
+## ADR-011: Monaco typewriter and viewZones
 
-**Status:** Accepted — **not implemented**
+**Status:** Accepted — **viewZone shipped**; typewriter **not implemented**
 
 ### Context
 
 Learn mode should feel like live typing without API streaming of JSON.
 
-### Decision (target)
+### Decision
 
-- Integrate `monaco-editor` in place of the placeholder.
-- Reveal each `codeSnippet` with `editor.executeEdits()` ~15 ms per character.
-- Show `knowledgeCheck` in a **viewZone** (or overlay widget) between code lines.
-- Unlock next scaffold only after a correct answer ( `questions` store).
+- Integrate `monaco-editor` in the learn loop (`monaco-editor.svelte`).
+- Show `knowledgeCheck` in a Monaco **viewZone** after the last code line — `KnowledgeViewZoneController` mounts `learning-card.svelte` into the zone DOM; `ResizeObserver` keeps `heightInPx` in sync. Scrolls with editor content (no viewport-clamped overlay).
+- Reveal each `codeSnippet` with `editor.executeEdits()` ~15 ms per character — **planned, not shipped**.
+- Unlock next scaffold only after a correct answer (session store today; dedicated `questions` store optional later).
+- **Editor read-only** until `session.completed` — selection/copy allowed; typing blocked (`readOnly: true`, not `domReadOnly`).
 
 ### Current state
 
-- `monaco-editor-placeholder.svelte` only; package not wired in the learning loop.
+- ViewZone integration: `src/lib/components/editor/monaco-knowledge-view-zone.ts`, styled via `monaco-editor.css`.
+- Code still applied via `editor.setValue()` (full chunk at once).
+- Wrong-answer feedback modal remains `position: fixed` inside `learning-card.svelte` (overlay widget pattern for modal only).
 
 ---
 
@@ -608,3 +611,4 @@ ADR-016 already says to add shadcn components via CLI before hand-rolling; this 
 | 2026-06-10 | ADR-012: shared `ui/markdown/` (`MarkdownContent`, `render-markdown.ts`); About intro in `about-content.md`, FAQ in `about-faq.ts`.     |
 | 2026-06-10 | ADR-017: ScrollArea default `type="hover"`; slimmer inset thumb; symmetric gutter via track width = thumb width.                        |
 | 2026-06-11 | Design tokens: `scaffy-logo.svelte` uses CSS vars; session incomplete dot `bg-scaffy-amber`; ADR-015/016 token docs synced.             |
+| 2026-06-14 | ADR-011: knowledge check viewZone; Monaco read-only until session completed (copy allowed); typewriter still pending.                   |

@@ -6,6 +6,7 @@
 @import '../lib/components/ui/scroll-area/scroll-area.css';
 @import '../lib/components/ui/resizable/resizable-handle.css';
 @import '../lib/components/ui/tooltip/tooltip.css';
+@import '../lib/components/editor/monaco-editor.css';
 
 @custom-variant dark (&:is(.dark *));
 

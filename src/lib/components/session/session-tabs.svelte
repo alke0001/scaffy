@@ -8,9 +8,10 @@
 	interface Props {
 		onSelectSession: (id: string) => void;
 		onDeleteSession?: (id: string) => void;
+		class?: string;
 	}
 
-	let { onSelectSession, onDeleteSession }: Props = $props();
+	let { onSelectSession, onDeleteSession, class: className }: Props = $props();
 
 	const sessions = $derived(getSessions());
 	const activeSessionId = $derived(getActiveSessionId());
@@ -38,7 +39,12 @@
 </script>
 
 <!-- class="session-tabs mb-2 flex min-h-12 items-center gap-2 overflow-x-auto px-2 text-sm" SO war die klasse vom Button vorher. Weiß net ob änderungen sinnvoll. So verändert sich die tab größe halt nimmer. Find ich persönlich besser-->
-<div class="session-tabs mb-2 flex flex-nowrap items-center gap-2 overflow-x-auto px-2 text-sm">
+<div
+	class={cn(
+		'session-tabs mb-2 flex flex-nowrap items-center gap-2 overflow-x-auto px-2 text-sm',
+		className,
+	)}
+>
 	{#if sessions.length > 0}
 		{#each sessions as session (session.id)}
 			<div
