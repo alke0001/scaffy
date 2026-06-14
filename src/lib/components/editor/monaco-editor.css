@@ -47,7 +47,7 @@
 	border-radius: 0.75rem;
 }
 
-/* Knowledge check — Monaco viewZone (scrolls with editor content) */
+/* Learning Card — Monaco viewZone (scrolls with editor content) */
 .scaffy-knowledge-check-view-zone {
 	box-sizing: border-box;
 	width: 100%;
@@ -74,7 +74,7 @@
 /* Read-only edit hint — portaled to body, above app chrome */
 .scaffy-readonly-hint {
 	position: fixed;
-	z-index: var(--scaffy-monaco-overlay-z, 100);
+	z-index: var(--scaffy-z-readonly-hint, 100);
 	max-width: min(22rem, calc(100vw - 1.5rem));
 	padding: 0.5rem 0.75rem;
 	border: 1px solid color-mix(in oklab, var(--border) 55%, transparent);

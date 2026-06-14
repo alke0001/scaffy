@@ -285,6 +285,7 @@
 		}
 
 		showLearningCard = true;
+		hideReadOnlyHint();
 		zoneBridge.selectedOption = optionId;
 		zoneBridge.showFeedback = true;
 		viewZoneController.refresh();

@@ -301,16 +301,23 @@ Learn mode should feel like live typing without API streaming of JSON.
 ### Decision
 
 - Integrate `monaco-editor` in the learn loop (`monaco-editor.svelte`).
-- Show `knowledgeCheck` in a Monaco **viewZone** after the last code line — `KnowledgeViewZoneController` mounts `learning-card.svelte` into the zone DOM; `ResizeObserver` keeps `heightInPx` in sync. Scrolls with editor content (no viewport-clamped overlay).
+- Show **`learning-card.svelte`** (UI label: **Learning Card**) in a Monaco **viewZone** after the last code line — `KnowledgeViewZoneController` mounts the card into the zone DOM; `ResizeObserver` keeps `heightInPx` in sync. Scrolls with editor content (no viewport-clamped overlay).
 - Reveal each `codeSnippet` with `editor.executeEdits()` ~15 ms per character — **planned, not shipped**.
 - Unlock next scaffold only after a correct answer (session store today; dedicated `questions` store optional later).
-- **Editor read-only** until `session.completed` — selection/copy allowed; typing blocked (`readOnly: true`, not `domReadOnly`).
+- **Editor read-only** until `session.completed` — selection/copy allowed on **code**; typing blocked (`readOnly: true`, not `domReadOnly`).
+- **Learning Card copy prevention** — question and answer options are not selectable/copyable (`user-select: none`, `copy` blocked on the card root). **Intentional friction:** stops learners from pasting the gated quiz into the Ask chat pane beside the editor to shortcut the knowledge check. Monaco code remains copyable; the wrong-answer feedback modal (portaled) is separate and may still expose the explanation after a failed attempt.
+
+### Alternatives considered
+
+- Allow copy and rely on honor system — rejected; Ask mode is one click away and would undermine the gate.
+- Block copy on the entire editor — rejected; copying scaffold code for notes is a valid learning action.
 
 ### Current state
 
-- ViewZone integration: `src/lib/components/editor/monaco-knowledge-view-zone.ts`, styled via `monaco-editor.css`.
+- ViewZone integration: `src/lib/components/editor/monaco-knowledge-view-zone.ts`, styled via `monaco-editor.css` and `learning-card.css`.
 - Code still applied via `editor.setValue()` (full chunk at once).
-- Wrong-answer feedback modal remains `position: fixed` inside `learning-card.svelte` (overlay widget pattern for modal only).
+- Wrong-answer feedback: portaled to `document.body` (`z-index` above app chrome); structured layout (correct option row + explanation).
+- Read-only edit hint: custom portaled tooltip (`read-only-hint.svelte`), not Monaco `readOnlyMessage`.
 
 ---
 
@@ -612,3 +619,4 @@ ADR-016 already says to add shadcn components via CLI before hand-rolling; this 
 | 2026-06-10 | ADR-017: ScrollArea default `type="hover"`; slimmer inset thumb; symmetric gutter via track width = thumb width.                        |
 | 2026-06-11 | Design tokens: `scaffy-logo.svelte` uses CSS vars; session incomplete dot `bg-scaffy-amber`; ADR-015/016 token docs synced.             |
 | 2026-06-14 | ADR-011: knowledge check viewZone; Monaco read-only until session completed (copy allowed); typewriter still pending.                   |
+| 2026-06-14 | ADR-011: Learning Card UI rename; portaled feedback + read-only hint; Learning Card copy prevention (no paste into Ask chat).          |

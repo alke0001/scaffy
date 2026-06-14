@@ -7,6 +7,7 @@
 @import '../lib/components/ui/resizable/resizable-handle.css';
 @import '../lib/components/ui/tooltip/tooltip.css';
 @import '../lib/components/editor/monaco-editor.css';
+@import '../lib/components/editor/learning-card.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -77,6 +78,10 @@
 	--scaffy-logo-green: #58eb94;
 	--scaffy-logo-blue: #82cff0;
 	--scaffy-logo-pink: #f082c5;
+
+	/* Portaled overlays — feedback modal above read-only hint above shadcn dialogs (z-50) */
+	--scaffy-z-readonly-hint: 100;
+	--scaffy-z-knowledge-feedback: 110;
 }
 
 /* .dark mirrors :root so shadcn dark: variants resolve correctly

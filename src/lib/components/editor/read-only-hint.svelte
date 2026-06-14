@@ -21,7 +21,7 @@
 	role="status"
 >
 	<p class="scaffy-readonly-hint__text">
-		Du kannst den Code erst bearbeiten, wenn alle Knowledge Checks abgeschlossen sind. Kopieren ist
+		Du kannst den Code erst bearbeiten, wenn alle Learning Cards abgeschlossen sind. Kopieren ist
 		jederzeit möglich.
 	</p>
 </div>
