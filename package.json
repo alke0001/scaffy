@@ -9,11 +9,15 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"ci": "pnpm install --frozen-lockfile",
-		"prepare": "svelte-kit sync || echo ''",
+		"prepare": "svelte-kit sync || echo '' ; husky",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write ."
+	},
+	"lint-staged": {
+		"*.{js,ts,mjs,cjs,svelte,css,md,json,yml,yaml}": "prettier --write",
+		"*.{js,ts,svelte}": "eslint --fix"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.4",
@@ -34,6 +38,8 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.17.0",
 		"globals": "^17.4.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^17.0.7",
 		"paneforge": "^1.0.2",
 		"prettier": "^3.8.1",
 		"prettier-plugin-svelte": "^3.5.1",

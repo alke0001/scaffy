@@ -17,6 +17,11 @@ pnpm exec prettier --write <path>…
 
 - Pass **explicit paths** (created/edited files), not the whole repo, unless many files changed.
 - Applies to source, config, and markdown files Prettier supports in this project.
+- **`docs/decisions.md`** — always include when updating ADRs (table rows are easy to miss).
+
+## Pre-commit (husky + lint-staged)
+
+Staged files are auto-formatted and ESLint-fixed on `git commit` via `.husky/pre-commit`. This catches forgotten Prettier runs before CI; agents should still format touched paths immediately after writing.
 
 ## 2. ESLint — before marking the task done
 
