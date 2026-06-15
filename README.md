@@ -4,11 +4,35 @@
 
 Scaffy generates code step by step and uses targeted questions to block the next chunk until the user answers correctly — combining scaffolding with deliberate friction to build real understanding.
 
-**Stack:** SvelteKit 5 · TypeScript · Monaco Editor · shadcn-svelte · Anthropic API · Vercel
+**Stack:** SvelteKit 5 (SPA) · TypeScript · Monaco Editor · shadcn-svelte · Anthropic API · Vercel
 
 ---
 
-## Getting Started
+## How it works
+
+| Route              | Purpose                                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------------------------- |
+| **`/`**            | Home — describe what you want to build in plain language and start a learning session.                     |
+| **`/session/:id`** | Workspace — Monaco editor (Learn) on the left, Ask tutor chat on the right, session tabs above the editor. |
+| **`/history`**     | Resume or delete past sessions stored in this browser.                                                     |
+
+**Learn mode**
+
+- Claude returns up to five ordered **scaffolds** (code snippet + Learning Card per step) via `POST /api/scaffold`.
+- Code appears in Monaco; a **Learning Card** (multiple-choice gate) is embedded in the editor via a Monaco **viewZone**.
+- The next scaffold unlocks only after a correct answer. Wrong answers show a structured feedback dialog (correct option + explanation).
+- The editor stays **read-only** until the session is completed; copying scaffold code is allowed.
+
+**Ask mode**
+
+- The right-hand chat is a Socratic tutor (`POST /api/chat`, SSE streaming, markdown replies).
+- It supports the lesson — it does not replace the Learn gate.
+
+Session progress (scaffolds, status, completion) is persisted in **`localStorage`** in the browser.
+
+---
+
+## Getting started
 
 **Prerequisites:** Node.js 20+ and [pnpm](https://pnpm.io/) 9.x
 
@@ -23,7 +47,7 @@ corepack prepare pnpm@9.15.9 --activate
 npm install -g pnpm@9.15.9
 ```
 
-Then clone and install dependencies:
+Clone and install dependencies (this also installs Git hooks via Husky):
 
 ```sh
 git clone https://github.com/alke/scaffy.git
@@ -31,7 +55,7 @@ cd scaffy
 pnpm install
 ```
 
-Copy the environment template and add your API key (see [Environment Setup](#environment-setup)):
+Copy the environment template and add your API key (see [Environment setup](#environment-setup)):
 
 ```sh
 # macOS / Linux
@@ -73,35 +97,46 @@ On Cursor, replace `code` with `cursor`.
 
 ---
 
-## Repository Structure
+## Repository structure
 
 ```
 src/
 ├── lib/
 │   ├── components/
-│   │   ├── chat/          # Chat panel UI (ask mode + learn mode)
-│   │   └── editor/        # Monaco editor wrapper
+│   │   ├── chat/          # Ask tutor UI (SSE, markdown, composer)
+│   │   ├── editor/        # Monaco, Learning Card, viewZone bridge
+│   │   ├── history/       # History page view
+│   │   ├── home/          # Home prompt + start session
+│   │   ├── session/       # Session workspace, session tabs
+│   │   ├── shell/         # App title bar
+│   │   └── ui/            # shadcn-svelte primitives (Button, Dialog, …)
 │   ├── server/
-│   │   ├── scaffold/      # Structured-output schema and system prompt (Learn)
+│   │   ├── scaffold/      # Structured JSON schema + system prompt (Learn)
 │   │   ├── chat/          # Ask-mode tutor system prompt
 │   │   └── anthropic-client.ts
-│   ├── session.svelte.ts  # Scaffold list + request status (Monaco consumes later)
-│   └── types/             # Client-safe shared types (scaffold, chat-message)
-│   └── mocks/             # Local fixture data for UI development
+│   ├── learn/             # Client scaffold request helper
+│   ├── session.svelte.ts  # Session list, active session, localStorage
+│   ├── types/             # Shared types (scaffold, chat-message)
+│   ├── actions/           # Svelte actions (e.g. portal for overlays)
+│   └── mocks/             # Fixture scaffolds for UI development
 └── routes/
-    ├── api/
-    │   ├── scaffold/      # POST /api/scaffold — structured JSON (Learn)
-    │   └── chat/          # POST /api/chat — SSE plain-text tutor (Ask)
-    └── +page.svelte       # Main app shell
+    ├── +page.svelte       # Home (thin → start-learning-session)
+    ├── history/           # History page
+    ├── session/[id]/      # Session workspace
+    └── api/
+        ├── scaffold/      # POST /api/scaffold — structured JSON (Learn)
+        └── chat/          # POST /api/chat — SSE tutor (Ask)
 ```
 
-Server routes under `src/routes/api/` are thin proxies: parse request → call Anthropic → return response. Reusable logic lives in `src/lib/server/`. UI components live in `src/lib/components/<area>/`.
+- **Routes** stay thin; feature views live under `src/lib/components/<area>/`.
+- **API routes** are thin proxies: parse request → call Anthropic → return response.
+- **Server-only** logic lives in `src/lib/server/` (never imported from the client).
 
-**Architecture decisions** (context, alternatives, status): [`docs/decisions.md`](docs/decisions.md). Agent-facing invariants remain in [`CLAUDE.md`](CLAUDE.md). Cursor agents update the decision log after implementation (`.cursor/rules/decisions-log.mdc`).
+**Architecture decisions** (context, alternatives, status): [`docs/decisions.md`](docs/decisions.md). Agent-facing invariants: [`CLAUDE.md`](CLAUDE.md). Test prompts for scaffold robustness: [`docs/run-test-prompts-profile-card.md`](docs/run-test-prompts-profile-card.md).
 
 ---
 
-## Environment Setup
+## Environment setup
 
 The AI API key is server-only and never exposed to the browser. Scaffold your local config from the committed template:
 
@@ -118,21 +153,47 @@ cp .env.example .env.local   # then edit .env.local
 
 ---
 
-## Building
+## Development scripts
 
-```sh
-pnpm run build
-```
+| Script           | Command            | Purpose                                   |
+| ---------------- | ------------------ | ----------------------------------------- |
+| Dev server       | `pnpm run dev`     | Vite dev server                           |
+| Production build | `pnpm run build`   | Build for Vercel                          |
+| Preview build    | `pnpm run preview` | Serve production build locally            |
+| Format all       | `pnpm run format`  | Prettier write on the whole repo          |
+| Lint             | `pnpm run lint`    | Prettier check + ESLint                   |
+| Typecheck        | `pnpm run check`   | `svelte-check`                            |
+| CI install       | `pnpm run ci`      | Frozen lockfile install (same as Actions) |
 
 Preview the production build locally:
 
 ```sh
+pnpm run build
 pnpm run preview
 ```
 
 ---
 
-## Continuous Integration
+## Code quality and Git hooks
+
+**Pre-commit (Husky + lint-staged):** On `git commit`, staged files are auto-formatted with Prettier and ESLint-fixed (see `lint-staged` in `package.json`). Hooks are installed when you run `pnpm install` (`prepare` script).
+
+Run the same checks CI uses before opening a PR:
+
+```sh
+pnpm run ci && pnpm run lint && pnpm run check
+```
+
+Format specific files after editing:
+
+```sh
+pnpm exec prettier --write path/to/file
+pnpm exec eslint path/to/file
+```
+
+---
+
+## Continuous integration
 
 Every push and pull request targeting `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
@@ -144,21 +205,17 @@ pnpm run check
 
 `pnpm run ci` installs dependencies from `pnpm-lock.yaml` with a frozen lockfile (fails if the lockfile is out of sync with `package.json`). CI copies [`.env.test`](.env.test) to `.env` before install so `svelte-kit sync` can generate `$env/static/private` types (no real API key in Actions).
 
-Run the same checks locally before opening a PR:
-
-```sh
-pnpm run ci && pnpm run lint && pnpm run check
-```
-
 **Branch protection (repo admin):** After CI has run at least once on `main`, open **GitHub → Settings → Branches → Add branch protection rule** for `main`, enable **Require status checks to pass before merging**, and select the **`ci`** check.
+
+No extra GitHub configuration is required for Husky — hooks run locally only; CI remains the safety net if someone commits with `--no-verify`.
 
 ---
 
 ## Deployment
 
-Scaffy is deployed on [Vercel](https://vercel.com). The same environment variables from [Environment Setup](#environment-setup) must be set on the Vercel project so serverless functions can reach the API.
+Scaffy is deployed on [Vercel](https://vercel.com). The same environment variables from [Environment setup](#environment-setup) must be set on the Vercel project so serverless functions can reach the API.
 
-**Via Vercel Dashboard:**
+**Via Vercel Dashboard:**  
 Project → Settings → Environment Variables → add `ANTHROPIC_API_KEY` (Production + Preview). Optionally add `ANTHROPIC_DEFAULT_MODEL`.
 
 **Via Vercel CLI:**
@@ -180,7 +237,7 @@ vercel env pull .env.local
 
 ---
 
-## Agentic Coding
+## Agentic coding
 
 This project is configured for AI-assisted development with three tools. All agents share the same design decisions and coding conventions defined in `CLAUDE.md`.
 

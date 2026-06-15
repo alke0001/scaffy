@@ -15,25 +15,25 @@ This document records **why** Scaffy is built the way it is. It complements [`CL
 
 ADR = Architecture Decision Record
 
-| ID                                                                        | Title                                                  | Status                             |
-| ------------------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------- |
-| [ADR-001](#adr-001-product-vision-scaffolding--friction)                  | Product vision: scaffolding + friction                 | Accepted                           |
-| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                  | SPA: SvelteKit 5, no SSR for app shell                 | Accepted                           |
-| [ADR-003](#adr-003-claude-only-via-server-api-routes)                     | Claude only via server API routes                      | Accepted                           |
-| [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask)              | Separate API endpoints for Learn and Ask               | Accepted                           |
-| [ADR-005](#adr-005-learn-scaffold-rest--structured-json)                  | Learn: REST + structured JSON                          | Accepted                           |
-| [ADR-006](#adr-006-ask-chat-sse-streaming)                                | Ask: chat SSE streaming                                | Accepted                           |
-| [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership)               | ChatPanel dual mode and state ownership                | Accepted                           |
-| [ADR-008](#adr-008-chat-message-lifecycle-statuses)                       | Chat message lifecycle statuses                        | Accepted                           |
-| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later)              | Session store for scaffolds (Monaco later)             | Accepted                           |
-| [ADR-010](#adr-010-repository-layout-and-typescript)                      | Repository layout and TypeScript                       | Accepted                           |
-| [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned)               | Monaco typewriter and viewZones (planned)              | Accepted (viewZone shipped)        |
-| [ADR-012](#adr-012-ask-markdown-rendering-during-stream)                  | Ask markdown rendering during stream                   | Accepted                           |
-| [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd)           | Documentation split: CLAUDE.md vs decisions.md         | Accepted                           |
-| [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) | Learning session persistence port — localStorage first | Accepted (adapter not implemented) |
-| [ADR-015](#adr-015-home-vs-session-route-split)                           | Home vs session route split                            | Accepted                           |
-| [ADR-016](#adr-016-routes-feature-views-vs-ui-components)                 | Routes, feature views, vs ui/ components               | Accepted                           |
-| [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                | ui/ primitives: shadcn-first; ScrollArea               | Accepted                           |
+| ID                                                                        | Title                                                  | Status                                                |
+| ------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------- |
+| [ADR-001](#adr-001-product-vision-scaffolding--friction)                  | Product vision: scaffolding + friction                 | Accepted                                              |
+| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                  | SPA: SvelteKit 5, no SSR for app shell                 | Accepted                                              |
+| [ADR-003](#adr-003-claude-only-via-server-api-routes)                     | Claude only via server API routes                      | Accepted                                              |
+| [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask)              | Separate API endpoints for Learn and Ask               | Accepted                                              |
+| [ADR-005](#adr-005-learn-scaffold-rest--structured-json)                  | Learn: REST + structured JSON                          | Accepted                                              |
+| [ADR-006](#adr-006-ask-chat-sse-streaming)                                | Ask: chat SSE streaming                                | Accepted                                              |
+| [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership)               | ChatPanel dual mode and state ownership                | Accepted                                              |
+| [ADR-008](#adr-008-chat-message-lifecycle-statuses)                       | Chat message lifecycle statuses                        | Accepted                                              |
+| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later)              | Session store for scaffolds (Monaco later)             | Accepted                                              |
+| [ADR-010](#adr-010-repository-layout-and-typescript)                      | Repository layout and TypeScript                       | Accepted                                              |
+| [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned)               | Monaco typewriter and viewZones (planned)              | Accepted (viewZone shipped)                           |
+| [ADR-012](#adr-012-ask-markdown-rendering-during-stream)                  | Ask markdown rendering during stream                   | Accepted                                              |
+| [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd)           | Documentation split: CLAUDE.md vs decisions.md         | Accepted                                              |
+| [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) | Learning session persistence port — localStorage first | Accepted (localStorage shipped inline; port deferred) |
+| [ADR-015](#adr-015-home-vs-session-route-split)                           | Home vs session route split                            | Accepted                                              |
+| [ADR-016](#adr-016-routes-feature-views-vs-ui-components)                 | Routes, feature views, vs ui/ components               | Accepted                                              |
+| [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                | ui/ primitives: shadcn-first; ScrollArea               | Accepted                                              |
 
 ---
 
@@ -379,7 +379,7 @@ Agent config files must stay small and synced across three tools; detailed ratio
 
 ## ADR-014: Learning session persistence port — localStorage first
 
-**Status:** Accepted (persistence **port and adapters are planned**; only [`session.svelte.ts`](../src/lib/session.svelte.ts) in-memory today — no `localStorage` or Supabase code yet)
+**Status:** Accepted — **localStorage shipped inline** in [`session.svelte.ts`](../src/lib/session.svelte.ts); **persistence port / adapter pattern deferred**
 
 ### Context
 
@@ -387,7 +387,14 @@ Learning progress must survive reloads and back navigation ([`Projektsteckbrief_
 
 [`session.svelte.ts`](../src/lib/session.svelte.ts) already holds **runtime** scaffold data for Learn; persistence is a separate concern from ChatPanel and Claude API routes.
 
-### Decision
+### Current state (shipped)
+
+- [`session.svelte.ts`](../src/lib/session.svelte.ts) persists `SessionRecord[]` and the active session id to `localStorage` on change; restores on load.
+- History page and session tabs read from the same store; no separate `LocalStorageSessionStore` adapter or `LearningSessionStore` port yet.
+- Step-level progress (current scaffold index, answered Learning Cards) is **not** fully persisted across reload — only session list, scaffolds payload, and `completed` flag.
+- Supabase adapter remains Phase 2 (optional).
+
+### Decision (target architecture)
 
 **Phase 1 — `localStorage` via a persistence port (adapter-friendly), not ad-hoc `localStorage` calls in components.**
 
@@ -486,7 +493,7 @@ The app previously rendered Monaco + ChatPanel on `/`. The product needs a focus
 
 ### Consequences
 
-- Prompt survives navigation within the same tab session only (lost on reload until full ADR-014 port; inline localStorage in `session.svelte.ts` already persists sessions).
+- Sessions and scaffold payloads persist across reload via inline `localStorage` in `session.svelte.ts`; step index within an in-progress session is not yet restored (see ADR-014 current state).
 - Tab select navigates via `goto('/session/:id')`; closing the last tab returns to `/`.
 - New files: `src/lib/components/home/*`, `src/lib/components/session/*`, `src/routes/session/[id]/+page.svelte`, `src/routes/history/+page.svelte`, `src/lib/components/history/history-page.svelte`.
 
@@ -620,3 +627,4 @@ ADR-016 already says to add shadcn components via CLI before hand-rolling; this 
 | 2026-06-11 | Design tokens: `scaffy-logo.svelte` uses CSS vars; session incomplete dot `bg-scaffy-amber`; ADR-015/016 token docs synced.             |
 | 2026-06-14 | ADR-011: knowledge check viewZone; Monaco read-only until session completed (copy allowed); typewriter still pending.                   |
 | 2026-06-14 | ADR-011: Learning Card UI rename; portaled feedback + read-only hint; Learning Card copy prevention (no paste into Ask chat).           |
+| 2026-06-14 | README + About copy synced to routes, Learning Cards, Husky/lint-staged; ADR-014 status (inline localStorage shipped).                  |
