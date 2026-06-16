@@ -12,10 +12,6 @@
 	let pendingDeleteId = $state<string | null>(null);
 	const sessions = $derived(getSessions());
 
-	function truncatePrompt(prompt: string, max = 80) {
-		return prompt.length > max ? `${prompt.slice(0, max)}…` : prompt;
-	}
-
 	function formatDate(iso: string) {
 		const date = new Date(iso);
 		if (Number.isNaN(date.getTime())) return '';
