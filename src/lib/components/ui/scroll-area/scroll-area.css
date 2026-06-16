@@ -12,10 +12,15 @@
 }
 
 [data-slot='scroll-area-scrollbar'] {
-	opacity: 0;
-	pointer-events: none;
+	opacity: var(--scaffy-scrollbar-visible-opacity);
+	pointer-events: auto;
 	transition: opacity var(--scaffy-scrollbar-fade-out-duration)
 		var(--scaffy-scrollbar-fade-out-ease);
+}
+
+[data-slot='scroll-area-scrollbar'][data-state='hidden'] {
+	opacity: 0;
+	pointer-events: none;
 }
 
 @starting-style {

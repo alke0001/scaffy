@@ -8,6 +8,7 @@
 @import '../lib/components/ui/tooltip/tooltip.css';
 @import '../lib/components/editor/monaco-editor.css';
 @import '../lib/components/editor/learning-card.css';
+@import '../lib/components/ui/scaffy-modal/scaffy-modal.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -45,6 +46,7 @@
 	--secondary: #1a1e21;
 	--accent: #1a1e21;
 	--destructive: #ef4444;
+	--destructive-foreground: #0b0d0e;
 	--border: #6b7378;
 	--input: #1a1e21;
 	--ring: #6fc3df;
@@ -79,9 +81,9 @@
 	--scaffy-logo-blue: #82cff0;
 	--scaffy-logo-pink: #f082c5;
 
-	/* Portaled overlays — feedback modal above read-only hint above shadcn dialogs (z-50) */
+	/* Portaled overlays — modal above read-only hint above shadcn dialogs (z-50) */
 	--scaffy-z-readonly-hint: 100;
-	--scaffy-z-knowledge-feedback: 110;
+	--scaffy-z-modal: 110;
 }
 
 /* .dark mirrors :root so shadcn dark: variants resolve correctly
@@ -102,6 +104,7 @@
 	--accent: #1a1e21;
 	--accent-foreground: #e6e8e6;
 	--destructive: #ef4444;
+	--destructive-foreground: #0b0d0e;
 	--border: #6b7378;
 	--input: #1a1e21;
 	--ring: #6fc3df;
