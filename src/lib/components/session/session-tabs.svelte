@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import DeleteConfirmationDialog from './delete-confirmation-dialog.svelte';
 
 	interface Props {
 		onSelectSession: (id: string) => void;
@@ -17,6 +18,9 @@
 	const activeSessionId = $derived(getActiveSessionId());
 	const pathname = $derived(page.url.pathname);
 	const isHome = $derived(pathname === '/');
+
+	let showDeleteConfirm = $state(false);
+	let pendingDeleteId = $state<string | null>(null);
 
 	function goHome() {
 		if (isHome) return;
@@ -33,8 +37,22 @@
 
 	function handleDelete(event: MouseEvent, id: string) {
 		event.stopPropagation();
-		deleteSession(id);
-		onDeleteSession?.(id);
+		pendingDeleteId = id;
+		showDeleteConfirm = true;
+	}
+
+	function confirmDelete() {
+		if (pendingDeleteId) {
+			deleteSession(pendingDeleteId);
+			onDeleteSession?.(pendingDeleteId);
+		}
+		showDeleteConfirm = false;
+		pendingDeleteId = null;
+	}
+
+	function cancelDelete() {
+		showDeleteConfirm = false;
+		pendingDeleteId = null;
 	}
 </script>
 
@@ -115,3 +133,7 @@
 		+
 	</button>
 </div>
+
+{#if showDeleteConfirm}
+	<DeleteConfirmationDialog onConfirm={confirmDelete} onCancel={cancelDelete} />
+{/if}
