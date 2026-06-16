@@ -33,9 +33,9 @@
 		goto(resolve('/session/[id]', { id }));
 	}
 	function handleDelete(event: MouseEvent, id: string) {
-	event.stopPropagation();
-	pendingDeleteId = id;
-	showDeleteConfirm = true;
+		event.stopPropagation();
+		pendingDeleteId = id;
+		showDeleteConfirm = true;
 	}
 
 	function confirmDelete() {
@@ -67,16 +67,14 @@
 		<ul class="mx-auto mt-6 flex w-full max-w-2xl flex-col gap-2" role="list">
 			{#each sessions as session (session.id)}
 				<li>
-					<div
-						class="flex items-start gap-2 rounded-lg border border-border bg-card px-4 py-3"
-					>
+					<div class="flex items-start gap-2 rounded-lg border border-border bg-card px-4 py-3">
 						<Button
 							type="button"
 							variant="ghost"
 							class="h-auto flex-1 flex-col items-start gap-1 border-0 bg-transparent p-0 text-left font-normal shadow-none hover:bg-transparent"
 							onclick={() => openSession(session.id)}
 						>
-							<span class="w-full whitespace-normal break-words text-sm text-foreground">
+							<span class="w-full text-sm break-words whitespace-normal text-foreground">
 								{session.prompt}
 							</span>
 
@@ -112,8 +110,5 @@
 	{/if}
 </ScrollArea>
 {#if showDeleteConfirm}
-	<DeleteConfirmationDialog
-		onConfirm={confirmDelete}
-		onCancel={cancelDelete}
-	/>
+	<DeleteConfirmationDialog onConfirm={confirmDelete} onCancel={cancelDelete} />
 {/if}

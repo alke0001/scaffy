@@ -20,28 +20,27 @@
 	<div class="delete-confirmation-card" role="status" aria-live="polite">
 		<div class="delete-confirmation-card__header">
 			<div class="delete-confirmation-card__icon" aria-hidden="true">⚠</div>
-			<h2 id="delete-title" class="delete-confirmation-card__title">
-				Session wirklich löschen?
-			</h2>
+			<h2 id="delete-title" class="delete-confirmation-card__title">Session wirklich löschen?</h2>
 		</div>
 
 		<div class="delete-confirmation-card__body">
 			<p class="delete-confirmation-card__message">
-				Diese Aktion kann nicht rückgängig gemacht werden. Alle gespeicherten Scaffolds dieser Session gehen verloren.
+				Diese Aktion kann nicht rückgängig gemacht werden. Alle gespeicherten Scaffolds dieser
+				Session gehen verloren.
 			</p>
 		</div>
 
 		<div class="delete-confirmation-card__actions">
-			<button 
-				type="button" 
-				class="delete-confirmation-card__btn delete-confirmation-card__btn--secondary" 
+			<button
+				type="button"
+				class="delete-confirmation-card__btn delete-confirmation-card__btn--secondary"
 				onclick={onCancel}
 			>
 				Abbrechen
 			</button>
-			<button 
-				type="button" 
-				class="delete-confirmation-card__btn delete-confirmation-card__btn--danger" 
+			<button
+				type="button"
+				class="delete-confirmation-card__btn delete-confirmation-card__btn--danger"
 				onclick={onConfirm}
 			>
 				Löschen
