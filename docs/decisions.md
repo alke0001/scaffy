@@ -573,7 +573,7 @@ ADR-016 already says to add shadcn components via CLI before hand-rolling; this 
 
 1. **`ScrollArea` is shadcn-svelte** — installed via `pnpm dlx shadcn-svelte@latest add scroll-area`. Files live under `src/lib/components/ui/scroll-area/` (`scroll-area.svelte`, `scroll-area-scrollbar.svelte`, `index.ts`). Feature code imports `{ ScrollArea }` and uses `orientation` (`vertical` | `horizontal` | `both`). Programmatic scroll uses `bind:viewportRef` (bits-ui viewport), not `bind:ref` on the root.
 
-2. **Scrollbar styling (single source)** — `scroll-area.css` (imported from `layout.css`) defines `--scaffy-scrollbar-inset` / `--scaffy-scrollbar-size` and inset rules for vertical and horizontal `[data-slot='scroll-area-scrollbar']` so thumbs stay inside rounded parents (dialogs). `scroll-area-scrollbar.svelte` holds thumb/track classes only; do not per-page overrides. Root default `type="hover"` (bits-ui) — scrollbar fades in on pointer enter, hides after leave (Cursor-like); pass `type="always"` only when a surface must keep the gutter visible.
+2. **Scrollbar styling (single source)** — `scroll-area.css` (imported from `layout.css`) defines `--scaffy-scrollbar-*` tokens and inset rules for `[data-slot='scroll-area-scrollbar']`. `scroll-area-scrollbar.svelte` holds thumb/track classes only; no per-page overrides. **All product scroll surfaces use `type="hover"`** (default in `scroll-area.svelte`) — fade in on pointer enter, fade out on leave; same behavior as Monaco (`monaco-editor.css`). Do **not** use `type="always"` / `type="scroll"` in modals or feature views. Agent rule: `.cursor/rules/scrollbars.mdc`.
 
 3. **Layout** — `ScrollArea` carries size/flex classes only; **content padding** belongs on inner wrappers so the scrollbar gutter is uniform. Root keeps `overflow-hidden min-h-0` for flex/grid parents.
 
@@ -592,8 +592,8 @@ ADR-016 already says to add shadcn components via CLI before hand-rolling; this 
 
 - Removed `.scaffy-scroll-area*` rules from `layout.css`.
 - `.cursor/rules/component-layout.mdc` references ADR-017 for ui/ install policy.
-- `scroll-area.css`: scrollbars visible by default; `data-state="hidden"` hides them — fixes `type="always"` (bits-ui omits `data-state` on the track).
-- Monaco and other third-party scroll surfaces are unchanged (out of scope).
+- `.cursor/rules/scrollbars.mdc` enforces hover-fade scrollbars app-wide (ScrollArea, Monaco, ScaffyModal).
+- Monaco and other third-party scroll surfaces use the same `--scaffy-scrollbar-*` tokens (Monaco in scope).
 
 ---
 
@@ -613,11 +613,11 @@ Delete confirmation, Learning Card wrong-answer feedback, and About each used se
 
 3. **Actions** — secondary left, primary/danger right (`justify-end`, DOM order). Single-action dialogs (feedback, About close) use one primary button on the right.
 
-4. **Behavior** — portaled to `document.body`; `--scaffy-z-modal: 110`; Escape and optional backdrop dismiss via `onDismiss`. Delete uses `error` + cancel on Escape; About enables backdrop dismiss.
+4. **Behavior** — portaled to `document.body`; `--scaffy-z-modal: 110`; Escape and **backdrop click** dismiss via `onDismiss` (default). Delete backdrop = cancel; feedback backdrop = „Verstanden“; About = close.
 
 5. **shadcn Dialog** — retained for generic/registry use elsewhere; product-facing modals (About, delete, feedback) use ScaffyModal. About composes shadcn `ScrollArea` + `Accordion` inside the body only.
 
-6. **Scrollable body** — `ScaffyModalBody` with `scroll` wraps content in shadcn `ScrollArea` (`type="always"` by default). `size="lg"` cards use CSS grid (`auto minmax(0,1fr) auto`) and a fixed `height: min(85vh, …)` so the middle row constrains and scrolling works (flex + `max-height` alone is insufficient).
+6. **Scrollable body** — `ScaffyModalBody` with `scroll` wraps content in shadcn `ScrollArea` (default `type="hover"` — same fade as Monaco). `size="lg"` cards use CSS grid (`auto minmax(0,1fr) auto`) and `height: min(85vh, …)` so the middle row constrains and scrolling works.
 
 ### Alternatives considered
 
@@ -667,3 +667,5 @@ Delete confirmation, Learning Card wrong-answer feedback, and About each used se
 | 2026-06-14 | README + About copy synced to routes, Learning Cards, Husky/lint-staged; ADR-014 status (inline localStorage shipped).                  |
 | 2026-06-12 | ADR-018: ScaffyModal unifies About, delete confirm, and Learning Card feedback dialogs.                                                 |
 | 2026-06-12 | ADR-018: scrollable modal body uses central ScrollArea + lg grid height constraint.                                                     |
+| 2026-06-12 | ADR-017: unified hover-fade scrollbars (ScrollArea, Monaco, modals); `scrollbars.mdc` agent rule.                                       |
+| 2026-06-12 | ADR-018: backdrop click dismisses all ScaffyModals by default (same as secondary / Verstanden).                                         |
