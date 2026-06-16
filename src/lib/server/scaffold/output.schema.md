@@ -12,7 +12,7 @@ Maintainer reference for the JSON Schema file next to this document. That file i
 
 - Exactly one top-level property besides implicit schema metadata: `scaffolds`.
 - No extra top-level keys (`additionalProperties: false`).
-- At most **five** scaffolds per response (enforced in `validateStructuredOutput`, not in the wire schema—Anthropic’s JSON Schema subset can reject some `maxItems` uses); the model must fold any further work into the last scaffold’s `codeSnippet` (see system prompt).
+- At most **three** scaffolds per lesson (enforced in `validate-lesson.ts`; wire schema allows 1–5 — extra steps are trimmed server-side).
 
 ## `scaffolds[]` (scaffold)
 

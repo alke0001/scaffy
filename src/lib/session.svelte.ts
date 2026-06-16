@@ -1,5 +1,7 @@
 import { browser } from '$app/environment';
 import type { Scaffold } from '$lib/types/scaffold';
+import { LESSON_SCAFFOLD_COUNT } from '$lib/types/scaffold';
+import { devLog } from '$lib/dev/log.js';
 
 export type SessionStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -42,14 +44,27 @@ function restoreSessions() {
 	try {
 		const parsed = JSON.parse(rawSessions) as unknown;
 		if (Array.isArray(parsed)) {
-			sessions = parsed.filter((item): item is SessionRecord =>
-				Boolean(
-					item &&
-					typeof (item as SessionRecord).id === 'string' &&
-					typeof (item as SessionRecord).prompt === 'string' &&
-					Array.isArray((item as SessionRecord).scaffolds),
-				),
-			);
+			sessions = parsed
+				.filter((item): item is SessionRecord =>
+					Boolean(
+						item &&
+						typeof (item as SessionRecord).id === 'string' &&
+						typeof (item as SessionRecord).prompt === 'string' &&
+						Array.isArray((item as SessionRecord).scaffolds),
+					),
+				)
+				.map((item) => {
+					const scaffolds = item.scaffolds ?? [];
+					const status =
+						item.status ?? (scaffolds.length > 0 ? ('ready' as const) : ('idle' as const));
+					return {
+						...item,
+						scaffolds,
+						status,
+						errorMessage: item.errorMessage ?? null,
+						completed: item.completed ?? false,
+					};
+				});
 		}
 	} catch {
 		// ignore invalid storage data
@@ -89,6 +104,10 @@ export function getActiveSession(): SessionRecord | null {
 	return sessions.find((session) => session.id === activeSessionId) ?? null;
 }
 
+export function getSessionById(id: string): SessionRecord | null {
+	return sessions.find((session) => session.id === id) ?? null;
+}
+
 export function getScaffolds(): Scaffold[] {
 	return getActiveSession()?.scaffolds ?? [];
 }
@@ -98,26 +117,41 @@ export function getSessionError(): string | null {
 }
 
 export function startScaffoldRequest(prompt: string, preferredId?: string): string {
-	const id =
-		preferredId && !sessions.some((session) => session.id === preferredId)
-			? preferredId
-			: createSessionId();
-	const session: SessionRecord = {
-		id,
-		prompt,
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity
-		createdAt: new Date().toISOString(),
-		scaffolds: [],
-		status: 'loading',
-		errorMessage: null,
-		completed: false,
-	};
+	const id = preferredId ?? createSessionId();
 
-	sessions = [session, ...sessions];
+	const existing = sessions.find((session) => session.id === id);
+	if (existing) {
+		sessions = sessions.map((session) =>
+			session.id === id
+				? {
+						...session,
+						prompt,
+						scaffolds: [],
+						status: 'loading',
+						errorMessage: null,
+						completed: false,
+					}
+				: session,
+		);
+	} else {
+		const session: SessionRecord = {
+			id,
+			prompt,
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
+			createdAt: new Date().toISOString(),
+			scaffolds: [],
+			status: 'loading',
+			errorMessage: null,
+			completed: false,
+		};
+		sessions = [session, ...sessions];
+	}
+
 	activeSessionId = id;
 	status = 'loading';
 	errorMessage = null;
 	persistSessions();
+	devLog('session', 'startScaffoldRequest', { id, promptLength: prompt.length });
 	return id;
 }
 
@@ -142,6 +176,7 @@ export function setScaffolds(next: Scaffold[], sessionId?: string): void {
 		errorMessage = null;
 	}
 	persistSessions();
+	devLog('session', 'setScaffolds', { sessionId: id, count: next.length });
 }
 
 export function setScaffoldError(message: string, sessionId?: string): void {
@@ -163,11 +198,36 @@ export function setScaffoldError(message: string, sessionId?: string): void {
 		errorMessage = message;
 	}
 	persistSessions();
+	devLog('session', 'setScaffoldError', { sessionId: id, message });
+}
+
+export function retryScaffoldRequest(sessionId: string): void {
+	sessions = sessions.map((session) =>
+		session.id === sessionId
+			? {
+					...session,
+					scaffolds: [],
+					status: 'loading',
+					errorMessage: null,
+					completed: false,
+				}
+			: session,
+	);
+
+	if (activeSessionId === sessionId) {
+		status = 'loading';
+		errorMessage = null;
+	}
+	persistSessions();
 }
 
 export function markSessionCompleted(sessionId?: string): void {
 	const id = sessionId ?? activeSessionId;
 	if (!id) return;
+
+	const session = sessions.find((entry) => entry.id === id);
+	if (!session) return;
+	if (session.status !== 'ready' || session.scaffolds.length < LESSON_SCAFFOLD_COUNT) return;
 
 	sessions = sessions.map((session) =>
 		session.id === id
@@ -188,6 +248,7 @@ export function setActiveSessionId(id: string): void {
 	activeSessionId = id;
 	persistSessions();
 	syncActiveState();
+	devLog('session', 'setActiveSessionId', { id, status: getActiveSession()?.status });
 }
 
 export function deleteSession(id: string): void {

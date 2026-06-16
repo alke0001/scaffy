@@ -32,15 +32,16 @@
 		sessionId?: string;
 		/** Prompt textarea only — no message list or submit button (home screen). */
 		promptOnly?: boolean;
+		/** Bound prompt text (home screen shares state with start button). */
+		prompt?: string;
 	}
 
-	let { mode, sessionId, promptOnly = false }: Props = $props();
+	let { mode, sessionId, promptOnly = false, prompt = $bindable('') }: Props = $props();
 
 	const promptTextareaClass =
 		'w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset focus-visible:outline-none';
 
 	let messages = $state<ChatMessage[]>([]);
-	let prompt = $state('');
 	let scrollViewport = $state<HTMLElement | null>(null);
 
 	let askAbort = $state<AbortController | null>(null);
@@ -161,6 +162,7 @@
 
 	async function onSubmit(event: SubmitEvent) {
 		event.preventDefault();
+		if (promptOnly) return;
 		await submitFromPrompt();
 	}
 

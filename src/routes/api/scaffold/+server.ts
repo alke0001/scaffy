@@ -1,24 +1,19 @@
+/**
+ * POST /api/scaffold — single-shot Learn scaffold proxy (3 scaffolds per lesson).
+ * System: system-prompt.md. Validation: validate-lesson.ts (count + cumulative chain).
+ */
+
 import { json, error, isHttpError } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { APIError } from '@anthropic-ai/sdk';
 import { client, resolveModel } from '$lib/server/anthropic-client.js';
-import {
-	OUTPUT_JSON_SCHEMA,
-	validateStructuredOutput,
-} from '$lib/server/scaffold/output-schema.js';
+import { OUTPUT_JSON_SCHEMA } from '$lib/server/scaffold/output-schema.js';
+import { shuffleScaffoldOptions } from '$lib/server/scaffold/post-process.js';
+import { validateLessonOutput } from '$lib/server/scaffold/validate-lesson.js';
 import systemPrompt from '$lib/server/scaffold/system-prompt.md?raw';
 
-/**
- * Singleton config for POST /api/scaffold — all model hyperparameters and caching in one place.
- *
- * `maxOutputTokens`      — hard cap on completion tokens; raise if responses hit stop_reason === 'max_tokens'.
- * `temperature`          — lower → more deterministic. Note: structured output schema constrains shape;
- *                          temperature only biases wording within that shape. Try 1 if you get a 400.
- * `systemPromptCacheTtl` — '5m' during active prompt development (changes take effect within 5 min);
- *                          '1h' once the prompt is stable (2× write cost, break-even at 3+ req/h).
- */
 const CONFIG = {
-	maxOutputTokens: 8192,
+	maxOutputTokens: 6144,
 	temperature: 0.3,
 	systemPromptCacheTtl: '5m',
 } as const satisfies {
@@ -27,17 +22,76 @@ const CONFIG = {
 	systemPromptCacheTtl: '5m' | '1h';
 };
 
-/**
- * SvelteKit route endpoint: maps to POST /api/scaffold (server-only).
- *
- * Proxies to Claude with structured output for Scaffy `scaffolds`. The UI uses
- * `fetch('/api/scaffold', …)`; the API key never leaves the server.
- */
-
 type ScaffoldRequestBody = {
 	prompt?: unknown;
 	model?: unknown;
 };
+
+function buildRetryUserContent(prompt: string, validationMessage: string): string {
+	return [
+		`[Retry] Previous response failed validation: ${validationMessage}`,
+		`Return exactly 3 scaffolds in "scaffolds". Each codeSnippet must cumulatively extend the previous (full-file snapshots).`,
+		'',
+		`Original user request:\n${prompt}`,
+	].join('\n');
+}
+
+async function callAnthropicScaffold(opts: {
+	apiModelId: string;
+	userContent: string;
+}): Promise<{ text: string }> {
+	const message = await client.messages.create({
+		model: opts.apiModelId,
+		max_tokens: CONFIG.maxOutputTokens,
+		temperature: CONFIG.temperature,
+		system: [
+			{
+				type: 'text',
+				text: systemPrompt.trim(),
+				cache_control: { type: 'ephemeral', ttl: CONFIG.systemPromptCacheTtl },
+			},
+		],
+		messages: [{ role: 'user', content: opts.userContent }],
+		output_config: {
+			format: {
+				type: 'json_schema',
+				schema: OUTPUT_JSON_SCHEMA,
+			},
+		},
+	});
+
+	if (message.stop_reason === 'refusal') {
+		throw error(502, 'Claude refused the request; structured output may be invalid.');
+	}
+	if (message.stop_reason === 'max_tokens') {
+		throw error(
+			502,
+			'Claude hit max_tokens before finishing structured output. Retry with a smaller request or higher max_tokens.',
+		);
+	}
+
+	const textBlock = message.content.find((b) => b.type === 'text');
+	if (!textBlock || textBlock.type !== 'text') {
+		throw error(502, 'Anthropic returned no text block.');
+	}
+
+	return { text: textBlock.text };
+}
+
+function parseAndValidate(text: string) {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(text);
+	} catch {
+		throw error(502, 'Anthropic response was not valid JSON.');
+	}
+
+	const validated = validateLessonOutput(parsed);
+	if (!validated.ok) {
+		return { ok: false as const, message: validated.message };
+	}
+	return { ok: true as const, value: validated.value };
+}
 
 export const POST: RequestHandler = async ({ request }) => {
 	let body: unknown;
@@ -62,95 +116,24 @@ export const POST: RequestHandler = async ({ request }) => {
 	const { apiModelId } = resolveModel(modelStr);
 
 	try {
-		const message = await client.messages.create({
-			model: apiModelId,
-			max_tokens: CONFIG.maxOutputTokens,
-			temperature: CONFIG.temperature,
-			// cache_control caches the system prompt — avoids re-processing ~2500 tokens on every request
-			system: [
-				{
-					type: 'text',
-					text: systemPrompt.trim(),
-					cache_control: { type: 'ephemeral', ttl: CONFIG.systemPromptCacheTtl },
-				},
-			],
-			messages: [{ role: 'user', content: trimmedPrompt }],
-			output_config: {
-				format: {
-					type: 'json_schema',
-					schema: OUTPUT_JSON_SCHEMA,
-				},
-			},
-		});
+		let result = parseAndValidate(
+			(await callAnthropicScaffold({ apiModelId, userContent: trimmedPrompt })).text,
+		);
 
-		if (message.stop_reason === 'refusal') {
-			throw error(502, 'Claude refused the request; structured output may be invalid.');
-		}
-		if (message.stop_reason === 'max_tokens') {
-			throw error(
-				502,
-				'Claude hit max_tokens before finishing structured output. Retry with a smaller request or higher max_tokens.',
-			);
-		}
-
-		const textBlock = message.content.find((b) => b.type === 'text');
-		if (!textBlock || textBlock.type !== 'text') {
-			throw error(502, 'Anthropic returned no text block.');
-		}
-
-		let parsed: unknown;
-		try {
-			parsed = JSON.parse(textBlock.text);
-		} catch {
-			throw error(502, 'Anthropic response was not valid JSON.');
-		}
-
-		const validated = validateStructuredOutput(parsed);
-		if (!validated.ok) {
-			throw error(502, `Output validation failed: ${validated.message}`);
-		}
-		const shuffledScaffolds = validated.value.scaffolds.map((scaffold) => {
-			const kc = scaffold.knowledgeCheck;
-
-			if (!kc?.options?.length) {
-				return scaffold;
+		if (!result.ok) {
+			const retryText = (
+				await callAnthropicScaffold({
+					apiModelId,
+					userContent: buildRetryUserContent(trimmedPrompt, result.message),
+				})
+			).text;
+			result = parseAndValidate(retryText);
+			if (!result.ok) {
+				throw error(502, `Output validation failed: ${result.message}`);
 			}
+		}
 
-			const options = [...kc.options];
-
-			// richtige Antwort merken
-			const correctOption = options.find((option) => option.id === kc.correctOptionId);
-
-			if (!correctOption) {
-				return scaffold;
-			}
-
-			// Fisher-Yates Shuffle
-			for (let i = options.length - 1; i > 0; i--) {
-				const j = Math.floor(Math.random() * (i + 1));
-				[options[i], options[j]] = [options[j], options[i]];
-			}
-
-			// IDs neu vergeben
-			const ids = ['a', 'b', 'c', 'd'];
-
-			const remappedOptions = options.map((option, index) => ({
-				...option,
-				id: ids[index],
-			}));
-
-			// neue Position der richtigen Antwort finden
-			const newCorrectOption = remappedOptions.find((option) => option.text === correctOption.text);
-
-			return {
-				...scaffold,
-				knowledgeCheck: {
-					...kc,
-					options: remappedOptions,
-					correctOptionId: newCorrectOption?.id ?? kc.correctOptionId,
-				},
-			};
-		});
+		const shuffledScaffolds = shuffleScaffoldOptions(result.value.scaffolds);
 		return json({ scaffolds: shuffledScaffolds });
 	} catch (e) {
 		if (isHttpError(e)) throw e;

@@ -12,6 +12,9 @@ export type KnowledgeCheck = {
 	explanation: string;
 };
 
+/** Full learn lesson length (single-shot API). */
+export const LESSON_SCAFFOLD_COUNT = 3;
+
 /** One teaching step: optional Monaco hints, code snippet, and its knowledge check. */
 export type Scaffold = {
 	targetPath?: string;

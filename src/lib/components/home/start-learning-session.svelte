@@ -1,61 +1,55 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
-	import ChatPanel from '$lib/components/chat/chat-panel.svelte';
-	import { HOME_EXAMPLE_PROMPTS } from '$lib/components/home/example-prompts.js';
-	import { requestScaffold } from '$lib/learn/request-scaffold.js';
-	import { ChipGrid } from '$lib/components/ui/chip/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import ScaffyLogo from '$lib/assets/scaffy-logo.svelte';
-	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
-	import { onMount } from 'svelte';
 
-	const PROMPT_INPUT_ID = 'chat-prompt';
+	import { resolve } from '$app/paths';
+
+	import ChatPanel from '$lib/components/chat/chat-panel.svelte';
+
+	import { HOME_EXAMPLE_PROMPTS } from '$lib/components/home/example-prompts.js';
+
+	import { startLearnSession } from '$lib/learn/request-scaffold.js';
+
+	import { ChipGrid } from '$lib/components/ui/chip/index.js';
+
+	import { Button } from '$lib/components/ui/button/index.js';
+
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
+
+	import * as Card from '$lib/components/ui/card/index.js';
+
+	import ScaffyLogo from '$lib/assets/scaffy-logo.svelte';
+
+	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
+
 	const MIN_PROMPT_LENGTH = 10;
 
-	let promptLength = $state(0);
+	let prompt = $state('');
+
 	let isStarting = $state(false);
 
-	const canStart = $derived(promptLength >= MIN_PROMPT_LENGTH && !isStarting);
-
-	function readPromptFromDom(): string {
-		const el = document.getElementById(PROMPT_INPUT_ID) as HTMLTextAreaElement | null;
-		return el?.value.trim() ?? '';
-	}
-
-	function syncPromptLength() {
-		promptLength = readPromptFromDom().length;
-	}
+	const canStart = $derived(prompt.trim().length >= MIN_PROMPT_LENGTH && !isStarting);
 
 	function fillPrompt(text: string) {
-		const el = document.getElementById(PROMPT_INPUT_ID) as HTMLTextAreaElement | null;
-		if (!el) return;
-		el.value = text;
-		el.dispatchEvent(new Event('input', { bubbles: true }));
-		syncPromptLength();
-		el.focus();
+		prompt = text;
 	}
 
 	async function startSession() {
-		const prompt = readPromptFromDom();
-		if (prompt.length < MIN_PROMPT_LENGTH || isStarting) return;
+		const trimmed = prompt.trim();
+
+		if (trimmed.length < MIN_PROMPT_LENGTH || isStarting) return;
 
 		isStarting = true;
-		const id = crypto.randomUUID();
 
-		void requestScaffold(prompt, id);
-		await goto(resolve('/session/[id]', { id }));
-		isStarting = false;
+		try {
+			const sessionId = crypto.randomUUID();
+
+			startLearnSession(trimmed, sessionId);
+
+			await goto(resolve('/session/[id]', { id: sessionId }));
+		} finally {
+			isStarting = false;
+		}
 	}
-
-	onMount(() => {
-		syncPromptLength();
-		const el = document.getElementById(PROMPT_INPUT_ID);
-		el?.addEventListener('input', syncPromptLength);
-		return () => el?.removeEventListener('input', syncPromptLength);
-	});
 </script>
 
 <ScrollArea orientation="vertical" class="h-full bg-background text-foreground">
@@ -63,8 +57,10 @@
 		<header class="mb-10 flex flex-col items-center gap-4 text-center">
 			<div class="flex items-center gap-3">
 				<ScaffyLogo width={52} height={52} class="shrink-0" />
+
 				<span class="text-3xl tracking-tight text-foreground lowercase">scaffy</span>
 			</div>
+
 			<p class="max-w-md text-sm leading-relaxed text-muted-foreground">
 				Learn to build code, not just have it built for you. Type what you want — Scaffy walks you
 				through it, chunk by chunk.
@@ -77,10 +73,12 @@
 					<p class="mb-3 text-xs font-medium tracking-widest text-muted-foreground uppercase">
 						Your prompt
 					</p>
+
 					<p class="mb-4 text-center text-sm text-muted-foreground">
 						Describe what you want to build in plain language.
 					</p>
-					<ChatPanel mode="learn" promptOnly />
+
+					<ChatPanel mode="learn" promptOnly bind:prompt />
 				</Card.Content>
 			</Card.Root>
 
@@ -93,13 +91,16 @@
 					onclick={startSession}
 				>
 					{isStarting ? 'Starting…' : 'start session'}
+
 					<CornerDownLeft class="size-4" aria-hidden="true" />
 				</Button>
 			</div>
 
 			<p class="mt-3 text-center text-xs text-muted-foreground">
 				<span class="text-scaffy-magenta">rule:</span>
+
 				prompt must be plain language —
+
 				<span class="text-scaffy-magenta">no &lt;, {'{'}, ; tokens</span>
 			</p>
 		</div>
@@ -111,6 +112,7 @@
 			>
 				Try one of these
 			</h2>
+
 			<ChipGrid items={HOME_EXAMPLE_PROMPTS} onSelect={fillPrompt} />
 		</section>
 	</main>
