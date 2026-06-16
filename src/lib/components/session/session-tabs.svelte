@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import DeleteConfirmationDialog from './delete-confirmation-dialog.svelte';
 
 	interface Props {
 		onSelectSession: (id: string) => void;
@@ -17,6 +18,9 @@
 	const activeSessionId = $derived(getActiveSessionId());
 	const pathname = $derived(page.url.pathname);
 	const isHome = $derived(pathname === '/');
+
+	let showDeleteConfirm = $state(false);
+	let pendingDeleteId = $state<string | null>(null);
 
 	function goHome() {
 		if (isHome) return;
@@ -33,15 +37,29 @@
 
 	function handleDelete(event: MouseEvent, id: string) {
 		event.stopPropagation();
-		deleteSession(id);
-		onDeleteSession?.(id);
+		pendingDeleteId = id;
+		showDeleteConfirm = true;
+	}
+
+	function confirmDelete() {
+		if (pendingDeleteId) {
+			deleteSession(pendingDeleteId);
+			onDeleteSession?.(pendingDeleteId);
+		}
+		showDeleteConfirm = false;
+		pendingDeleteId = null;
+	}
+
+	function cancelDelete() {
+		showDeleteConfirm = false;
+		pendingDeleteId = null;
 	}
 </script>
 
 <!-- class="session-tabs mb-2 flex min-h-12 items-center gap-2 overflow-x-auto px-2 text-sm" SO war die klasse vom Button vorher. Weiß net ob änderungen sinnvoll. So verändert sich die tab größe halt nimmer. Find ich persönlich besser-->
 <div
 	class={cn(
-		'session-tabs mb-2 flex flex-nowrap items-center gap-2 overflow-x-auto px-2 text-sm',
+		'session-tabs native-scroll-x mb-2 flex flex-nowrap items-center gap-2 px-2 text-sm',
 		className,
 	)}
 >
@@ -115,3 +133,7 @@
 		+
 	</button>
 </div>
+
+{#if showDeleteConfirm}
+	<DeleteConfirmationDialog onConfirm={confirmDelete} onCancel={cancelDelete} />
+{/if}

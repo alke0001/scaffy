@@ -21,6 +21,7 @@
 		var(--muted-foreground) calc(var(--scaffy-scrollbar-visible-opacity) * 100%),
 		transparent
 	) !important;
+	opacity: 0;
 	transition:
 		opacity var(--scaffy-scrollbar-fade-out-duration) var(--scaffy-scrollbar-fade-out-ease),
 		background-color var(--scaffy-scrollbar-fade-out-duration) var(--scaffy-scrollbar-fade-out-ease);
@@ -28,6 +29,7 @@
 
 .scaffy-monaco-editor:hover .monaco-scrollable-element > .scrollbar > .slider,
 .scaffy-monaco-editor .monaco-scrollable-element > .scrollbar.active > .slider {
+	opacity: 1;
 	transition-duration: var(--scaffy-scrollbar-fade-in-duration);
 	transition-timing-function: var(--scaffy-scrollbar-fade-in-ease);
 }

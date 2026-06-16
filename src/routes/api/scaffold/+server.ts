@@ -109,8 +109,49 @@ export const POST: RequestHandler = async ({ request }) => {
 		if (!validated.ok) {
 			throw error(502, `Output validation failed: ${validated.message}`);
 		}
+		const shuffledScaffolds = validated.value.scaffolds.map((scaffold) => {
+			const kc = scaffold.knowledgeCheck;
 
-		return json({ scaffolds: validated.value.scaffolds });
+			if (!kc?.options?.length) {
+				return scaffold;
+			}
+
+			const options = [...kc.options];
+
+			// richtige Antwort merken
+			const correctOption = options.find((option) => option.id === kc.correctOptionId);
+
+			if (!correctOption) {
+				return scaffold;
+			}
+
+			// Fisher-Yates Shuffle
+			for (let i = options.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[options[i], options[j]] = [options[j], options[i]];
+			}
+
+			// IDs neu vergeben
+			const ids = ['a', 'b', 'c', 'd'];
+
+			const remappedOptions = options.map((option, index) => ({
+				...option,
+				id: ids[index],
+			}));
+
+			// neue Position der richtigen Antwort finden
+			const newCorrectOption = remappedOptions.find((option) => option.text === correctOption.text);
+
+			return {
+				...scaffold,
+				knowledgeCheck: {
+					...kc,
+					options: remappedOptions,
+					correctOptionId: newCorrectOption?.id ?? kc.correctOptionId,
+				},
+			};
+		});
+		return json({ scaffolds: shuffledScaffolds });
 	} catch (e) {
 		if (isHttpError(e)) throw e;
 

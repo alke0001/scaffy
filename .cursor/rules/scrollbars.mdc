@@ -1,0 +1,36 @@
+---
+description: Unified hover-fade scrollbars — ScrollArea, Monaco, modals (ADR-017)
+alwaysApply: true
+---
+
+# Scrollbars — one behavior everywhere
+
+All scrollable product surfaces use the **same hover-fade scrollbar** as Monaco (Cursor-like): thumb/track **hidden by default**, **fades in** on pointer enter or while actively scrolling, **fades out** after leave.
+
+## Required pattern
+
+| Surface | Implementation |
+| ------- | -------------- |
+| App pages, chat, history | `{ ScrollArea }` from `ui/scroll-area` — **do not** pass `type`; default is `hover` |
+| Modals (About, etc.) | `ScaffyModalBody scroll` — wraps `ScrollArea` internally; **no** `type="always"` / `type="scroll"` |
+| Monaco editor | `monaco-editor.css` — same `--scaffy-scrollbar-*` tokens |
+| Markdown `<pre>` only | `native-scroll-x` in `scroll-area.css` (documented ADR-017 exception) |
+
+## Do not
+
+- Pass `type="always"`, `type="scroll"`, or `type="auto"` on product `ScrollArea` unless a new ADR documents an exception.
+- Add per-page scrollbar colors, sizes, or fade overrides.
+- Use native `overflow: auto` scrollbars in feature views when `ScrollArea` fits.
+
+## Styling (single source)
+
+- **Tokens:** `--scaffy-scrollbar-inset`, `--scaffy-scrollbar-size`, `--scaffy-scrollbar-visible-opacity`, fade durations in `scroll-area.css` (`:root`).
+- **ScrollArea:** fade via `[data-state='visible']` on `[data-slot='scroll-area-scrollbar']` in `scroll-area.css`.
+- **Monaco:** slider opacity tied to `.scaffy-monaco-editor:hover` / `.scrollbar.active` in `monaco-editor.css`.
+
+## Layout
+
+- `ScrollArea` root: `min-h-0`, flex/grid parent must constrain height (`minmax(0,1fr)` for modal lg grid — see ADR-018).
+- Content padding on **inner** wrappers, not on `ScrollArea` root.
+
+See **ADR-017** and **ADR-018** in `docs/decisions.md`.

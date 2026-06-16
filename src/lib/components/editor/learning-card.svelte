@@ -1,6 +1,12 @@
 <script lang="ts">
-	import { portal } from '$lib/actions/portal.js';
 	import { getExplanationBody } from '$lib/components/editor/knowledge-check-feedback.js';
+	import {
+		ScaffyModal,
+		ScaffyModalHeader,
+		ScaffyModalBody,
+		ScaffyModalActions,
+		ScaffyModalButton,
+	} from '$lib/components/ui/scaffy-modal/index.js';
 	import type { KnowledgeCheck } from '$lib/types/scaffold.js';
 
 	let {
@@ -65,50 +71,33 @@
 </div>
 
 {#if showFeedback && correctOption}
-	<div
-		use:portal
-		class="scaffy-knowledge-feedback-overlay"
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="feedback-title"
-	>
-		<div class="scaffy-knowledge-feedback-card" role="status" aria-live="polite">
-			<div class="scaffy-knowledge-feedback-card__header">
-				<div class="scaffy-knowledge-feedback-card__icon" aria-hidden="true">!</div>
-				<h2 id="feedback-title" class="scaffy-knowledge-feedback-card__title">
-					Diese Antwort ist falsch
-				</h2>
+	<ScaffyModal variant="error" ariaLabelledby="feedback-title" onDismiss={onUnderstand}>
+		<ScaffyModalHeader icon="!" title="Diese Antwort ist falsch" titleId="feedback-title" />
+
+		<ScaffyModalBody>
+			<p class="learning-card-feedback__answer-label">Die richtige Antwort ist:</p>
+			<p class="learning-card-feedback__answer-id">Korrekt ist ({correctOption.id}).</p>
+			<div
+				class="knowledge-check-option knowledge-check-option-correct"
+				role="group"
+				aria-label="Korrekte Antwort ({correctOption.id})"
+			>
+				<span class="knowledge-check-radio" aria-hidden="true"></span>
+				<span class="knowledge-check-option-text">
+					({correctOption.id}) {correctOption.text}
+				</span>
 			</div>
 
-			<div class="scaffy-knowledge-feedback-card__body">
-				<p class="scaffy-knowledge-feedback-card__answer-label">Die richtige Antwort ist:</p>
-				<p class="scaffy-knowledge-feedback-card__answer-id">
-					Korrekt ist ({correctOption.id}).
-				</p>
-				<div
-					class="knowledge-check-option knowledge-check-option-correct"
-					role="group"
-					aria-label="Korrekte Antwort ({correctOption.id})"
-				>
-					<span class="knowledge-check-radio" aria-hidden="true"></span>
-					<span class="knowledge-check-option-text">
-						({correctOption.id}) {correctOption.text}
-					</span>
+			{#if explanationBody}
+				<div class="learning-card-feedback__explanation">
+					<p class="learning-card-feedback__explanation-label">Erklärung</p>
+					<p class="scaffy-modal-card__message">{explanationBody}</p>
 				</div>
+			{/if}
+		</ScaffyModalBody>
 
-				{#if explanationBody}
-					<div class="scaffy-knowledge-feedback-card__explanation">
-						<p class="scaffy-knowledge-feedback-card__explanation-label">Erklärung</p>
-						<p class="scaffy-knowledge-feedback-card__message">{explanationBody}</p>
-					</div>
-				{/if}
-			</div>
-
-			<div class="scaffy-knowledge-feedback-card__actions">
-				<button type="button" class="scaffy-knowledge-feedback-card__btn" onclick={onUnderstand}>
-					Verstanden
-				</button>
-			</div>
-		</div>
-	</div>
+		<ScaffyModalActions>
+			<ScaffyModalButton variant="primary" onclick={onUnderstand}>Verstanden</ScaffyModalButton>
+		</ScaffyModalActions>
+	</ScaffyModal>
 {/if}

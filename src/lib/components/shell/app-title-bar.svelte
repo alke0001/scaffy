@@ -1,7 +1,6 @@
 <script lang="ts">
 	import AboutDialog from '$lib/components/about/about-dialog.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -52,21 +51,15 @@
 		>
 			history
 		</Button>
-		<Dialog.Root bind:open={aboutOpen}>
-			<Dialog.Trigger>
-				{#snippet child({ props })}
-					<Button
-						variant="ghost"
-						size="icon-sm"
-						{...props}
-						aria-label="About Scaffy"
-						class="text-muted-foreground hover:text-foreground"
-					>
-						<CircleHelp />
-					</Button>
-				{/snippet}
-			</Dialog.Trigger>
-			<AboutDialog />
-		</Dialog.Root>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			aria-label="About Scaffy"
+			class="text-muted-foreground hover:text-foreground"
+			onclick={() => (aboutOpen = true)}
+		>
+			<CircleHelp />
+		</Button>
+		<AboutDialog bind:open={aboutOpen} />
 	</div>
 </header>
