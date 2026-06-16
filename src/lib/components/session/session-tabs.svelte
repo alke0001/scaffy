@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { deleteSession, getActiveSessionId, getSessions } from '$lib/session.svelte.js';
+	import { cn } from '$lib/utils.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -7,9 +8,10 @@
 	interface Props {
 		onSelectSession: (id: string) => void;
 		onDeleteSession?: (id: string) => void;
+		class?: string;
 	}
 
-	let { onSelectSession, onDeleteSession }: Props = $props();
+	let { onSelectSession, onDeleteSession, class: className }: Props = $props();
 
 	const sessions = $derived(getSessions());
 	const activeSessionId = $derived(getActiveSessionId());
@@ -37,20 +39,25 @@
 </script>
 
 <!-- class="session-tabs mb-2 flex min-h-12 items-center gap-2 overflow-x-auto px-2 text-sm" SO war die klasse vom Button vorher. Weiß net ob änderungen sinnvoll. So verändert sich die tab größe halt nimmer. Find ich persönlich besser-->
-<div class="session-tabs mb-2 flex flex-nowrap items-center gap-2 overflow-x-auto px-2 text-sm">
+<div
+	class={cn(
+		'session-tabs mb-2 flex flex-nowrap items-center gap-2 overflow-x-auto px-2 text-sm',
+		className,
+	)}
+>
 	{#if sessions.length > 0}
 		{#each sessions as session (session.id)}
 			<div
-				class="session-pill flex items-center gap-2 rounded-full border px-1 py-1 transition"
-				class:bg-indigo-600={session.id === activeSessionId}
-				class:text-white={session.id === activeSessionId}
-				class:border-transparent={session.id === activeSessionId}
-				class:bg-slate-900={session.id !== activeSessionId && session.completed}
-				class:text-slate-200={session.id !== activeSessionId && session.completed}
-				class:border-slate-700={session.id !== activeSessionId && session.completed}
-				class:bg-slate-950={session.id !== activeSessionId && !session.completed}
-				class:text-orange-300={session.id !== activeSessionId && !session.completed}
-				class:border-orange-500={session.id !== activeSessionId && !session.completed}
+				class={cn(
+					'session-pill flex items-center gap-2 rounded-full border px-1 py-1 transition',
+					session.id === activeSessionId && 'border-transparent bg-ring text-background',
+					session.id !== activeSessionId &&
+						session.completed &&
+						'border-border bg-card text-foreground',
+					session.id !== activeSessionId &&
+						!session.completed &&
+						'border-scaffy-amber/50 bg-card text-scaffy-amber',
+				)}
 			>
 				<!-- class="flex items-center px-3 py-1 focus:outline-none" SO war die klasse vom Button vorher. Weiß net ob änderungen sinnvoll. So verändert sich die tab größe halt nimmer. Find ich persönlich besser-->
 				<button
@@ -62,29 +69,29 @@
 
 					{#if session.completed}
 						<span
-							class="ml-2 inline-flex h-5 items-center rounded-full bg-emerald-500 px-2 text-[0.65rem] font-semibold text-slate-950"
+							class="ml-2 inline-flex h-5 items-center rounded-full bg-primary px-2 text-[0.65rem] font-semibold text-primary-foreground"
 						>
 							✓
 						</span>
 					{:else}
 						<span
-							class="ml-2 inline-block h-2 w-2 rounded-full bg-orange-400"
+							class="ml-2 inline-block h-2 w-2 rounded-full bg-scaffy-amber"
 							title="Unvollständige Session"
 						></span>
 					{/if}
 
 					{#if session.status === 'loading'}
-						<span class="ml-2 text-slate-400">(Lädt)</span>
+						<span class="ml-2 text-muted-foreground">(Lädt)</span>
 					{/if}
 
 					{#if session.status === 'error'}
-						<span class="ml-2 text-rose-400">(Fehler)</span>
+						<span class="ml-2 text-destructive">(Fehler)</span>
 					{/if}
 				</button>
 
 				<button
 					type="button"
-					class="session-close rounded-full px-2 text-sm opacity-70 transition hover:bg-black/10 hover:opacity-100"
+					class="session-close rounded-full px-2 text-sm opacity-70 transition hover:bg-foreground/10 hover:opacity-100"
 					aria-label="Session schließen"
 					onclick={(event) => handleDelete(event, session.id)}
 				>
@@ -94,7 +101,7 @@
 		{/each}
 	{:else}
 		<div
-			class="rounded-2xl border border-dashed border-slate-600 bg-slate-950/70 px-3 py-2 text-slate-400"
+			class="rounded-2xl border border-dashed border-border bg-background/70 px-3 py-2 text-muted-foreground"
 		>
 			Noch keine Session vorhanden. Erzeuge eine neue Session über den Lernmodus.
 		</div>

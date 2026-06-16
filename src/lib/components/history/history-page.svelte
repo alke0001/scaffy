@@ -34,7 +34,7 @@
 	}
 </script>
 
-<ScrollArea orientation="vertical" class="h-full bg-home-bg px-4 py-8 text-foreground">
+<ScrollArea orientation="vertical" class="h-full bg-background px-4 py-8 text-foreground">
 	<header class="mx-auto w-full max-w-2xl">
 		<h1 class="text-lg font-medium">History</h1>
 		<p class="mt-1 text-sm text-muted-foreground">Past learning sessions from this browser.</p>
@@ -51,7 +51,7 @@
 					<Button
 						type="button"
 						variant="ghost"
-						class="h-auto w-full flex-col items-start gap-1 rounded-lg border border-home-border bg-home-card px-4 py-3 text-left font-normal shadow-none hover:bg-home-card/80"
+						class="h-auto w-full flex-col items-start gap-1 rounded-lg border border-border bg-card px-4 py-3 text-left font-normal shadow-none hover:bg-card/80"
 						onclick={() => openSession(session.id)}
 					>
 						<span class="line-clamp-2 w-full text-sm text-foreground">
@@ -61,9 +61,9 @@
 							<time datetime={session.createdAt}>{formatDate(session.createdAt)}</time>
 							<span aria-hidden="true">·</span>
 							<span
-								class:text-emerald-500={session.completed}
-								class:text-orange-400={!session.completed && session.status !== 'error'}
-								class:text-rose-400={session.status === 'error'}
+								class:text-primary={session.completed}
+								class:text-scaffy-amber={!session.completed && session.status !== 'error'}
+								class:text-destructive={session.status === 'error'}
 							>
 								{statusLabel(session)}
 							</span>

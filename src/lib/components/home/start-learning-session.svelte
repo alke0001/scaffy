@@ -8,7 +8,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
-	import scaffyLogo from '$lib/assets/scaffy-logo.svg';
+	import ScaffyLogo from '$lib/assets/scaffy-logo.svelte';
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 	import { onMount } from 'svelte';
 
@@ -58,11 +58,11 @@
 	});
 </script>
 
-<ScrollArea orientation="vertical" class="h-full bg-home-bg text-foreground">
+<ScrollArea orientation="vertical" class="h-full bg-background text-foreground">
 	<main class="flex flex-1 flex-col items-center px-4 py-10 sm:py-16">
 		<header class="mb-10 flex flex-col items-center gap-4 text-center">
 			<div class="flex items-center gap-3">
-				<img src={scaffyLogo} alt="" width="52" height="52" class="shrink-0" />
+				<ScaffyLogo width={52} height={52} class="shrink-0" />
 				<span class="text-3xl tracking-tight text-foreground lowercase">scaffy</span>
 			</div>
 			<p class="max-w-md text-sm leading-relaxed text-muted-foreground">
@@ -72,19 +72,15 @@
 		</header>
 
 		<div class="mb-4 w-full max-w-2xl">
-			<Card.Root
-				class="gap-0 border-home-border bg-home-card py-0 shadow-none ring-1 ring-home-border"
-			>
+			<Card.Root class="gap-0 border-border bg-card py-0 shadow-none ring-1 ring-border">
 				<Card.Content class="p-4 sm:p-5">
-					<p class="mb-3 text-xs font-medium tracking-widest text-home-label uppercase">
+					<p class="mb-3 text-xs font-medium tracking-widest text-muted-foreground uppercase">
 						Your prompt
 					</p>
 					<p class="mb-4 text-center text-sm text-muted-foreground">
 						Describe what you want to build in plain language.
 					</p>
-					<div class="home-chat-panel__body">
-						<ChatPanel mode="learn" promptOnly />
-					</div>
+					<ChatPanel mode="learn" promptOnly />
 				</Card.Content>
 			</Card.Root>
 
@@ -93,7 +89,7 @@
 					type="button"
 					variant="outline"
 					disabled={!canStart}
-					class="rounded-full border-home-accent text-home-accent hover:bg-home-accent/10 hover:text-home-accent disabled:border-home-accent-muted disabled:text-home-accent-muted disabled:opacity-100"
+					class="rounded-full border-primary text-primary hover:bg-primary/10 hover:text-primary disabled:border-primary/40 disabled:text-primary/40 disabled:opacity-100"
 					onclick={startSession}
 				>
 					{isStarting ? 'Starting…' : 'start session'}
@@ -102,16 +98,16 @@
 			</div>
 
 			<p class="mt-3 text-center text-xs text-muted-foreground">
-				<span class="text-home-rule-highlight">rule:</span>
+				<span class="text-scaffy-magenta">rule:</span>
 				prompt must be plain language —
-				<span class="text-home-rule-highlight">no &lt;, {'{'}, ; tokens</span>
+				<span class="text-scaffy-magenta">no &lt;, {'{'}, ; tokens</span>
 			</p>
 		</div>
 
 		<section aria-labelledby="example-prompts-heading" class="mt-8 w-full max-w-2xl">
 			<h2
 				id="example-prompts-heading"
-				class="mb-3 text-center text-xs font-medium tracking-widest text-home-label uppercase"
+				class="mb-3 text-center text-xs font-medium tracking-widest text-muted-foreground uppercase"
 			>
 				Try one of these
 			</h2>
@@ -119,10 +115,3 @@
 		</section>
 	</main>
 </ScrollArea>
-
-<style>
-	.home-chat-panel__body :global(textarea#chat-prompt) {
-		border-color: var(--home-border);
-		background: var(--home-bg);
-	}
-</style>

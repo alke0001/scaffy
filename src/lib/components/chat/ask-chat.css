@@ -1,0 +1,62 @@
+/**
+ * Ask-mode chat message bubbles — wireframe tokens from Scaffy_Navigation-Flow.
+ */
+.ask-chat-message--user {
+	border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+	border-radius: 0.875rem;
+	background: var(--card);
+	color: var(--foreground);
+}
+
+.ask-chat-message--assistant {
+	border: 1.5px dashed color-mix(in oklab, var(--border) 65%, transparent);
+	border-radius: 0.875rem;
+	background: transparent;
+	color: var(--foreground);
+}
+
+.ask-chat-message__label {
+	display: block;
+	margin-bottom: 0.5rem;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 0.6875rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: lowercase;
+	color: var(--scaffy-magenta);
+}
+
+.ask-chat-message__skeleton {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 0.125rem 0;
+}
+
+.ask-chat-message__skeleton span {
+	display: block;
+	height: 0.625rem;
+	border-radius: 999px;
+	background: color-mix(in oklab, var(--muted-foreground) 22%, transparent);
+}
+
+.ask-chat-message__skeleton span:nth-child(1) {
+	width: 100%;
+}
+
+.ask-chat-message__skeleton span:nth-child(2) {
+	width: 82%;
+}
+
+.ask-chat-message__skeleton span:nth-child(3) {
+	width: 58%;
+}
+
+.ask-chat-message--assistant :global(.chat-markdown) {
+	font-family: inherit;
+}
+
+.ask-chat-message--assistant :global(.chat-markdown p),
+.ask-chat-message--assistant :global(.chat-markdown li) {
+	color: var(--foreground);
+}

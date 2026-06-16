@@ -4,135 +4,172 @@
 @import 'shadcn-svelte/tailwind.css';
 @import '@fontsource-variable/inter';
 @import '../lib/components/ui/scroll-area/scroll-area.css';
+@import '../lib/components/ui/resizable/resizable-handle.css';
+@import '../lib/components/ui/tooltip/tooltip.css';
+@import '../lib/components/editor/monaco-editor.css';
+@import '../lib/components/editor/learning-card.css';
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Scaffy design tokens - dark-only interface (VS Code / Cursor aesthetic)
+ *
+ * Wireframe palette -> shadcn-svelte CSS variable mapping:
+ *   --bg        #0b0d0e  ->  --background
+ *   --bg-2      #121517  ->  --card / --popover
+ *   --bg-3      #1a1e21  ->  --muted / --secondary / --accent
+ *   --ink       #e6e8e6  ->  --foreground
+ *   --ink-dim   #8a918e  ->  --muted-foreground
+ *   --stroke    #6b7378  ->  --border
+ *   --green     #4ade80  ->  --primary  (CTAs, progress, success)
+ *   --cyan      #6fc3df  ->  --ring     (focus ring, brand identity)
+ *   --crimson   #ef4444  ->  --destructive
+ *
+ * Colors with no direct shadcn slot live as --scaffy-* tokens and are
+ * exposed as Tailwind utilities via @theme inline below.
+ */
+
 :root {
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.141 0.005 285.823);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.141 0.005 285.823);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.141 0.005 285.823);
-	--primary: oklch(0.21 0.006 285.885);
-	--primary-foreground: oklch(0.985 0 0);
-	--secondary: oklch(0.967 0.001 286.375);
-	--secondary-foreground: oklch(0.21 0.006 285.885);
-	--muted: oklch(0.967 0.001 286.375);
-	--muted-foreground: oklch(0.552 0.016 285.938);
-	--accent: oklch(0.967 0.001 286.375);
-	--accent-foreground: oklch(0.21 0.006 285.885);
-	--destructive: oklch(0.577 0.245 27.325);
-	--border: oklch(0.92 0.004 286.32);
-	--input: oklch(0.92 0.004 286.32);
-	--ring: oklch(0.705 0.015 286.067);
-	--chart-1: oklch(0.871 0.006 286.286);
-	--chart-2: oklch(0.552 0.016 285.938);
-	--chart-3: oklch(0.442 0.017 285.786);
-	--chart-4: oklch(0.37 0.013 285.805);
-	--chart-5: oklch(0.274 0.006 286.033);
+	--background: #0b0d0e;
+	--card: #121517;
+	--popover: #121517;
+	--muted: #1a1e21;
+	--foreground: #e6e8e6;
+	--card-foreground: #e6e8e6;
+	--popover-foreground: #e6e8e6;
+	--muted-foreground: #8a918e;
+	--primary-foreground: #0b0d0e;
+	--secondary-foreground: #e6e8e6;
+	--accent-foreground: #e6e8e6;
+	--primary: #4ade80;
+	--secondary: #1a1e21;
+	--accent: #1a1e21;
+	--destructive: #ef4444;
+	--border: #6b7378;
+	--input: #1a1e21;
+	--ring: #6fc3df;
 	--radius: 0.625rem;
-	--sidebar: oklch(0.985 0 0);
-	--sidebar-foreground: oklch(0.141 0.005 285.823);
-	--sidebar-primary: oklch(0.21 0.006 285.885);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.967 0.001 286.375);
-	--sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-	--sidebar-border: oklch(0.92 0.004 286.32);
-	--sidebar-ring: oklch(0.705 0.015 286.067);
+	--sidebar: #121517;
+	--sidebar-foreground: #e6e8e6;
+	--sidebar-primary: #4ade80;
+	--sidebar-primary-foreground: #0b0d0e;
+	--sidebar-accent: #1a1e21;
+	--sidebar-accent-foreground: #e6e8e6;
+	--sidebar-border: #6b7378;
+	--sidebar-ring: #6fc3df;
+	--chart-1: #4ade80;
+	--chart-2: #6fc3df;
+	--chart-3: #5b9bf5;
+	--chart-4: #f4b860;
+	--chart-5: #e879c5;
+
+	/* Scaffy accent tokens - no direct shadcn slot (--scaffy-green mirrors --primary) */
+	--scaffy-green: #4ade80;
+	--scaffy-magenta: #e879c5;
+	--scaffy-cyan: #6fc3df;
+	--scaffy-blue: #5b9bf5;
+	--scaffy-amber: #f4b860;
+
+	/* Structural chrome dividers (non-interactive) — keep quieter than resize/hover affordances */
+	--scaffy-divider: color-mix(in oklab, var(--border) 14%, transparent);
+
+	/* Logo palette — consumed by scaffy-logo.svelte (inline SVG; img cannot read page CSS vars) */
+	--scaffy-logo-teal: #64d2b4;
+	--scaffy-logo-green: #58eb94;
+	--scaffy-logo-blue: #82cff0;
+	--scaffy-logo-pink: #f082c5;
+
+	/* Portaled overlays — feedback modal above read-only hint above shadcn dialogs (z-50) */
+	--scaffy-z-readonly-hint: 100;
+	--scaffy-z-knowledge-feedback: 110;
 }
 
+/* .dark mirrors :root so shadcn dark: variants resolve correctly
+   when a dark class is present (e.g. future theme toggle). */
 .dark {
-	--background: oklch(0.141 0.005 285.823);
-	--foreground: oklch(0.985 0 0);
-	--card: oklch(0.21 0.006 285.885);
-	--card-foreground: oklch(0.985 0 0);
-	--popover: oklch(0.21 0.006 285.885);
-	--popover-foreground: oklch(0.985 0 0);
-	--primary: oklch(0.92 0.004 286.32);
-	--primary-foreground: oklch(0.21 0.006 285.885);
-	--secondary: oklch(0.274 0.006 286.033);
-	--secondary-foreground: oklch(0.985 0 0);
-	--muted: oklch(0.274 0.006 286.033);
-	--muted-foreground: oklch(0.705 0.015 286.067);
-	--accent: oklch(0.274 0.006 286.033);
-	--accent-foreground: oklch(0.985 0 0);
-	--destructive: oklch(0.704 0.191 22.216);
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 15%);
-	--ring: oklch(0.552 0.016 285.938);
-	--chart-1: oklch(0.871 0.006 286.286);
-	--chart-2: oklch(0.552 0.016 285.938);
-	--chart-3: oklch(0.442 0.017 285.786);
-	--chart-4: oklch(0.37 0.013 285.805);
-	--chart-5: oklch(0.274 0.006 286.033);
-	--sidebar: oklch(0.21 0.006 285.885);
-	--sidebar-foreground: oklch(0.985 0 0);
-	--sidebar-primary: oklch(0.488 0.243 264.376);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.274 0.006 286.033);
-	--sidebar-accent-foreground: oklch(0.985 0 0);
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.552 0.016 285.938);
-
-	/* Home screen (design mockup) */
-	--home-bg: #0b0b0b;
-	--home-card: #161616;
-	--home-border: oklch(1 0 0 / 12%);
-	--home-accent: #6ee7b7;
-	--home-accent-muted: color-mix(in srgb, #6ee7b7 40%, transparent);
-	--home-rule-highlight: #f082c5;
-	--home-label: oklch(0.705 0.015 286.067);
-	--logo-teal: #64d2b4;
-	--logo-green: #58eb94;
-	--logo-blue: #82cff0;
-	--logo-pink: #f082c5;
+	--background: #0b0d0e;
+	--card: #121517;
+	--popover: #121517;
+	--muted: #1a1e21;
+	--foreground: #e6e8e6;
+	--card-foreground: #e6e8e6;
+	--popover-foreground: #e6e8e6;
+	--muted-foreground: #8a918e;
+	--primary: #4ade80;
+	--primary-foreground: #0b0d0e;
+	--secondary: #1a1e21;
+	--secondary-foreground: #e6e8e6;
+	--accent: #1a1e21;
+	--accent-foreground: #e6e8e6;
+	--destructive: #ef4444;
+	--border: #6b7378;
+	--input: #1a1e21;
+	--ring: #6fc3df;
+	--sidebar: #121517;
+	--sidebar-foreground: #e6e8e6;
+	--sidebar-primary: #4ade80;
+	--sidebar-primary-foreground: #0b0d0e;
+	--sidebar-accent: #1a1e21;
+	--sidebar-accent-foreground: #e6e8e6;
+	--sidebar-border: #6b7378;
+	--sidebar-ring: #6fc3df;
 }
 
 @theme inline {
 	--font-sans: 'Inter Variable', sans-serif;
-	--color-sidebar-ring: var(--sidebar-ring);
-	--color-sidebar-border: var(--sidebar-border);
-	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-	--color-sidebar-accent: var(--sidebar-accent);
-	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-	--color-sidebar-primary: var(--sidebar-primary);
-	--color-sidebar-foreground: var(--sidebar-foreground);
-	--color-sidebar: var(--sidebar);
-	--color-chart-5: var(--chart-5);
-	--color-chart-4: var(--chart-4);
-	--color-chart-3: var(--chart-3);
-	--color-chart-2: var(--chart-2);
-	--color-chart-1: var(--chart-1);
-	--color-ring: var(--ring);
-	--color-input: var(--input);
-	--color-border: var(--border);
-	--color-destructive: var(--destructive);
-	--color-accent-foreground: var(--accent-foreground);
-	--color-accent: var(--accent);
-	--color-muted-foreground: var(--muted-foreground);
-	--color-muted: var(--muted);
-	--color-secondary-foreground: var(--secondary-foreground);
-	--color-secondary: var(--secondary);
-	--color-primary-foreground: var(--primary-foreground);
-	--color-primary: var(--primary);
-	--color-popover-foreground: var(--popover-foreground);
-	--color-popover: var(--popover);
-	--color-card-foreground: var(--card-foreground);
-	--color-card: var(--card);
-	--color-foreground: var(--foreground);
+
+	/* shadcn-svelte standard color aliases */
 	--color-background: var(--background);
-	--color-home-bg: var(--home-bg);
-	--color-home-card: var(--home-card);
-	--color-home-border: var(--home-border);
-	--color-home-accent: var(--home-accent);
-	--color-home-accent-muted: var(--home-accent-muted);
-	--color-home-rule-highlight: var(--home-rule-highlight);
-	--color-home-label: var(--home-label);
-	--color-logo-teal: var(--logo-teal);
-	--color-logo-green: var(--logo-green);
-	--color-logo-blue: var(--logo-blue);
-	--color-logo-pink: var(--logo-pink);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+
+	/* Scaffy accent tokens - Tailwind utilities */
+	--color-scaffy-green: var(--scaffy-green);
+	--color-scaffy-magenta: var(--scaffy-magenta);
+	--color-scaffy-cyan: var(--scaffy-cyan);
+	--color-scaffy-blue: var(--scaffy-blue);
+	--color-scaffy-amber: var(--scaffy-amber);
+	--color-scaffy-divider: var(--scaffy-divider);
+
+	/* Logo palette */
+	--color-scaffy-logo-teal: var(--scaffy-logo-teal);
+	--color-scaffy-logo-green: var(--scaffy-logo-green);
+	--color-scaffy-logo-blue: var(--scaffy-logo-blue);
+	--color-scaffy-logo-pink: var(--scaffy-logo-pink);
+
+	/* Sidebar */
+	--color-sidebar: var(--sidebar);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-ring: var(--sidebar-ring);
+
+	/* Charts */
+	--color-chart-1: var(--chart-1);
+	--color-chart-2: var(--chart-2);
+	--color-chart-3: var(--chart-3);
+	--color-chart-4: var(--chart-4);
+	--color-chart-5: var(--chart-5);
+
+	/* Radius scale */
 	--radius-sm: calc(var(--radius) * 0.6);
 	--radius-md: calc(var(--radius) * 0.8);
 	--radius-lg: var(--radius);
@@ -152,4 +189,52 @@
 	html {
 		@apply font-sans;
 	}
+}
+
+/* Title-bar logo link — global classes so hover is not blocked by Svelte scope or Tailwind filter clashes */
+.scaffy-logo-link {
+	padding: 0.25rem;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	border-radius: 0.75rem;
+	line-height: 0;
+}
+
+.scaffy-logo-link-mark {
+	display: block;
+	transform-origin: center;
+	opacity: 0.88;
+	filter: saturate(0.92) brightness(0.96);
+	transition:
+		transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1),
+		opacity 0.22s ease,
+		filter 0.22s ease;
+}
+
+.scaffy-logo-link:hover .scaffy-logo-link-mark {
+	transform: scale(1.08);
+	opacity: 1;
+	filter: saturate(1.12) brightness(1.12)
+		drop-shadow(0 0 12px color-mix(in oklab, var(--ring) 32%, transparent));
+}
+
+/* Press feedback without shrinking — avoids hover → active → hover scale bounce on click */
+.scaffy-logo-link:active:hover .scaffy-logo-link-mark {
+	transform: scale(1.08);
+	opacity: 0.9;
+	filter: saturate(1.06) brightness(1.04)
+		drop-shadow(0 0 8px color-mix(in oklab, var(--ring) 24%, transparent));
+	transition-duration: 0.08s;
+}
+
+.scaffy-logo-link:active:not(:hover) .scaffy-logo-link-mark {
+	transform: scale(0.98);
+	opacity: 0.94;
+	transition-duration: 0.08s;
+}
+
+.scaffy-logo-link:focus-visible {
+	outline: 2px solid var(--ring);
+	outline-offset: 3px;
 }

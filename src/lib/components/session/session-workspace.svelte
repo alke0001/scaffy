@@ -5,7 +5,6 @@
 	import MonacoEditor from '$lib/components/editor/monaco-editor.svelte';
 	import SessionTabs from '$lib/components/session/session-tabs.svelte';
 	import * as Resizable from '$lib/components/ui/resizable/index.js';
-	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import { getActiveSessionId, getSessions, setActiveSessionId } from '$lib/session.svelte.js';
 
 	interface Props {
@@ -45,30 +44,36 @@
 		<div class="hidden h-full md:block">
 			<Resizable.PaneGroup direction="horizontal" class="h-full">
 				<Resizable.Pane defaultSize={60} minSize={25} class="min-h-0">
-					<ScrollArea orientation="vertical" class="h-full bg-background p-2">
-						<SessionTabs onSelectSession={selectSession} onDeleteSession={handleDeleteSession} />
-						<MonacoEditor />
-					</ScrollArea>
+					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background p-2">
+						<SessionTabs
+							class="shrink-0"
+							onSelectSession={selectSession}
+							onDeleteSession={handleDeleteSession}
+						/>
+						<MonacoEditor class="min-h-0 flex-1" />
+					</div>
 				</Resizable.Pane>
-				<Resizable.Handle class="cursor-col-resize hover:bg-border/80" />
+				<Resizable.Handle />
 				<Resizable.Pane defaultSize={40} minSize={20} class="min-h-0">
-					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-						<ScrollArea orientation="vertical" class="min-h-0 flex-1 p-2">
-							<ChatPanel mode="ask" />
-						</ScrollArea>
+					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background p-2">
+						<ChatPanel mode="ask" />
 					</div>
 				</Resizable.Pane>
 			</Resizable.PaneGroup>
 		</div>
 
 		<div class="flex h-full flex-col md:hidden">
-			<section class="min-h-0 flex-3 overflow-hidden p-2">
-				<SessionTabs onSelectSession={selectSession} onDeleteSession={handleDeleteSession} />
-				<MonacoEditor />
+			<section class="flex min-h-0 flex-3 flex-col overflow-hidden p-2">
+				<SessionTabs
+					class="shrink-0"
+					onSelectSession={selectSession}
+					onDeleteSession={handleDeleteSession}
+				/>
+				<MonacoEditor class="min-h-0 flex-1" />
 			</section>
-			<ScrollArea orientation="vertical" class="min-h-0 flex-2 border-t border-border p-2">
+			<div class="flex min-h-0 flex-2 flex-col overflow-hidden border-t border-scaffy-divider p-2">
 				<ChatPanel mode="ask" />
-			</ScrollArea>
+			</div>
 		</div>
 	</main>
 </div>

@@ -21,7 +21,7 @@ export const ABOUT_FAQ: AboutFaqItem[] = [
 		id: 'locked',
 		question: 'Why is the next code chunk locked?',
 		answer:
-			'Each scaffold ends with a knowledge check. The next chunk unlocks only after you answer correctly. The friction is intentional and encourages active learning.',
+			'Each scaffold ends with a Learning Card (multiple-choice gate). The next chunk unlocks only after you answer correctly. The friction is intentional and encourages active learning.',
 	},
 	{
 		id: 'wrong',
@@ -33,7 +33,7 @@ export const ABOUT_FAQ: AboutFaqItem[] = [
 		id: 'scaffolds',
 		question: 'What are scaffolds?',
 		answer:
-			'A scaffold is one teaching step: a code snippet plus a knowledge check about the concept used in that snippet. Several scaffolds together form a complete feature or component.',
+			'A scaffold is one teaching step: a code snippet plus a Learning Card about the concept used in that snippet. Several scaffolds together form a complete feature or component.',
 	},
 	{
 		id: 'storage',
