@@ -19,7 +19,7 @@
 </script>
 
 {#if open}
-	<ScaffyModal size="lg" ariaLabelledby="about-title" dismissOnBackdrop onDismiss={close}>
+	<ScaffyModal size="lg" ariaLabelledby="about-title" onDismiss={close}>
 		<ScaffyModalHeader icon="?" title="About Scaffy" titleId="about-title" />
 
 		<ScaffyModalBody scroll>

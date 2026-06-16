@@ -8,7 +8,7 @@
 		size = 'md',
 		ariaLabelledby,
 		dismissOnEscape = true,
-		dismissOnBackdrop = false,
+		dismissOnBackdrop = true,
 		onDismiss,
 		children,
 	}: {
