@@ -41,7 +41,7 @@
 <!-- class="session-tabs mb-2 flex min-h-12 items-center gap-2 overflow-x-auto px-2 text-sm" SO war die klasse vom Button vorher. Weiß net ob änderungen sinnvoll. So verändert sich die tab größe halt nimmer. Find ich persönlich besser-->
 <div
 	class={cn(
-		'session-tabs mb-2 flex flex-nowrap items-center gap-2 overflow-x-auto px-2 text-sm',
+		'session-tabs native-scroll-x mb-2 flex flex-nowrap items-center gap-2 px-2 text-sm',
 		className,
 	)}
 >
