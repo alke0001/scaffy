@@ -23,7 +23,6 @@
 	const ASK_PLACEHOLDER = 'Ask scaffy a question about the code (min. 10 characters)';
 	const ASK_MIN_LENGTH_TOOLTIP =
 		'Enter at least 10 characters to ask Scaffy a question. We skip very short prompts to avoid unnecessary AI calls and reduce environmental impact.';
-	const ASK_EMPTY_HINT = 'Ask a question about code or concepts.';
 	const LEARN_PLACEHOLDER =
 		'Describe what to build (min. 10 characters; avoid <, {, ; in prompts).';
 
@@ -38,8 +37,12 @@
 
 	let { mode, sessionId, promptOnly = false, prompt = $bindable('') }: Props = $props();
 
+	const learnPromptFieldShellClass =
+		'rounded-md border border-border bg-background text-sm focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/50 focus-within:ring-inset';
+	const askPromptFieldShellClass =
+		'rounded-md border border-border bg-card text-sm focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/50 focus-within:ring-inset';
 	const promptTextareaClass =
-		'w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset focus-visible:outline-none';
+		'w-full resize-none px-3 py-2 placeholder:text-muted-foreground focus-visible:outline-none';
 
 	let messages = $state<ChatMessage[]>([]);
 	let scrollViewport = $state<HTMLElement | null>(null);
@@ -182,12 +185,10 @@
 		onsubmit={onSubmit}
 	>
 		<label class="sr-only" for="chat-prompt">Message</label>
-		<div
-			class="relative rounded-md border border-input bg-background focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/50 focus-within:ring-inset"
-		>
+		<div class="relative {askPromptFieldShellClass}">
 			<textarea
 				id="chat-prompt"
-				class="block min-h-[5.5rem] w-full resize-none border-0 bg-transparent px-3 py-2 pr-11 pb-10 text-sm placeholder:text-muted-foreground focus-visible:outline-none sm:min-h-24"
+				class="{promptTextareaClass} block min-h-[5.5rem] w-full border-0 bg-transparent pr-11 pb-10 sm:min-h-24"
 				bind:value={prompt}
 				disabled={threadBusy}
 				placeholder={ASK_PLACEHOLDER}
@@ -231,13 +232,15 @@
 		onsubmit={onSubmit}
 	>
 		<label class="sr-only" for="chat-prompt">Message</label>
-		<textarea
-			id="chat-prompt"
-			class="{promptTextareaClass} min-h-24 w-full"
-			bind:value={prompt}
-			disabled={threadBusy}
-			placeholder={LEARN_PLACEHOLDER}
-		></textarea>
+		<div class={learnPromptFieldShellClass}>
+			<textarea
+				id="chat-prompt"
+				class="{promptTextareaClass} min-h-24 w-full border-0 bg-transparent"
+				bind:value={prompt}
+				disabled={threadBusy}
+				placeholder={LEARN_PLACEHOLDER}
+			></textarea>
+		</div>
 		<Button type="submit" disabled={!canSubmit} class="w-full sm:w-auto">
 			{threadBusy ? 'Please wait…' : 'Generate lesson'}
 		</Button>
@@ -247,13 +250,15 @@
 {#snippet homePromptComposer()}
 	<form class="flex shrink-0 flex-col gap-2" onsubmit={onSubmit}>
 		<label class="sr-only" for="chat-prompt">Message</label>
-		<textarea
-			id="chat-prompt"
-			class="{promptTextareaClass} min-h-[140px] w-full"
-			bind:value={prompt}
-			disabled={threadBusy}
-			placeholder={LEARN_PLACEHOLDER}
-		></textarea>
+		<div class={learnPromptFieldShellClass}>
+			<textarea
+				id="chat-prompt"
+				class="{promptTextareaClass} min-h-[140px] w-full border-0 bg-transparent"
+				bind:value={prompt}
+				disabled={threadBusy}
+				placeholder={LEARN_PLACEHOLDER}
+			></textarea>
+		</div>
 	</form>
 {/snippet}
 
@@ -270,12 +275,7 @@
 			</ScrollArea>
 			{@render askComposer(true)}
 		{:else}
-			<div class="flex min-h-0 flex-1 flex-col">
-				{@render askComposer(false)}
-				<div class="flex min-h-0 flex-1 items-center justify-center px-3 py-6">
-					<p class="max-w-sm text-center text-sm text-muted-foreground">{ASK_EMPTY_HINT}</p>
-				</div>
-			</div>
+			{@render askComposer(false)}
 		{/if}
 	{:else if promptOnly}
 		{@render homePromptComposer()}
