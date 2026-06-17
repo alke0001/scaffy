@@ -10,6 +10,18 @@ import {
 } from '$lib/components/editor/scaffold-loading-content.js';
 import { devLog } from '$lib/dev/log.js';
 
+export const MONACO_CODE_LANGUAGE = 'html';
+
+export function setCodeLanguage(
+	editor: Monaco.editor.IStandaloneCodeEditor,
+	monaco: typeof Monaco,
+): void {
+	const model = editor.getModel();
+	if (model && model.getLanguageId() !== MONACO_CODE_LANGUAGE) {
+		monaco.editor.setModelLanguage(model, MONACO_CODE_LANGUAGE);
+	}
+}
+
 /** Animates scaffold loading text inside the Monaco editor buffer. */
 export class ScaffoldLoadingAnimator {
 	private editor: Monaco.editor.IStandaloneCodeEditor | null = null;
@@ -107,9 +119,9 @@ export class ScaffoldLoadingAnimator {
 	}
 
 	private restoreLanguage(): void {
-		const model = this.editor?.getModel();
-		if (model && this.monaco && this.previousLanguageId) {
-			this.monaco.editor.setModelLanguage(model, this.previousLanguageId);
+		const editor = this.editor;
+		if (editor && this.monaco) {
+			setCodeLanguage(editor, this.monaco);
 		}
 		this.previousLanguageId = null;
 	}

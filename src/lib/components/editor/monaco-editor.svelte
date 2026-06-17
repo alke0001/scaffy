@@ -12,6 +12,8 @@
 	import {
 		ScaffoldLoadingAnimator,
 		applyErrorDecorations,
+		setCodeLanguage,
+		MONACO_CODE_LANGUAGE,
 	} from '$lib/components/editor/monaco-scaffold-loading.js';
 	import { buildErrorContent } from '$lib/components/editor/scaffold-loading-content.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -82,7 +84,7 @@
 
 			const createdEditor = monaco.editor.create(editorContainer, {
 				value: '',
-				language: 'html',
+				language: MONACO_CODE_LANGUAGE,
 				theme: 'vs-dark',
 				automaticLayout: true,
 				readOnly: true,
@@ -206,6 +208,11 @@
 		}
 	}
 
+	function ensureCodeLanguage() {
+		if (!editor || !monacoApi) return;
+		setCodeLanguage(editor, monacoApi);
+	}
+
 	function resetEditorState() {
 		currentIndex = 0;
 		currentQuestion = null;
@@ -305,6 +312,7 @@
 
 		if (boundSession.completed) {
 			const lastCode = scaffolds.at(-1)?.codeSnippet ?? '';
+			ensureCodeLanguage();
 			editor.setValue(lastCode);
 			currentIndex = scaffolds.length;
 			currentQuestion = null;
@@ -357,6 +365,7 @@
 				? '// Bitte Frage beantworten'
 				: scaffold.codeSnippet;
 
+		ensureCodeLanguage();
 		editor.setValue(code);
 		selectedOption = null;
 		showLearningCard = false;
