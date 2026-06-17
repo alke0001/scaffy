@@ -35,6 +35,7 @@ ADR = Architecture Decision Record
 | [ADR-016](#adr-016-routes-feature-views-vs-ui-components)                 | Routes, feature views, vs ui/ components               | Accepted                                              |
 | [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                | ui/ primitives: shadcn-first; ScrollArea               | Accepted                                              |
 | [ADR-018](#adr-018-scaffy-modal-product-dialogs)                          | ScaffyModal — unified product dialogs                  | Accepted                                              |
+| [ADR-019](#adr-019-monaco-viewzone-aria-hidden-accepted)                  | Monaco viewZone aria-hidden — accepted trade-off       | Accepted                                              |
 
 ---
 
@@ -644,6 +645,33 @@ Delete confirmation, Learning Card wrong-answer feedback, and About each used se
 
 ---
 
+## ADR-019: Monaco viewZone aria-hidden — accepted trade-off
+
+**Status:** Accepted
+
+### Context
+
+Lighthouse (and axe) report **`aria-hidden-focus`** on the session route: Monaco marks its `.view-zones` container `aria-hidden="true"`, while the interactive **Learning Card** (radio options) lives inside a viewZone so the card scrolls with code. Session Lighthouse accessibility is ~96 — still strong; fixing the audit would mean moving the card out of the viewZone.
+
+### Decision
+
+- **Keep Learning Card in a Monaco viewZone** — scroll-with-code is core pedagogy (ADR-011).
+- **Do not** move interactive knowledge checks to **overlay widgets**, portaled panels, or other DOM outside the viewZone solely to satisfy `aria-hidden-focus`.
+- **Accept** the resulting automated a11y finding; we do not target Lighthouse accessibility 100 on session.
+- **Ignore** `aria-hidden-focus` in Lighthouse/PageSpeed triage for `/session/*` unless product requirements change.
+
+### Alternatives considered
+
+- **Monaco overlay widget** for the Learning Card — rejected; decouples the card from line-aligned scroll position and adds layout/sync complexity.
+- **Portal Learning Card to `document.body`** — rejected for the same reason; used only for read-only hint and wrong-answer modal where scroll coupling is not required.
+
+### Consequences
+
+- Session route may retain `aria-hidden-focus` in audits; no agent or refactor should “fix” it without an explicit product decision to reverse this ADR.
+- Wrong-answer feedback and read-only hint remain portaled (ADR-011); only the inline gated quiz stays in the viewZone.
+
+---
+
 ## Planned / nice-to-have (not ADRs yet)
 
 - Supabase adapter + Google Auth (see [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) Phase 2)
@@ -682,3 +710,4 @@ Delete confirmation, Learning Card wrong-answer feedback, and About each used se
 | 2026-06-12 | ADR-017: unified hover-fade scrollbars (ScrollArea, Monaco, modals); `scrollbars.mdc` agent rule.                                                          |
 | 2026-06-12 | ADR-018: backdrop click dismisses all ScaffyModals by default (same as secondary / Verstanden).                                                            |
 | 2026-06-17 | Design tokens: WCAG AA contrast pass — `--destructive-subtle*`, stronger `--scaffy-divider`, modal/chat/error-surface fixes; `scripts/audit-contrast.mjs`. |
+| 2026-06-17 | ADR-019: accept Monaco viewZone `aria-hidden-focus` on session; no overlay-widget refactor for Lighthouse. History page `<main>` landmark.                 |
