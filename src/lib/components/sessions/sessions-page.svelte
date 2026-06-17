@@ -69,19 +69,21 @@
 
 <ScrollArea orientation="vertical" class="h-full bg-background text-foreground">
 	<main class="mx-auto w-full max-w-6xl px-4 py-8">
-		<header>
-			<h1 class="text-lg font-medium">Learning overview</h1>
-			<p class="mt-1 text-sm text-muted-foreground">Pick up where you left off anytime.</p>
-		</header>
-
 		{#if sortedSessions.length === 0}
-			<div class="mt-16 flex flex-col items-center justify-center gap-4 text-center">
+			<div
+				class="flex min-h-[min(24rem,calc(100dvh-8rem))] flex-col items-center justify-center gap-4 text-center"
+			>
 				<p class="text-sm text-muted-foreground">No learning sessions yet.</p>
 				<Button type="button" variant="outline" onclick={goHome}>
 					Start your first learning session
 				</Button>
 			</div>
 		{:else}
+			<header>
+				<h1 class="text-lg font-medium">Learning overview</h1>
+				<p class="mt-1 text-sm text-muted-foreground">Pick up where you left off anytime.</p>
+			</header>
+
 			<ul
 				class="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-3"
 				role="list"
