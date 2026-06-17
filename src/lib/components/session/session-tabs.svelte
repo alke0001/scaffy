@@ -94,23 +94,23 @@
 					{:else}
 						<span
 							class="ml-2 inline-block h-2 w-2 rounded-full bg-scaffy-amber"
-							title="Unvollständige Session"
+							title="Incomplete session"
 						></span>
 					{/if}
 
 					{#if session.status === 'loading'}
-						<span class="ml-2 text-muted-foreground">(Lädt)</span>
+						<span class="ml-2 text-muted-foreground">(Loading)</span>
 					{/if}
 
 					{#if session.status === 'error'}
-						<span class="ml-2 text-destructive">(Fehler)</span>
+						<span class="ml-2 text-destructive">(Error)</span>
 					{/if}
 				</button>
 
 				<button
 					type="button"
 					class="session-close rounded-full px-2 text-sm opacity-70 transition hover:bg-foreground/10 hover:opacity-100"
-					aria-label="Session schließen"
+					aria-label="Close session"
 					onclick={(event) => handleDelete(event, session.id)}
 				>
 					×
@@ -121,7 +121,7 @@
 		<div
 			class="rounded-2xl border border-dashed border-border bg-background/70 px-3 py-2 text-muted-foreground"
 		>
-			Noch keine Session vorhanden. Erzeuge eine neue Session über den Lernmodus.
+			No sessions yet. Start one from home.
 		</div>
 	{/if}
 	<button

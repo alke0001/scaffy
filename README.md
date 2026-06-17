@@ -14,7 +14,7 @@ Scaffy generates code step by step and uses targeted questions to block the next
 | ------------------ | ---------------------------------------------------------------------------------------------------------- |
 | **`/`**            | Home — describe what you want to build in plain language and start a learning session.                     |
 | **`/session/:id`** | Workspace — Monaco editor (Learn) on the left, Ask tutor chat on the right, session tabs above the editor. |
-| **`/history`**     | Resume or delete past sessions stored in this browser.                                                     |
+| **`/sessions`**    | My learning overview — resume or delete saved sessions.                                                    |
 
 **Learn mode**
 
@@ -105,7 +105,7 @@ src/
 │   ├── components/
 │   │   ├── chat/          # Ask tutor UI (SSE, markdown, composer)
 │   │   ├── editor/        # Monaco, Learning Card, viewZone bridge
-│   │   ├── history/       # History page view
+│   │   ├── sessions/      # Sessions overview page view
 │   │   ├── home/          # Home prompt + start session
 │   │   ├── session/       # Session workspace, session tabs
 │   │   ├── shell/         # App title bar
@@ -121,7 +121,7 @@ src/
 │   └── mocks/             # Fixture scaffolds for UI development
 └── routes/
     ├── +page.svelte       # Home (thin → start-learning-session)
-    ├── history/           # History page
+    ├── sessions/          # Sessions overview page
     ├── session/[id]/      # Session workspace
     └── api/
         ├── scaffold/      # POST /api/scaffold — structured JSON (Learn)

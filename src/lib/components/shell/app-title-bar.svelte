@@ -11,16 +11,16 @@
 
 	const pathname = $derived(page.url.pathname);
 	const isHome = $derived(pathname === '/');
-	const isHistory = $derived(pathname === '/history');
+	const isSessions = $derived(pathname === '/sessions');
 
 	function goHome() {
 		if (isHome) return;
 		goto(resolve('/'));
 	}
 
-	function goHistory() {
-		if (isHistory) return;
-		goto(resolve('/history'));
+	function goSessions() {
+		if (isSessions) return;
+		goto(resolve('/sessions'));
 	}
 </script>
 
@@ -45,11 +45,11 @@
 		<Button
 			variant="ghost"
 			size="sm"
-			disabled={isHistory}
+			disabled={isSessions}
 			class="text-muted-foreground hover:text-foreground"
-			onclick={goHistory}
+			onclick={goSessions}
 		>
-			history
+			My learning sessions
 		</Button>
 		<Button
 			variant="ghost"

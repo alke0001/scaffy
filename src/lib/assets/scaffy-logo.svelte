@@ -4,7 +4,7 @@
 		width = 52,
 		height = 52,
 		interactive = false,
-		ariaLabel = 'Zur Startseite',
+		ariaLabel = 'Go to home',
 		onclick,
 	}: {
 		class?: string;

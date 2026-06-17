@@ -12,4 +12,4 @@ Scaffy is built for people learning framework-based UI development, especially S
 - **Session** — Code appears in the Monaco editor as teaching steps. A **Learning Card** blocks the next step until you answer correctly. Session tabs let you switch between open lessons.
 - **Wrong answer?** — A feedback dialog shows the correct option and a short explanation; try again until the concept clicks.
 - **Ask panel** — Use the chat on the right for a Socratic tutor that explains concepts without dumping a complete solution.
-- **History** — Past sessions are stored in this browser and can be resumed later.
+- **Sessions** — All your learning sessions in one place. Resume or delete any time.
