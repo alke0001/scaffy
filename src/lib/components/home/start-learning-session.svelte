@@ -83,7 +83,7 @@
 				<Card.Content class="p-4 sm:p-5">
 					<div class="mb-4 flex flex-col gap-1">
 						<p class="text-[0.6875rem] font-medium tracking-widest text-muted-foreground uppercase">
-							Your prompt
+							New learning session
 						</p>
 						<p class="text-base leading-snug text-foreground">
 							Describe what you want to build in plain language.
@@ -112,7 +112,7 @@
 				<span class="font-semibold text-scaffy-magenta"
 					>{sessionCount} saved session{sessionCount === 1 ? '' : 's'}</span
 				>
-				<span class="text-muted-foreground"> – continue and review in </span>
+				<span class="text-muted-foreground"> – continue in </span>
 				{#if hasSessions}
 					<button
 						type="button"
