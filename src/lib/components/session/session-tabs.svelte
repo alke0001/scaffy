@@ -74,7 +74,7 @@
 						'border-border bg-card text-foreground',
 					session.id !== activeSessionId &&
 						!session.completed &&
-						'border-scaffy-amber/50 bg-card text-scaffy-amber',
+						'border-scaffy-amber/80 bg-card text-scaffy-amber',
 				)}
 			>
 				<!-- class="flex items-center px-3 py-1 focus:outline-none" SO war die klasse vom Button vorher. Weiß net ob änderungen sinnvoll. So verändert sich die tab größe halt nimmer. Find ich persönlich besser-->

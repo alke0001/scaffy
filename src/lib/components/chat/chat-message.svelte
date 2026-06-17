@@ -33,7 +33,7 @@
 			class="max-w-[92%] px-3.5 py-2.5 text-sm {isUser
 				? 'ask-chat-message--user'
 				: isError
-					? 'rounded-xl border border-destructive/40 bg-destructive/10 text-destructive'
+					? 'scaffy-error-surface rounded-xl'
 					: 'ask-chat-message--assistant'}"
 		>
 			{#if !isUser && !isError}
@@ -72,7 +72,7 @@
 			class="max-w-[92%] rounded-lg px-3 py-2 text-sm {isUser
 				? 'bg-primary text-primary-foreground'
 				: isError
-					? 'border border-destructive/40 bg-destructive/10 text-destructive'
+					? 'scaffy-error-surface rounded-lg'
 					: 'border border-border bg-muted/40 text-foreground'}"
 		>
 			{#if !isUser && showSpinner}

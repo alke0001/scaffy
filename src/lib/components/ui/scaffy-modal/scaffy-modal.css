@@ -152,18 +152,18 @@
 
 .scaffy-modal-btn--secondary {
 	color: var(--ring);
-	background: color-mix(in oklab, var(--ring) 14%, var(--muted));
+	background: var(--muted);
 	border-color: color-mix(in oklab, var(--ring) 60%, var(--border));
 }
 
 .scaffy-modal-btn--primary {
 	color: var(--ring);
-	background: color-mix(in oklab, var(--ring) 14%, var(--muted));
+	background: var(--muted);
 	border-color: color-mix(in oklab, var(--ring) 60%, var(--border));
 }
 
 .scaffy-modal-btn--danger {
 	color: var(--destructive-foreground);
-	background: color-mix(in oklab, var(--destructive) 45%, var(--muted));
-	border-color: color-mix(in oklab, var(--destructive) 65%, var(--border));
+	background: var(--destructive);
+	border-color: color-mix(in oklab, var(--destructive) 80%, var(--border));
 }

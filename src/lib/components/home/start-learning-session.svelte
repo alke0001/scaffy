@@ -87,7 +87,7 @@
 					type="button"
 					variant="outline"
 					disabled={!canStart}
-					class="rounded-full border-primary text-primary hover:bg-primary/10 hover:text-primary disabled:border-primary/40 disabled:text-primary/40 disabled:opacity-100"
+					class="rounded-full border-primary text-primary hover:bg-primary/10 hover:text-primary disabled:border-border disabled:text-muted-foreground disabled:opacity-100"
 					onclick={startSession}
 				>
 					{isStarting ? 'Starting…' : 'start session'}
