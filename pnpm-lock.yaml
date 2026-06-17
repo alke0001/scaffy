@@ -37,8 +37,8 @@ importers:
         specifier: ^3.12.1
         version: 3.12.2
       '@lucide/svelte':
-        specifier: ^1.17.0
-        version: 1.17.0(svelte@5.56.2(@typescript-eslint/types@8.60.1))
+        specifier: ^1.20.0
+        version: 1.20.0(svelte@5.56.2(@typescript-eslint/types@8.60.1))
       '@sveltejs/adapter-vercel':
         specifier: ^6.3.3
         version: 6.3.3(@sveltejs/kit@2.63.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.2(@typescript-eslint/types@8.60.1))(vite@8.0.16(@types/node@24.13.1)(jiti@2.7.0)(yaml@2.9.0)))(svelte@5.56.2(@typescript-eslint/types@8.60.1))(typescript@6.0.3)(vite@8.0.16(@types/node@24.13.1)(jiti@2.7.0)(yaml@2.9.0)))
@@ -410,8 +410,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@lucide/svelte@1.17.0':
-    resolution: {integrity: sha512-q06YCFBN5CO8cd1ADmLCxWRVMVb7xxvHzqC0lvNoxGa+FLW6Cd1Y1AOxgbQk4Iwe68vkAMCRveNHint4WoaVKg==}
+  '@lucide/svelte@1.20.0':
+    resolution: {integrity: sha512-s7TKCHEtFEfflOUDPRC0WBZEjoNJHtj/aUmuWxopFe3AKecEoKvMmCaO0sBDkflok8nR0BCFsm44QF+S6/gc+w==}
     peerDependencies:
       svelte: ^5
 
@@ -1991,7 +1991,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@lucide/svelte@1.17.0(svelte@5.56.2(@typescript-eslint/types@8.60.1))':
+  '@lucide/svelte@1.20.0(svelte@5.56.2(@typescript-eslint/types@8.60.1))':
     dependencies:
       svelte: 5.56.2(@typescript-eslint/types@8.60.1)
 

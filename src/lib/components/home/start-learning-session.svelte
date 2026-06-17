@@ -21,6 +21,8 @@
 
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 
+	import { getSessions } from '$lib/session.svelte.js';
+
 	const MIN_PROMPT_LENGTH = 10;
 
 	let prompt = $state('');
@@ -28,6 +30,15 @@
 	let isStarting = $state(false);
 
 	const canStart = $derived(prompt.trim().length >= MIN_PROMPT_LENGTH && !isStarting);
+
+	const sessionCount = $derived(getSessions().length);
+
+	const hasSessions = $derived(sessionCount > 0);
+
+	function goToSessions() {
+		if (!hasSessions) return;
+		goto(resolve('/sessions'));
+	}
 
 	function fillPrompt(text: string) {
 		prompt = text;
@@ -115,5 +126,23 @@
 
 			<ChipGrid items={HOME_EXAMPLE_PROMPTS} onSelect={fillPrompt} />
 		</section>
+
+		<p class="mt-8 max-w-2xl text-center font-mono text-sm" aria-disabled={!hasSessions}>
+			<span class="font-semibold text-scaffy-amber"
+				>{sessionCount} saved session{sessionCount === 1 ? '' : 's'}</span
+			>
+			<span class="text-muted-foreground"> – continue and review in </span>
+			{#if hasSessions}
+				<button
+					type="button"
+					class="font-semibold text-foreground underline decoration-dotted underline-offset-4 hover:text-ring"
+					onclick={goToSessions}
+				>
+					My learning sessions →
+				</button>
+			{:else}
+				<span class="text-muted-foreground">My learning sessions →</span>
+			{/if}
+		</p>
 	</main>
 </ScrollArea>

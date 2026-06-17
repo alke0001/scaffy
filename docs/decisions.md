@@ -493,7 +493,7 @@ The app previously rendered Monaco + ChatPanel on `/`. The product needs a focus
 - **`/`** — `StartLearningSession`: learn/scaffold only (`promptOnly` + **start session** → `requestScaffold`).
 - **`/session/[id]`** — `SessionWorkspace`: **Monaco + tabs (learn progress)** left; **`ChatPanel mode="ask"`** right (SSE tutor, unrelated to scaffold).
 - **`/sessions`** — `SessionsPage`: list of `getSessions()` from localStorage; select opens `/session/:id`. **`/history`** redirects to `/sessions`.
-- **App shell:** `AppTitleBar` in root `+layout.svelte` — **home** and **sessions** nav buttons + About dialog (no route breadcrumb).
+- **App shell:** `AppTitleBar` in root `+layout.svelte` — **shadcn Breadcrumb** (route context: home / sessions / session prompt), logo → home, About dialog; no separate home/sessions nav buttons.
 - **Navigation:** **start session** on home calls `requestScaffold` and `goto('/session/:id')`.
 - **Session id alignment:** `startScaffoldRequest(prompt, preferredId?)` uses the route id so Home navigation and localStorage tabs stay consistent.
 - **Example chips:** copy text into the chat textarea via DOM (`#chat-prompt`) to avoid ChatPanel prop changes.
@@ -712,3 +712,4 @@ Lighthouse (and axe) report **`aria-hidden-focus`** on the session route: Monaco
 | 2026-06-17 | Design tokens: WCAG AA contrast pass — `--destructive-subtle*`, stronger `--scaffy-divider`, modal/chat/error-surface fixes.                |
 | 2026-06-17 | ADR-019: accept Monaco viewZone `aria-hidden-focus` on session; no overlay-widget refactor for Lighthouse. Sessions page `<main>` landmark. |
 | 2026-06-17 | ADR-015/016: `/history` renamed to `/sessions` (308 redirect); `SessionsPage` copy — “My learning overview”.                                |
+| 2026-06-17 | ADR-015: App shell breadcrumb (shadcn) replaces home/sessions nav; home saved-session count line under example chips.                       |
