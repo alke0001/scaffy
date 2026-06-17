@@ -15,6 +15,12 @@
 		setCodeLanguage,
 		MONACO_CODE_LANGUAGE,
 	} from '$lib/components/editor/monaco-scaffold-loading.js';
+	import {
+		LoadingTypewriter,
+		SPINNER_FRAMES,
+		SPINNER_FRAME_MS,
+		TYPEWRITER_CHAR_MS,
+	} from '$lib/components/editor/scaffold-loading-content.js';
 	import { buildErrorContent } from '$lib/components/editor/scaffold-loading-content.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { KnowledgeViewZoneController } from '$lib/components/editor/monaco-knowledge-view-zone.js';
@@ -56,19 +62,13 @@
 	let currentQuestion = $state<KnowledgeCheck | null>(null);
 	let selectedOption = $state<string | null>(null);
 	let showLearningCard = $state(false);
-	let loadingVerb = $state('');
+	let loadingTypedVerb = $state('');
 	let loadingSpinnerFrame = $state('⠋');
 	let errorDecorationIds = $state<string[]>([]);
 	let lastErrorMessage = $state<string | null>(null);
 	let monacoApi = $state<typeof Monaco | null>(null);
 
 	const loadingAnimator = new ScaffoldLoadingAnimator();
-	loadingAnimator.setOnVerbChange((verb) => {
-		loadingVerb = verb;
-	});
-	loadingAnimator.setOnFrameChange((frame) => {
-		loadingSpinnerFrame = frame;
-	});
 
 	zoneBridge.onAnswer = handleOptionChange;
 	zoneBridge.onUnderstand = acknowledgeError;
@@ -135,7 +135,7 @@
 
 	function showErrorInEditor(message: string) {
 		if (!editor || !monacoApi) return;
-		loadingAnimator.stop();
+		loadingAnimator.exitLoadingMode();
 		clearErrorDecorations();
 		errorDecorationIds = applyErrorDecorations(editor, buildErrorContent(message), monacoApi);
 		resetEditorState();
@@ -259,7 +259,7 @@
 				sessionId: sessionIdForLog,
 				activeStatus,
 			});
-			loadingAnimator.stop();
+			loadingAnimator.exitLoadingMode();
 			clearErrorDecorations();
 			editor.setValue('');
 			resetEditorState();
@@ -271,14 +271,11 @@
 			devLog('monaco', 'effect → loading', {
 				sessionId: sessionIdForLog,
 				sessionChanged: currentSessionId !== boundSession.id,
-				animatorRunning: loadingAnimator.isRunning(),
+				loadingMode: loadingAnimator.isInLoadingMode(),
 			});
 			const sessionChanged = currentSessionId !== boundSession.id;
-			if (sessionChanged) {
-				loadingAnimator.stop();
-			}
-			if (sessionChanged || !loadingAnimator.isRunning()) {
-				loadingAnimator.start();
+			if (sessionChanged || !loadingAnimator.isInLoadingMode()) {
+				loadingAnimator.enterLoadingMode();
 			}
 			clearErrorDecorations();
 			lastErrorMessage = null;
@@ -289,7 +286,7 @@
 
 		if (activeStatus === 'error') {
 			devLog('monaco', 'effect → error', { sessionId: sessionIdForLog, sessionError });
-			loadingAnimator.stop();
+			loadingAnimator.exitLoadingMode();
 			const message = sessionError ?? 'Request failed.';
 			if (lastErrorMessage !== message || currentSessionId !== boundSession.id) {
 				showErrorInEditor(message);
@@ -307,7 +304,7 @@
 
 		lastErrorMessage = null;
 
-		loadingAnimator.stop();
+		loadingAnimator.exitLoadingMode();
 		clearErrorDecorations();
 
 		if (boundSession.completed) {
@@ -335,6 +332,42 @@
 				loadNextScaffold();
 			}
 		}
+	});
+
+	$effect(() => {
+		if (!editorReady || activeStatus !== 'loading') {
+			loadingTypedVerb = '';
+			loadingSpinnerFrame = SPINNER_FRAMES[0];
+			return;
+		}
+
+		const typewriter = new LoadingTypewriter();
+		let frameIndex = 0;
+
+		const paint = () => {
+			const frame = SPINNER_FRAMES[frameIndex] ?? SPINNER_FRAMES[0];
+			const typed = typewriter.getTypedText();
+			loadingSpinnerFrame = frame;
+			loadingTypedVerb = typed;
+			loadingAnimator.renderLoadingDisplay(frame, typed);
+		};
+
+		paint();
+
+		const spinnerTimer = setInterval(() => {
+			frameIndex = (frameIndex + 1) % SPINNER_FRAMES.length;
+			paint();
+		}, SPINNER_FRAME_MS);
+
+		const typewriterTimer = setInterval(() => {
+			typewriter.tick();
+			paint();
+		}, TYPEWRITER_CHAR_MS);
+
+		return () => {
+			clearInterval(spinnerTimer);
+			clearInterval(typewriterTimer);
+		};
 	});
 
 	$effect(() => {
@@ -426,7 +459,10 @@
 				<p class="scaffy-editor-loading__label">scaffy · generating lesson</p>
 				<p class="scaffy-editor-loading__status">
 					<span class="scaffy-editor-loading__spinner">{loadingSpinnerFrame}</span>
-					<span class="scaffy-editor-loading__verb">{loadingVerb || 'Booping Scaffy...'}</span>
+					<span class="scaffy-editor-loading__verb">
+						{loadingTypedVerb}<span class="scaffy-editor-loading__cursor" aria-hidden="true">▋</span
+						>
+					</span>
 				</p>
 			</div>
 		{/if}
@@ -508,6 +544,17 @@
 
 	.scaffy-editor-loading__verb {
 		color: var(--scaffy-cyan);
+	}
+
+	.scaffy-editor-loading__cursor {
+		color: var(--scaffy-cyan);
+		animation: scaffy-loading-cursor-blink 1s step-end infinite;
+	}
+
+	@keyframes scaffy-loading-cursor-blink {
+		50% {
+			opacity: 0;
+		}
 	}
 
 	.dev-continue {

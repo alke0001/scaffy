@@ -63,6 +63,17 @@
 	color: var(--scaffy-cyan) !important;
 }
 
+.scaffy-monaco-editor .monaco-editor .scaffy-loading-cursor {
+	color: var(--scaffy-cyan) !important;
+	animation: scaffy-loading-cursor-blink 1s step-end infinite;
+}
+
+@keyframes scaffy-loading-cursor-blink {
+	50% {
+		opacity: 0;
+	}
+}
+
 .scaffy-monaco-editor .monaco-editor .scaffy-error-mark {
 	color: var(--destructive) !important;
 	font-weight: 700;
