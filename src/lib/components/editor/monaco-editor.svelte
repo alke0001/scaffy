@@ -2,23 +2,32 @@
 	import { onDestroy, onMount, tick } from 'svelte';
 	import loader from '@monaco-editor/loader';
 	import type * as Monaco from 'monaco-editor';
+	import { getActiveSession, getSessionById, markSessionCompleted } from '$lib/session.svelte.js';
 	import {
-		getActiveSession,
-		getScaffolds,
-		getSessionStatus,
-		markSessionCompleted,
-	} from '$lib/session.svelte.js';
-	import type { KnowledgeCheck } from '$lib/types/scaffold.js';
+		isFallbackScaffoldAvailable,
+		loadFallbackScaffolds,
+		retryScaffold,
+	} from '$lib/learn/request-scaffold.js';
+	import { LESSON_SCAFFOLD_COUNT, type KnowledgeCheck } from '$lib/types/scaffold.js';
+	import {
+		ScaffoldLoadingAnimator,
+		applyErrorDecorations,
+	} from '$lib/components/editor/monaco-scaffold-loading.js';
+	import { buildErrorContent } from '$lib/components/editor/scaffold-loading-content.js';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import { KnowledgeViewZoneController } from '$lib/components/editor/monaco-knowledge-view-zone.js';
 	import { KnowledgeZoneBridge } from '$lib/components/editor/knowledge-zone-bridge.svelte.js';
 	import ReadOnlyHint from '$lib/components/editor/read-only-hint.svelte';
 	import { cn } from '$lib/utils.js';
+	import { devLog } from '$lib/dev/log.js';
 	import './monaco-editor.css';
 
 	let {
 		class: className,
+		sessionId,
 	}: {
 		class?: string;
+		sessionId?: string;
 	} = $props();
 
 	let editorContainer = $state<HTMLDivElement | null>(null);
@@ -32,17 +41,32 @@
 	const zoneBridge = new KnowledgeZoneBridge();
 	const viewZoneController = new KnowledgeViewZoneController(zoneBridge);
 
-	const activeSession = $derived(getActiveSession());
-	const activeStatus = $derived(getSessionStatus());
-	const scaffolds = $derived(getScaffolds());
+	const boundSession = $derived(sessionId ? getSessionById(sessionId) : getActiveSession());
+	const activeStatus = $derived(boundSession?.status ?? 'idle');
+	const sessionError = $derived(boundSession?.errorMessage ?? null);
+	const scaffolds = $derived(boundSession?.scaffolds ?? []);
+	const fallbackAvailable = $derived(isFallbackScaffoldAvailable());
 	const isEditorEditable = $derived(
-		Boolean(activeSession?.completed && activeStatus !== 'loading' && activeStatus !== 'idle'),
+		Boolean(boundSession?.completed && activeStatus !== 'loading' && activeStatus !== 'idle'),
 	);
 	let currentSessionId = $state<string | null>(null);
 	let currentIndex = $state(0);
 	let currentQuestion = $state<KnowledgeCheck | null>(null);
 	let selectedOption = $state<string | null>(null);
 	let showLearningCard = $state(false);
+	let loadingVerb = $state('');
+	let loadingSpinnerFrame = $state('⠋');
+	let errorDecorationIds = $state<string[]>([]);
+	let lastErrorMessage = $state<string | null>(null);
+	let monacoApi = $state<typeof Monaco | null>(null);
+
+	const loadingAnimator = new ScaffoldLoadingAnimator();
+	loadingAnimator.setOnVerbChange((verb) => {
+		loadingVerb = verb;
+	});
+	loadingAnimator.setOnFrameChange((frame) => {
+		loadingSpinnerFrame = frame;
+	});
 
 	zoneBridge.onAnswer = handleOptionChange;
 	zoneBridge.onUnderstand = acknowledgeError;
@@ -72,6 +96,7 @@
 				},
 			});
 			editor = createdEditor;
+			monacoApi = monaco;
 
 			createdEditor.getContribution('editor.contrib.readOnlyMessageController')?.dispose?.();
 
@@ -80,7 +105,9 @@
 			});
 
 			viewZoneController.attach(createdEditor);
+			loadingAnimator.attach(createdEditor, monaco);
 			editorReady = true;
+			devLog('monaco', 'editor ready', { sessionId, status: boundSession?.status });
 		})();
 
 		return () => {
@@ -90,9 +117,43 @@
 
 	onDestroy(() => {
 		hideReadOnlyHint();
+		loadingAnimator.dispose();
+		if (editor && errorDecorationIds.length > 0) {
+			editor.deltaDecorations(errorDecorationIds, []);
+		}
 		viewZoneController.dispose();
 		editor?.dispose();
 	});
+
+	function clearErrorDecorations() {
+		if (!editor || errorDecorationIds.length === 0) return;
+		editor.deltaDecorations(errorDecorationIds, []);
+		errorDecorationIds = [];
+	}
+
+	function showErrorInEditor(message: string) {
+		if (!editor || !monacoApi) return;
+		loadingAnimator.stop();
+		clearErrorDecorations();
+		errorDecorationIds = applyErrorDecorations(editor, buildErrorContent(message), monacoApi);
+		resetEditorState();
+	}
+
+	async function handleRetryScaffold() {
+		if (!boundSession) return;
+		clearErrorDecorations();
+		try {
+			await retryScaffold(boundSession.id);
+		} catch {
+			// error state restored by request-scaffold
+		}
+	}
+
+	function handleLoadFallback() {
+		if (!boundSession) return;
+		clearErrorDecorations();
+		loadFallbackScaffolds(boundSession.id);
+	}
 
 	function hideReadOnlyHint() {
 		readOnlyHint = null;
@@ -184,7 +245,15 @@
 	$effect(() => {
 		if (!editorReady || !editor) return;
 
-		if (!activeSession || activeStatus === 'idle') {
+		const sessionIdForLog = boundSession?.id ?? sessionId ?? null;
+
+		if (!boundSession || activeStatus === 'idle') {
+			devLog('monaco', 'effect → idle (clear editor)', {
+				sessionId: sessionIdForLog,
+				activeStatus,
+			});
+			loadingAnimator.stop();
+			clearErrorDecorations();
 			editor.setValue('');
 			resetEditorState();
 			currentSessionId = null;
@@ -192,13 +261,49 @@
 		}
 
 		if (activeStatus === 'loading') {
-			editor.setValue('// Erzeuge Session…');
+			devLog('monaco', 'effect → loading', {
+				sessionId: sessionIdForLog,
+				sessionChanged: currentSessionId !== boundSession.id,
+				animatorRunning: loadingAnimator.isRunning(),
+			});
+			const sessionChanged = currentSessionId !== boundSession.id;
+			if (sessionChanged) {
+				loadingAnimator.stop();
+			}
+			if (sessionChanged || !loadingAnimator.isRunning()) {
+				loadingAnimator.start();
+			}
+			clearErrorDecorations();
+			lastErrorMessage = null;
 			resetEditorState();
-			currentSessionId = activeSession.id;
+			currentSessionId = boundSession.id;
 			return;
 		}
 
-		if (activeSession.completed) {
+		if (activeStatus === 'error') {
+			devLog('monaco', 'effect → error', { sessionId: sessionIdForLog, sessionError });
+			loadingAnimator.stop();
+			const message = sessionError ?? 'Request failed.';
+			if (lastErrorMessage !== message || currentSessionId !== boundSession.id) {
+				showErrorInEditor(message);
+				lastErrorMessage = message;
+			}
+			currentSessionId = boundSession.id;
+			return;
+		}
+
+		devLog('monaco', 'effect → ready', {
+			sessionId: sessionIdForLog,
+			scaffoldCount: scaffolds.length,
+			completed: boundSession.completed,
+		});
+
+		lastErrorMessage = null;
+
+		loadingAnimator.stop();
+		clearErrorDecorations();
+
+		if (boundSession.completed) {
 			const lastCode = scaffolds.at(-1)?.codeSnippet ?? '';
 			editor.setValue(lastCode);
 			currentIndex = scaffolds.length;
@@ -207,13 +312,13 @@
 			showLearningCard = false;
 			zoneBridge.reset();
 			viewZoneController.refresh();
-			currentSessionId = activeSession.id;
+			currentSessionId = boundSession.id;
 			return;
 		}
 
-		const sessionSwitched = activeSession.id !== currentSessionId;
+		const sessionSwitched = boundSession.id !== currentSessionId;
 		if (sessionSwitched) {
-			currentSessionId = activeSession.id;
+			currentSessionId = boundSession.id;
 			resetEditorState();
 		}
 
@@ -272,14 +377,18 @@
 			zoneBridge.reset();
 			viewZoneController.refresh();
 
-			if (currentIndex >= scaffolds.length) {
-				markSessionCompleted();
+			if (currentIndex >= scaffolds.length && scaffolds.length >= LESSON_SCAFFOLD_COUNT) {
+				markSessionCompleted(boundSession?.id);
 				return;
 			}
 
 			loadNextScaffold();
-			if (currentIndex >= scaffolds.length && !currentQuestion) {
-				markSessionCompleted();
+			if (
+				currentIndex >= scaffolds.length &&
+				!currentQuestion &&
+				scaffolds.length >= LESSON_SCAFFOLD_COUNT
+			) {
+				markSessionCompleted(boundSession?.id);
 			}
 			return;
 		}
@@ -303,7 +412,31 @@
 <div class={cn('scaffy-monaco-editor flex min-h-0 flex-1 flex-col', className)}>
 	<div class="editor-wrapper relative min-h-0 flex-1">
 		<div bind:this={editorContainer} class="editor h-full min-h-0 w-full"></div>
+		{#if activeStatus === 'loading'}
+			<div class="scaffy-editor-loading" aria-live="polite">
+				<p class="scaffy-editor-loading__label">scaffy · generating lesson</p>
+				<p class="scaffy-editor-loading__status">
+					<span class="scaffy-editor-loading__spinner">{loadingSpinnerFrame}</span>
+					<span class="scaffy-editor-loading__verb">{loadingVerb || 'Booping Scaffy...'}</span>
+				</p>
+			</div>
+		{/if}
 	</div>
+
+	{#if activeStatus === 'error'}
+		<div class="scaffy-editor-actions flex shrink-0 flex-wrap gap-2 px-1 py-2">
+			<Button type="button" size="sm" onclick={handleRetryScaffold}>Erneut versuchen</Button>
+			<Button
+				type="button"
+				size="sm"
+				variant="outline"
+				disabled={!fallbackAvailable}
+				onclick={handleLoadFallback}
+			>
+				Fallback laden
+			</Button>
+		</div>
+	{/if}
 
 	{#if !currentQuestion && scaffolds.length > 0 && currentIndex < scaffolds.length}
 		<button type="button" class="dev-continue shrink-0" onclick={loadNextScaffold}>Weiter</button>
@@ -321,6 +454,51 @@
 
 	.editor {
 		overflow: hidden;
+	}
+
+	.scaffy-editor-loading {
+		position: absolute;
+		inset: 0;
+		z-index: 3;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		padding: 1.5rem;
+		border-radius: 0.75rem;
+		background: color-mix(in oklch, var(--background) 88%, transparent);
+		pointer-events: none;
+		text-align: center;
+	}
+
+	.scaffy-editor-loading__label {
+		margin: 0;
+		font-size: 0.8125rem;
+		font-style: italic;
+		color: var(--muted-foreground);
+	}
+
+	.scaffy-editor-loading__status {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem 0.75rem;
+		margin: 0;
+		max-width: 28rem;
+		font-family: var(--font-mono, ui-monospace, monospace);
+		font-size: 0.9375rem;
+		line-height: 1.4;
+	}
+
+	.scaffy-editor-loading__spinner {
+		color: var(--primary);
+		font-weight: 600;
+	}
+
+	.scaffy-editor-loading__verb {
+		color: var(--scaffy-cyan);
 	}
 
 	.dev-continue {

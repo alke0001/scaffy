@@ -49,6 +49,33 @@
 	border-radius: 0.75rem;
 }
 
+.scaffy-monaco-editor .monaco-editor .scaffy-loading-label {
+	color: var(--muted-foreground) !important;
+	font-style: italic;
+}
+
+.scaffy-monaco-editor .monaco-editor .scaffy-loading-spinner {
+	color: var(--primary) !important;
+	font-weight: 600;
+}
+
+.scaffy-monaco-editor .monaco-editor .scaffy-loading-verb {
+	color: var(--scaffy-cyan) !important;
+}
+
+.scaffy-monaco-editor .monaco-editor .scaffy-error-mark {
+	color: var(--destructive) !important;
+	font-weight: 700;
+}
+
+.scaffy-monaco-editor .monaco-editor .scaffy-error-message {
+	color: var(--muted-foreground) !important;
+}
+
+.scaffy-editor-actions {
+	border-top: 1px solid var(--scaffy-divider);
+}
+
 /* Learning Card — Monaco viewZone (scrolls with editor content) */
 .scaffy-knowledge-check-view-zone {
 	box-sizing: border-box;

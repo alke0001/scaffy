@@ -1,0 +1,88 @@
+{
+	"scaffolds": [
+		{
+			"targetPath": "Counter.svelte",
+			"language": "svelte",
+			"codeSnippet": "",
+			"knowledgeCheck": {
+				"question": "Welche Rune verwendest du in Svelte 5, um reaktiven State innerhalb einer Komponente zu deklarieren?",
+				"options": [
+					{
+						"id": "a",
+						"text": "$derived() – damit werden abgeleitete Werte berechnet"
+					},
+					{
+						"id": "b",
+						"text": "$props() – damit werden Props von außen entgegengenommen"
+					},
+					{
+						"id": "c",
+						"text": "$state() – damit wird eine reaktive Variable erstellt, die bei Änderungen automatisch das UI aktualisiert"
+					},
+					{
+						"id": "d",
+						"text": "let count = 0 – normale JavaScript-Variablen sind in Svelte 5 automatisch reaktiv"
+					}
+				],
+				"correctOptionId": "c",
+				"explanation": "Richtig! $state() ist die Rune für reaktiven State in Svelte 5. Im Gegensatz zu Svelte 4 (wo let-Variablen im Top-Level automatisch reaktiv waren) machst du Reaktivität in Svelte 5 explizit: let count = $state(0). In React würdest du useState(0) verwenden, in Vue ref(0) oder reactive({}), in Angular eine Klassen-Property mit Change Detection. $props() ist für Eingabeparameter von außen, $derived() für berechnete Werte – beides andere Runes mit anderen Zwecken."
+			}
+		},
+		{
+			"targetPath": "Counter.svelte",
+			"language": "svelte",
+			"codeSnippet": "<script>\n\tlet count = $state(0);\n</script>",
+			"knowledgeCheck": {
+				"question": "Du hast jetzt den reaktiven State count deklariert. Wie bindest du diesen Wert im Template an einen Button, sodass bei jedem Klick count um 1 erhöht wird?",
+				"options": [
+					{
+						"id": "a",
+						"text": "<button onclick={() => count++}>Geklickt: {count} mal</button>"
+					},
+					{
+						"id": "b",
+						"text": "<button onclick={count++}>Geklickt: {count} mal</button>"
+					},
+					{
+						"id": "c",
+						"text": "<button (click)=\"count++\">Geklickt: {count} mal</button>"
+					},
+					{
+						"id": "d",
+						"text": "<button @click=\"count++\">Geklickt: {count} mal</button>"
+					}
+				],
+				"correctOptionId": "a",
+				"explanation": "Korrekt! In Svelte bindest du Event-Handler mit on:eventname={handler}. Für inline-Logik verwendest du eine Arrow-Function: onclick={() => count++}. Die geschweiften Klammern {} zeigen den Wert im Template an – das ist in React (JSX) und Svelte identisch. Option a (@click) ist Vue-Syntax, Option b ((click)) ist Angular-Syntax. Option c (onclick={count++}) würde den Ausdruck sofort ausführen statt bei Klick – deshalb braucht es die Arrow-Function. Der Wert {count} im Text wird bei jeder State-Änderung automatisch neu gerendert, weil $state() die Reaktivität herstellt."
+			}
+		},
+		{
+			"targetPath": "Counter.svelte",
+			"language": "svelte",
+			"codeSnippet": "<script>\n\tlet count = $state(0);\n</script>\n\n<button onclick={() => count++}>\n\tGeklickt: {count} mal\n</button>\n\n<style>\n\tbutton {\n\t\tpadding: 0.5rem 1rem;\n\t\tfont-size: 1rem;\n\t\tborder-radius: 0.25rem;\n\t\tbackground: #4CAF50;\n\t\tcolor: white;\n\t\tborder: none;\n\t\tcursor: pointer;\n\t}\n\n\tbutton:hover {\n\t\tbackground: #45a049;\n\t}\n</style>",
+			"knowledgeCheck": {
+				"question": "Die Komponente ist jetzt vollständig. Warum funktioniert die Reaktivität hier ohne explizites Re-Rendering wie in React (setState) oder Angular (ChangeDetectorRef)?",
+				"options": [
+					{
+						"id": "a",
+						"text": "Svelte nutzt Angulars Zone.js, um alle DOM-Events abzufangen und Change Detection zu triggern"
+					},
+					{
+						"id": "b",
+						"text": "Der Browser erkennt automatisch Änderungen an let-Variablen und aktualisiert das DOM"
+					},
+					{
+						"id": "c",
+						"text": "Svelte kompiliert den Code zur Build-Zeit und injiziert automatisch Update-Logik an den Stellen, wo $state()-Variablen geändert werden"
+					},
+					{
+						"id": "d",
+						"text": "Svelte verwendet ein Virtual DOM wie React, das bei jeder State-Änderung einen Diff berechnet"
+					}
+				],
+				"correctOptionId": "c",
+				"explanation": "Genau! Svelte ist ein Compiler, kein Framework mit Runtime-Overhead. Wenn du count++ schreibst, fügt der Svelte-Compiler zur Build-Zeit Code ein, der genau die DOM-Knoten aktualisiert, die von count abhängen – ohne Virtual DOM Diff (React) oder Zone.js Polling (Angular). Das führt zu kleinerem Bundle-Size und schnellerer Runtime, bindet dich aber an den Compile-Schritt. React mit useState() triggert ein Re-Render der Komponente, Vue mit ref() nutzt Proxies für Reaktivität, Angular mit Signals (ab v16) ähnelt Svelte, nutzt aber weiterhin Change Detection. Der Tradeoff: Svelte = weniger Runtime-Code, dafür Compiler-Abhängigkeit; React/Angular = mehr Flexibilität zur Laufzeit, dafür größere Bundles."
+			}
+		}
+	]
+}

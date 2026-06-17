@@ -143,20 +143,32 @@ Learn and Ask need different system prompts, output shapes, temperatures, and tr
 
 ### Context
 
-Scaffy needs a fixed shape: `codeSnippet` + `knowledgeCheck` per step, validated server-side.
+Scaffy needs a fixed shape: `codeSnippet` + `knowledgeCheck` per step, validated server-side. A **two-phase API experiment** (phase 1: scaffold 1, phase 2: scaffolds 2–5) was tried on branch `feature/19-…` and **reverted**: the model often ignored phase counts, **code drift** broke cumulative chains at phase boundaries, and Anthropic’s JSON Schema subset cannot express exact array counts — leading to repeated 502 errors and poor UX.
+
+That fragility is **rooted in LLM non-determinism + structured-output constraints**, not fixable by validation alone. Scaffy is built for the module **„Frameworkbasierte UI-Entwicklung“** — deep API orchestration is off-topic; a **pragmatic** design is preferred.
 
 ### Decision
 
+- **Single-shot** `POST /api/scaffold`: one request returns the **full lesson** (`LESSON_SCAFFOLD_COUNT = 3`).
 - `client.messages.create` with `output_config.format.type: 'json_schema'` and schema from `output.schema.json` / `output-schema.ts`.
 - **No API streaming** for scaffold: partial JSON is not reliably parseable.
-- **Temperature ~0.3**, high `max_tokens` (8192) — tuned in `src/routes/api/scaffold/+server.ts`.
-- Post-parse validation in `validateStructuredOutput()` (1–5 scaffolds, option ids, etc.).
+- **Temperature ~0.3**, `max_tokens` 6144 — tuned in `src/routes/api/scaffold/+server.ts`.
+- Post-parse: `validateStructuredOutput()` → `validate-lesson.ts` (trim to 3 scaffolds if the model over-generates; **strict cumulative** `codeSnippet` chain; one **server retry** on validation failure).
+- **In-editor loading** while waiting (~45s): Braille spinner + rotating verbs rendered **inside Monaco** as animated comment text (not an HTML overlay).
+- **Resilience:** client auto-retry once; error state with retry + static `scaffold-fallback.json` (dev paste from localStorage).
 - **Prompt rules:** min 10 characters; heuristic reject `<`, `{`, `;` to discourage pasting code snippets into Learn prompts.
+
+### Alternatives considered
+
+- **Two-phase loading** — rejected after experiment (count mismatch, code drift, double failure rate).
+- **Five scaffolds single-shot** — rejected in favor of **three** (shorter chain, fewer drift points; didactic beats merged).
+- **Accepting code drift via normalization** — rejected (breaks cumulative Monaco lesson flow).
 
 ### Consequences
 
 - Perceived “streaming” for code is **client-side** only: Monaco typewriter (~15 ms/char) after the full response arrives (ADR-011).
 - Learn chat UI does not show the raw JSON; scaffolds go to the session store (ADR-009).
+- Session fetch: `ensureScaffold()` on `/session/[id]` when status is `loading` (resume after reload).
 
 ---
 
@@ -656,7 +668,7 @@ Delete confirmation, Learning Card wrong-answer feedback, and About each used se
 | 2026-06-08 | ADR-016 Accepted: routes vs feature views vs ui/ components; `component-layout.mdc` for agents.                                         |
 | 2026-06-08 | ADR-012: `render-markdown.ts` co-located under `src/lib/components/chat/`.                                                              |
 | 2026-06-08 | ADR-015: session tabs from main integrated into `SessionWorkspace`; route id wired to `startScaffoldRequest`.                           |
-| 2026-06-08 | ADR-015: history page lists localStorage sessions; click opens `/session/:id`.                                                          |
+| 2026-06-16 | ADR-005: 3-scaffold single-shot lesson; two-phase experiment documented as rejected; in-editor Monaco loading; retry + fallback JSON.   |
 | 2026-06-10 | ADR-017: shadcn ScrollArea replaces custom scroll wrapper; `native-scroll-x` CSS only for markdown `<pre>`.                             |
 | 2026-06-10 | ADR-017: centralized `scroll-area.css` inset + default `type="always"`; content padding off ScrollArea root.                            |
 | 2026-06-10 | ADR-012: shared `ui/markdown/` (`MarkdownContent`, `render-markdown.ts`); About intro in `about-content.md`, FAQ in `about-faq.ts`.     |

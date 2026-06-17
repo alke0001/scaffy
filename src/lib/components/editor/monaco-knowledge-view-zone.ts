@@ -22,7 +22,9 @@ export class KnowledgeViewZoneController {
 	}
 
 	dispose() {
-		cancelAnimationFrame(this.layoutRaf);
+		if (typeof cancelAnimationFrame !== 'undefined') {
+			cancelAnimationFrame(this.layoutRaf);
+		}
 		this.removeZone();
 		this.editor = null;
 	}
@@ -70,6 +72,12 @@ export class KnowledgeViewZoneController {
 	}
 
 	private scheduleLayout() {
+		if (
+			typeof cancelAnimationFrame === 'undefined' ||
+			typeof requestAnimationFrame === 'undefined'
+		) {
+			return;
+		}
 		cancelAnimationFrame(this.layoutRaf);
 		this.layoutRaf = requestAnimationFrame(() => {
 			this.applyZoneLayout();
