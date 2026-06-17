@@ -4,6 +4,7 @@
 	import type { SessionRecord } from '$lib/session.svelte.js';
 	import { deleteSession, getSessions, setActiveSessionId } from '$lib/session.svelte.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import DeleteConfirmationDialog from '$lib/components/session/delete-confirmation-dialog.svelte';
 	import { cn } from '$lib/utils.js';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -73,70 +74,79 @@
 			<p class="mt-1 text-sm text-muted-foreground">Pick up where you left off anytime.</p>
 		</header>
 
-		<ul
-			class="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-3"
-			role="list"
-		>
-			{#each sortedSessions as session, index (session.id)}
-				{@const isLatest = index === 0}
-				<li class="relative h-full">
+		{#if sortedSessions.length === 0}
+			<div class="mt-16 flex flex-col items-center justify-center gap-4 text-center">
+				<p class="text-sm text-muted-foreground">No learning sessions yet.</p>
+				<Button type="button" variant="outline" onclick={goHome}>
+					Start your first learning session
+				</Button>
+			</div>
+		{:else}
+			<ul
+				class="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-3"
+				role="list"
+			>
+				{#each sortedSessions as session, index (session.id)}
+					{@const isLatest = index === 0}
+					<li class="relative h-full">
+						<button
+							type="button"
+							class={cn(
+								'relative z-0 flex h-full w-full flex-col items-start gap-2 p-4 pr-10 text-left',
+								isLatest && 'scaffy-dashed-ring-surface scaffy-dashed-ring-surface--hover',
+								!isLatest && sessionCard,
+							)}
+							onclick={() => openSession(session.id)}
+						>
+							{#if isLatest}
+								<span class="text-xs font-medium text-ring">
+									continue with latest learning session
+								</span>
+							{/if}
+
+							<span class="w-full text-sm break-words text-foreground">
+								{session.prompt}
+							</span>
+
+							<span class="flex w-full flex-wrap items-center gap-2 text-xs text-muted-foreground">
+								<time datetime={session.createdAt}>
+									{formatDate(session.createdAt)}
+								</time>
+
+								<span aria-hidden="true">·</span>
+
+								<span
+									class:text-primary={session.completed}
+									class:text-scaffy-amber={!session.completed && session.status !== 'error'}
+									class:text-destructive={session.status === 'error'}
+								>
+									{statusLabel(session)}
+								</span>
+							</span>
+						</button>
+
+						<button
+							type="button"
+							class="absolute top-2 right-2 z-10 rounded-full p-1.5 opacity-70 transition hover:bg-foreground/10 hover:opacity-100 active:translate-y-px active:opacity-100"
+							aria-label="Delete session"
+							onclick={(event) => handleDelete(event, session.id)}
+						>
+							<Trash2 class="size-4" aria-hidden="true" />
+						</button>
+					</li>
+				{/each}
+
+				<li class="h-full">
 					<button
 						type="button"
-						class={cn(
-							'relative z-0 flex h-full w-full flex-col items-start gap-2 p-4 pr-10 text-left',
-							isLatest && 'scaffy-dashed-ring-surface scaffy-dashed-ring-surface--hover',
-							!isLatest && sessionCard,
-						)}
-						onclick={() => openSession(session.id)}
+						class="scaffy-dashed-ring-surface scaffy-dashed-ring-surface--hover flex h-full w-full items-center justify-center p-4 text-sm font-medium text-ring"
+						onclick={goHome}
 					>
-						{#if isLatest}
-							<span class="text-xs font-medium text-ring">
-								continue with latest learning session
-							</span>
-						{/if}
-
-						<span class="w-full text-sm break-words text-foreground">
-							{session.prompt}
-						</span>
-
-						<span class="flex w-full flex-wrap items-center gap-2 text-xs text-muted-foreground">
-							<time datetime={session.createdAt}>
-								{formatDate(session.createdAt)}
-							</time>
-
-							<span aria-hidden="true">·</span>
-
-							<span
-								class:text-primary={session.completed}
-								class:text-scaffy-amber={!session.completed && session.status !== 'error'}
-								class:text-destructive={session.status === 'error'}
-							>
-								{statusLabel(session)}
-							</span>
-						</span>
-					</button>
-
-					<button
-						type="button"
-						class="absolute top-2 right-2 z-10 rounded-full p-1.5 opacity-70 transition hover:bg-foreground/10 hover:opacity-100 active:translate-y-px active:opacity-100"
-						aria-label="Delete session"
-						onclick={(event) => handleDelete(event, session.id)}
-					>
-						<Trash2 class="size-4" aria-hidden="true" />
+						Start new session
 					</button>
 				</li>
-			{/each}
-
-			<li class="h-full">
-				<button
-					type="button"
-					class="scaffy-dashed-ring-surface scaffy-dashed-ring-surface--hover flex h-full w-full items-center justify-center p-4 text-sm font-medium text-ring"
-					onclick={goHome}
-				>
-					Start new session
-				</button>
-			</li>
-		</ul>
+			</ul>
+		{/if}
 	</main>
 </ScrollArea>
 {#if showDeleteConfirm}

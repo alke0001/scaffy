@@ -493,7 +493,8 @@ The app previously rendered Monaco + ChatPanel on `/`. The product needs a focus
 - **`/`** — `StartLearningSession`: learn/scaffold only (`promptOnly` + **start session** → `requestScaffold`).
 - **`/session/[id]`** — `SessionWorkspace`: **Monaco + tabs (learn progress)** left; **`ChatPanel mode="ask"`** right (SSE tutor, unrelated to scaffold).
 - **`/sessions`** — `SessionsPage`: list of `getSessions()` from localStorage; select opens `/session/:id`. **`/history`** redirects to `/sessions`.
-- **App shell:** `AppTitleBar` in root `+layout.svelte` — **shadcn Breadcrumb** (route context: home / sessions / session prompt), logo → home, About dialog; no separate home/sessions nav buttons.
+- **App shell:** `AppTitleBar` in root `+layout.svelte` — persistent top nav (**scaffy** brand + **My Sessions** + optional session title with chevron on `/session/[id]`); cyan underline (`border-ring`) marks the active segment; logo and **scaffy** text both link to `/`; About dialog. No shadcn Breadcrumb.
+- **`/sessions` empty state:** when `getSessions()` is empty, centered copy + **Start your first learning session** → `/`.
 - **Navigation:** **start session** on home calls `requestScaffold` and `goto('/session/:id')`.
 - **Session id alignment:** `startScaffoldRequest(prompt, preferredId?)` uses the route id so Home navigation and localStorage tabs stay consistent.
 - **Example chips:** copy text into the chat textarea via DOM (`#chat-prompt`) to avoid ChatPanel prop changes.
@@ -713,3 +714,4 @@ Lighthouse (and axe) report **`aria-hidden-focus`** on the session route: Monaco
 | 2026-06-17 | ADR-019: accept Monaco viewZone `aria-hidden-focus` on session; no overlay-widget refactor for Lighthouse. Sessions page `<main>` landmark. |
 | 2026-06-17 | ADR-015/016: `/history` renamed to `/sessions` (308 redirect); `SessionsPage` copy — “My learning overview”.                                |
 | 2026-06-17 | ADR-015: App shell breadcrumb (shadcn) replaces home/sessions nav; home saved-session count line under example chips.                       |
+| 2026-06-17 | ADR-015: persistent top nav (scaffy + My Sessions + session title); removed shadcn `ui/breadcrumb`; `/sessions` empty state.                |

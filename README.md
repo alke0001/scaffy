@@ -30,6 +30,8 @@ Scaffy generates code step by step and uses targeted questions to block the next
 
 Session progress (scaffolds, status, completion) is persisted in **`localStorage`** in the browser.
 
+**App shell (top bar):** Logo and **scaffy** link to home; **My Sessions** links to `/sessions`; on an open session, a chevron and truncated prompt title appear with the active route underlined in cyan. In-page navigation (session tabs, chips, cards) is unchanged.
+
 ---
 
 ## Getting started
@@ -108,7 +110,7 @@ src/
 │   │   ├── sessions/      # Sessions overview page view
 │   │   ├── home/          # Home prompt + start session
 │   │   ├── session/       # Session workspace, session tabs
-│   │   ├── shell/         # App title bar
+│   │   ├── shell/         # App title bar (persistent top nav)
 │   │   └── ui/            # shadcn-svelte primitives (Button, Dialog, …)
 │   ├── server/
 │   │   ├── scaffold/      # Structured JSON schema + system prompt (Learn)
