@@ -529,6 +529,7 @@ Scaffy grew separate surfaces (home, session, sessions overview) plus shared chr
 1. **`src/routes/` — routing only**
    - Folder path = URL (`/`, `/sessions`, `/session/[id]`; `/history` redirects to `/sessions`).
    - `+page.svelte` stays **thin**: import one view component from `lib/`, render it.
+   - **Lazy route (conditional):** `routes/sessions/+page.svelte` — empty state inline (instant when no sessions); `sessions-page.svelte` loads via dynamic `import()` only when `getSessions().length > 0`.
    - No `-page` suffix on route files; use SvelteKit conventions (`+page.svelte`, `+layout.svelte`).
 
 2. **`src/lib/components/<area>/` — feature / area views**
@@ -551,13 +552,14 @@ Scaffy grew separate surfaces (home, session, sessions overview) plus shared chr
 
 ### Examples (this repo)
 
-| Piece           | Location                                        | Why                                   |
-| --------------- | ----------------------------------------------- | ------------------------------------- |
-| `/` route shell | `routes/+page.svelte` → `StartLearningSession`  | Thin route                            |
-| Home screen     | `components/home/start-learning-session.svelte` | Copy, ChatPanel wiring, examples      |
-| Chip grid       | `components/ui/chip/chip-grid.svelte`           | Generic; no “Try one of these” inside |
-| Logo            | `lib/assets/scaffy-logo.svelte`                 | Themed inline SVG (`--scaffy-logo-*`) |
-| App chrome      | `components/shell/app-title-bar.svelte`         | Cross-route shell, not `ui/`          |
+| Piece           | Location                                                  | Why                                               |
+| --------------- | --------------------------------------------------------- | ------------------------------------------------- |
+| `/` route shell | `routes/+page.svelte` → `StartLearningSession`            | Thin route                                        |
+| `/sessions`     | `routes/sessions/+page.svelte` → empty static / list lazy | Empty state eager; list chunk when sessions exist |
+| Home screen     | `components/home/start-learning-session.svelte`           | Copy, ChatPanel wiring, examples                  |
+| Chip grid       | `components/ui/chip/chip-grid.svelte`                     | Generic; no “Try one of these” inside             |
+| Logo            | `lib/assets/scaffy-logo.svelte`                           | Themed inline SVG (`--scaffy-logo-*`)             |
+| App chrome      | `components/shell/app-title-bar.svelte`                   | Cross-route shell, not `ui/`                      |
 
 ### Alternatives considered
 
@@ -716,3 +718,4 @@ Lighthouse (and axe) report **`aria-hidden-focus`** on the session route: Monaco
 | 2026-06-17 | ADR-015: App shell breadcrumb (shadcn) replaces home/sessions nav; home saved-session count line under example chips.                       |
 | 2026-06-17 | ADR-015: persistent top nav (scaffy + My Sessions + session title); removed shadcn `ui/breadcrumb`; `/sessions` empty state.                |
 | 2026-06-19 | ADR-005: removed Learn prompt `<`/`{`/`;` heuristic — caused false 400s; min 10 characters remains.                                         |
+| 2026-06-19 | ADR-016: `/sessions` — eager empty state; lazy `sessions-page` chunk only when sessions exist.                                              |

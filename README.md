@@ -110,14 +110,14 @@ src/
 │   └── mocks/             # Fixture scaffolds for UI development
 └── routes/
     ├── +page.svelte       # Home (thin → start-learning-session)
-    ├── sessions/          # Sessions overview page
+    ├── sessions/          # Sessions overview (lazy-loaded view)
     ├── session/[id]/      # Session workspace
     └── api/
         ├── scaffold/      # POST /api/scaffold — structured JSON (Learn)
         └── chat/          # POST /api/chat — SSE tutor (Ask)
 ```
 
-- **Routes** stay thin; feature views live under `src/lib/components/<area>/`.
+- **Routes** stay thin; feature views live under `src/lib/components/<area>/`. `/sessions` shows an **eager** empty state when there are no sessions; the list UI is **lazy-loaded** only when `localStorage` has sessions (conditional code split).
 - **API routes** are thin proxies: parse request → call Anthropic → return response.
 - **Server-only** logic lives in `src/lib/server/` (never imported from the client).
 
