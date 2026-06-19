@@ -157,7 +157,7 @@ That fragility is **rooted in LLM non-determinism + structured-output constraint
 - Post-parse: `validateStructuredOutput()` → `validate-lesson.ts` (trim to 3 scaffolds if the model over-generates; **strict cumulative** `codeSnippet` chain; one **server retry** on validation failure).
 - **In-editor loading** while waiting (~45s): Braille spinner + rotating verbs rendered **inside Monaco** as animated comment text (not an HTML overlay).
 - **Resilience:** client auto-retry once; error state with retry + static `scaffold-fallback.json` (dev paste from localStorage).
-- **Prompt rules:** min 10 characters; heuristic reject `<`, `{`, `;` to discourage pasting code snippets into Learn prompts.
+- **Prompt rules:** min 10 characters (Learn and Ask).
 
 ### Alternatives considered
 
@@ -188,7 +188,7 @@ Ask is free-form Q&A; users expect token-by-token replies like other chat produc
 - **Temperature 0.55**, **`max_tokens` 2048** (teaching replies; ladder: UI concept → Runes → syntax).
 - **History cap:** last **30 messages** (~15 user/assistant turns) in `buildMessages()` — cost and context control; focused use per open question, not long threads.
 - **No** structured output schema; **scaffolded Socratic** tutor prompt in `src/lib/server/chat/system-prompt.md` (teach mental model first, then questions + small steps; not interrogation-only; topic-agnostic for any scaffold lesson; no MC spoilers).
-- **Prompt rules:** min 10 characters; **no** `<`/`{`/`;` heuristic (code questions allowed).
+- **Prompt rules:** min 10 characters (same as Learn).
 - **Lesson context** (current scaffold/knowledge check) — planned later; not in API body yet.
 - Client: `src/lib/api/chat-stream.ts` appends deltas; `request.signal` / `AbortController` for cancel.
 
@@ -715,3 +715,4 @@ Lighthouse (and axe) report **`aria-hidden-focus`** on the session route: Monaco
 | 2026-06-17 | ADR-015/016: `/history` renamed to `/sessions` (308 redirect); `SessionsPage` copy — “My learning overview”.                                |
 | 2026-06-17 | ADR-015: App shell breadcrumb (shadcn) replaces home/sessions nav; home saved-session count line under example chips.                       |
 | 2026-06-17 | ADR-015: persistent top nav (scaffy + My Sessions + session title); removed shadcn `ui/breadcrumb`; `/sessions` empty state.                |
+| 2026-06-19 | ADR-005: removed Learn prompt `<`/`{`/`;` heuristic — caused false 400s; min 10 characters remains.                                         |

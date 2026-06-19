@@ -24,7 +24,7 @@
 	const ASK_MIN_LENGTH_TOOLTIP =
 		'Enter at least 10 characters to ask Scaffy a question. We skip very short prompts to avoid unnecessary AI calls and reduce environmental impact.';
 	const LEARN_PLACEHOLDER =
-		'e.g. A login form with email validation and a forgot-password link\n(min. 10 characters; avoid <, {, ; in prompts)';
+		'e.g. A login form with email validation and a forgot-password link\n(min. 10 characters)';
 
 	interface Props {
 		mode: ChatMode;
