@@ -6,102 +6,95 @@
 
 ## Was tut die Anwendung?
 
-**Scaffy** ist ein interaktiver KI-Coding-Lernassistent. Der User gibt einen natürlichsprachlichen Prompt ein (z. B. _„Generiere eine Svelte 5 Login-Komponente mit Passwort-Validierung (mindestens 8 Zeichen lang)"_), woraufhin Claude den vollständigen Code sowie framework-spezifische Lernfragen in einem strukturierten JSON-Response generiert. Scaffy präsentiert diesen Code dann im Monaco Editor bewusst durch **Scaffolding & Desirable Friction**: Der Code wird schrittweise freigeschaltet — blockiert durch eingebettete Frage-Antwort-Komponenten, die der User korrekt beantworten muss, bevor der nächste Chunk sichtbar wird.
+**Scaffy** ist ein interaktiver KI-Coding-Lernassistent. Der User gibt einen natürlichsprachlichen Prompt ein (z. B. _„Generiere eine Svelte 5 Login-Komponente mit Passwort-Validierung (mindestens 8 Zeichen lang)"_), woraufhin Claude den vollständigen Code sowie framework-spezifische Lernfragen in einem strukturierten JSON-Response generiert. Scaffy präsentiert diesen Code dann im Monaco Editor bewusst durch **Scaffolding & Desirable Friction**: Der Code wird schrittweise freigeschaltet — blockiert durch eingebettete **Learning Cards**, die der User korrekt beantworten muss, bevor der nächste Chunk sichtbar wird.
 
-**Hypothese:** Eine Erklärung im Nachgang zum bereits komplett generierten Code (Diff) — wie es klassisches Agentic Coding heute tut — wird von Novizen typischerweise übersprungen. Gleicher Effekt wie bei Geldautomaten. Wenn der User sein Ziel erreicht hat, also Geld erhalten hat, vergisst er die Karte zu entnehmen, wenn diese nach dem Geld aus dem Automaten kommt. Daher wurde die Reihenfolge dort umgedreht, zuerst Karte, dann Geld (User Ziel). Gleiches planen wir mit Scaffy. Durch die erzwungene Auseinandersetzung _während_ des Code-Aufbaus internalisieren Lernende die relevanten Konzepte nachhaltiger.
+**Hypothese:** Eine Erklärung im Nachgang zum bereits komplett generierten Code (Diff) — wie es klassisches Agentic Coding heute tut — wird von Novizen typischerweise übersprungen. Gleicher Effekt wie bei Geldautomaten. Wenn der User sein Ziel erreicht hat, vergisst er die Karte zu entnehmen, wenn diese nach dem Geld kommt. Daher wurde die Reihenfolge dort umgedreht: zuerst Karte, dann Geld. Gleiches Prinzip bei Scaffy — erzwungene Auseinandersetzung _während_ des Code-Aufbaus statt Erklärung danach.
 
 ---
 
 ## Technologiewahl
 
-| Bereich       | Technologie                     | Begründung                                                           |
-| ------------- | ------------------------------- | -------------------------------------------------------------------- |
-| Framework     | SvelteKit 5, SPA-Modus          | Kursinhalt; kein SSR/SSG nötig                                       |
-| Editor        | Monaco Editor (VS Code Basis)   | Code-Highlighting, viewZones für Inline-Fragen                       |
-| UI            | shadcn-svelte                   | Konsistentes Design-System für Custom Svelte Components              |
-| KI-API        | Claude API (Anthropic)          | Strukturiertes JSON: Code-Chunks + Fragen                            |
-| State         | Svelte Runes + Singleton-Stores | Aufgeteilt: `editor` / `session` / `questions`                       |
-| Persistierung | localStorage                    | Lernfortschritt, anonyme UID                                         |
-| Hosting       | Vercel + GitHub                 | Branch-Preview-URLs für Team-Workflow; Feature-Flag via Env-Variable |
+| Bereich       | Technologie                    | Begründung                                                  |
+| ------------- | ------------------------------ | ----------------------------------------------------------- |
+| Framework     | SvelteKit 5, SPA-Modus         | Kursinhalt; kein SSR/SSG nötig                              |
+| Editor        | Monaco Editor (VS Code Basis)  | Code-Highlighting, viewZones für Learning Cards             |
+| UI            | shadcn-svelte + Tailwind CSS 4 | Konsistentes Design-System                                  |
+| KI-API        | Claude API (Anthropic)         | Structured JSON (Learn) + SSE-Stream (Ask)                  |
+| State         | Svelte 5 Runes + Singleton     | Global: `session.svelte.ts`; lokal: Monaco/Chat-Komponenten |
+| Persistierung | localStorage                   | Session-Liste, Scaffold-Payloads, Metadaten                 |
+| Hosting       | Vercel + GitHub                | Live-Deploy, CI via GitHub Actions                          |
 
 ---
 
 ## Pflicht-Checkliste
 
-| Anforderung                                                   | Plan in Scaffy                                                                                                                                                                                                                                                              |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **≥5 eigene Komponenten** (davon ≥2 mehrfach verwendet)       | `PromptInput`, `CodeEditor` (Monaco-Wrapper), `QuestionCard` (mehrfach — 1× pro Chunk), `AnswerOption` (mehrfach — 4× pro Frage), `ProgressBar`, `ChatMessage` (mehrfach — je Prompt/Antwort-Paar) — QuestionCard, AnswerOption und ChatMessage werden wiederholt verwendet |
-| **Reactivity** — 1 User-Aktion → ≥2 UI-Bereiche aktualisieren | Korrekte Antwort → gleichzeitig: Monaco Editor zeigt neuen Chunk + ProgressBar aktualisiert sich + QuestionCard verschwindet                                                                                                                                                |
-| **Lokaler + globaler State** von ≥2 Routen gelesen            | Globaler Singleton-State (`session.svelte.js`) wird auf Editor-Route und History-Route gelesen                                                                                                                                                                              |
-| **3 Routen** (≥2 substantiell unterschiedlich + 1× `:id`)     | `/` Home/Prompt-Eingabe · `/session/:id` aktive Lern-Session mit Monaco + Chat + Fragen · `/sessions` Lernübersicht (ehem. `/history`)                                                                                                                                      |
-| **Externe API** — ≥1 Call mit User-Input                      | Claude API wird mit dem User-Prompt aufgerufen; antwortet mit strukturiertem JSON (Code-Chunks + Fragen); niedrige Temperature + festes JSON-Schema erzwungen via System Prompt                                                                                             |
-| **Formular** — ≥2 Validierungsregeln, davon ≥1 nicht-trivial  | Prompt-Eingabefeld: (1) nicht leer, (2) Mindestlänge 10 Zeichen, (3) nicht-trivial: Prompt darf keine reinen Code-Snippets enthalten (Regex-Check auf `<`, `{`, `;` als Heuristik)                                                                                          |
-| **Loading- + Error-States** für API-Calls                     | Skeleton-Loader im Monaco-Bereich während Claude antwortet; Error-Banner bei API-Fehler mit Retry-Option                                                                                                                                                                    |
-| **Persistierung** (überlebt Reload)                           | Lernfortschritt (welche Chunks freigeschaltet, welche Fragen beantwortet) in `localStorage`; anonyme Session-ID via `crypto.randomUUID()`                                                                                                                                   |
+| Status       | Anforderung                                                   | Ist-Umsetzung in Scaffy                                                                                                                                                                                                                                                         |
+| ------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅ umgesetzt | **≥5 eigene Komponenten** (davon ≥2 mehrfach verwendet)       | u. a. `ChatPanel`, `MonacoEditor`, `LearningCard`, `ChatMessage`, `SessionTabs`, `SessionsPage`, `SessionWorkspace`, `StartLearningSession`, `DeleteConfirmationDialog` — **mehrfach:** `ChatPanel` (Home + Session), `ChatMessage` (Chat-Liste), `LearningCard` (pro Scaffold) |
+| ⚠️ teilweise | **Reactivity** — 1 User-Aktion → ≥2 UI-Bereiche aktualisieren | Korrekte Antwort → Monaco zeigt nächsten Chunk **und** Learning Card verschwindet; Session-Tab/`completed` bei Lektionsende. **Offen:** dedizierte `ProgressBar` (nur „chunk X of Y“ in der Card)                                                                               |
+| ✅ umgesetzt | **Lokaler + globaler State** von ≥2 Routen gelesen            | Global: `session.svelte.ts` auf `/`, `/session/:id`, `/sessions`. Lokal: `currentIndex`/Card-UI in `monaco-editor.svelte`, Ask-Messages in `chat-panel.svelte`                                                                                                                  |
+| ✅ umgesetzt | **3 Routen** (≥2 substantiell unterschiedlich + 1× `:id`)     | `/` Home · `/session/:id` Workspace (Monaco + Ask + Learning Cards) · `/sessions` Übersicht (`/history` → 308 Redirect)                                                                                                                                                         |
+| ✅ umgesetzt | **Externe API** — ≥1 Call mit User-Input                      | Learn: `POST /api/scaffold` (Structured JSON, `temperature: 0.3`, JSON-Schema). Ask: `POST /api/chat` (SSE, User-Prompt + History). Beide mit User-Input                                                                                                                        |
+| ✅ umgesetzt | **Formular** — ≥2 Validierungsregeln, davon ≥1 nicht-trivial  | Learn-Prompt: (1) nicht leer (`trim`), (2) Mindestlänge 10 Zeichen, (3) Submit blockiert während `isStarting` (Doppel-Submit-Schutz). Server spiegelt Mindestlänge auf `/api/scaffold`                                                                                          |
+| ✅ umgesetzt | **Loading- + Error-States** für API-Calls                     | Learn: In-Editor-Loading (Spinner + Typewriter-Text) + Error mit Retry + Fallback-JSON. Ask: `loading` / `streaming` / `complete` / `error` in `ChatMessage`                                                                                                                    |
+| ⚠️ teilweise | **Persistierung** (überlebt Reload)                           | **Ja:** Session-Liste, Prompt, Scaffold-JSON von Claude, `completed`, aktive Tab-ID (`crypto.randomUUID()`). **Nein:** Schritt-Index in der Lektion (`currentIndex`) und Ask-Chat-Verlauf — nach Reload startet die Lektion wieder bei Scaffold 1                               |
 
 ---
 
 ## Persistierung
 
-localStorage + Svelte State Manegement + Routing/URL
+localStorage + Svelte State Management + Routing/URL (Details: `docs/architecture.md` §6)
 
-| Was wird gespeichert                           | Wo             |
-| ---------------------------------------------- | -------------- |
-| Aktiver Lernfortschritt (Chunks + Antworten)   | `localStorage` |
-| Session-ID (anonym, via `crypto.randomUUID()`) | `localStorage` |
-| Vergangene Sessions (History)                  | `localStorage` |
-
-Externe Daten (Claude API Response) werden **nicht** persistiert — sie werden bei Bedarf neu generiert.
+| Was wird gespeichert                                        | Wo             | Status                 |
+| ----------------------------------------------------------- | -------------- | ---------------------- |
+| Session-Liste inkl. Scaffold-Payloads (Claude-Antwort)      | `localStorage` | ✅ umgesetzt           |
+| Session-ID (anonym, `crypto.randomUUID()`)                  | `localStorage` | ✅ umgesetzt           |
+| Aktive Tab-ID                                               | `localStorage` | ✅ umgesetzt           |
+| `completed`-Flag pro Session                                | `localStorage` | ✅ umgesetzt           |
+| In-Lektion-Fortschritt (welcher Chunk / beantwortete Cards) | —              | ❌ nicht (noch)        |
+| Ask-Chat-Verlauf                                            | —              | ❌ bewusst weggelassen |
 
 ---
 
 ## Add-ons (optional)
 
-| Add-on                                                      | Status           | Umsetzungsplan                                                    |
-| ----------------------------------------------------------- | ---------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Live-Deploy**                                             | ✅ eingeplant    | Vercel, automatisch via GitHub-Integration (main + dev branch)    |
-| **Lazy Loading** mind. einer Route                          | ✅ eingeplant    | `/sessions`-Route wird lazy geladen (SvelteKit dynamic import)    |
-| NEU: **Feature Flag: ScaffyCoding vs. NormalAgenticCoding** | ✅ eingeplant    | Env-Variable (`SCAFFY_MODE=scaffy                                 | agentic`) steuert Verhalten: im _ScaffyCoding_-Modus läuft Scaffy mit Desirable Friction und Scaffolding wie beschrieben; im _NormalAgenticCoding_-Modus liefert Claude den gesamten Code auf einmal mit einer kurzen Erklärung danach — so wie es in heutigen Agentic-Coding-Tools üblich ist. Beide Modi laufen auf demselben Vercel-Deployment über verschiedene Branch-URLs, sodass ein direkter Vergleich möglich ist. |
-| **Dark Mode / Theme-Wahl**                                  | 🔄 optional      | shadcn-svelte Dark Theme als Standard; Light-Mode-Toggle bei Zeit |
-| **Offline-Fähigkeit** (Service Worker / PWA-Light)          | ❌ nicht geplant | Ohne Claude API nicht sinnvoll nutzbar                            |
+| Add-on                                                 | Status             | Umsetzung                                                                                                   |
+| ------------------------------------------------------ | ------------------ | ----------------------------------------------------------------------------------------------------------- |
+| **Live-Deploy**                                        | ✅ umgesetzt       | [scaffy.vercel.app](https://scaffy.vercel.app/), GitHub → Vercel, CI via `.github/workflows/ci.yml`         |
+| **Lazy Loading** mind. einer Route                     | ✅ umgesetzt       | `/sessions`: leerer Zustand inline in `+page.svelte`; Listen-UI per `import()` nur wenn Sessions existieren |
+| **Feature Flag: ScaffyCoding vs. NormalAgenticCoding** | ❌ nicht umgesetzt | Geplant (`SCAFFY_MODE`); nur Scaffy-Modus shipped — siehe „Wissenschaftlicher Ausblick“                     |
+| **Dark Mode / Theme-Wahl**                             | ⚠️ teilweise       | Dark Theme als Standard (shadcn); kein Light-Mode-Toggle                                                    |
+| **Offline-Fähigkeit** (Service Worker / PWA-Light)     | ❌ nicht geplant   | Ohne Claude API nicht sinnvoll nutzbar                                                                      |
 
 ---
 
 ## Technische Komplexität & Challenges im Projekt
 
-Scaffy geht in drei Bereichen deutlich über eine einfache Svelte SPA mit REST Anbindung hinaus:
+Scaffy geht in drei Bereichen deutlich über eine einfache Svelte SPA mit REST-Anbindung hinaus:
 
 ### 1. Claude API — System Prompt, Temperature & Structured Outputs
 
-Die Claude API wird nicht wie eine einfache Film- oder Wetter-REST-API konsumiert. Die Herausforderung liegt in der **kontrollierten, konsistenten Ausgabequalität** über drei Stellschrauben:
+Die Claude API wird nicht wie eine einfache Film- oder Wetter-REST-API konsumiert. Die Herausforderung liegt in der **kontrollierten, konsistenten Ausgabequalität**:
 
-- **System Prompt:** Muss Claude präzise instruieren, Code zuverlässig in didaktisch sinnvolle Chunks aufzuteilen _und_ passende Lernfragen pro Chunk zu generieren — beides in einem einzigen API-Call. Die Qualität des Outputs hängt direkt von der Qualität des System Prompts ab und erfordert iteratives Prompt Engineering.
-- **Temperature:** Niedrige Temperature-Einstellung notwendig, um deterministisches, strukturiertes Output zu bekommen — zu hohe Kreativität produziert unvorhersehbare Chunk-Grenzen und Fragequalität.
-- **Structured Outputs** (`output_config.format`: `json_schema`): Die Claude API bietet einen dedizierten Parameter, der das JSON-Ausgabeschema (z. B. `{ scaffolds: [{ codeSnippet, knowledgeCheck: { question, options, correctOptionId, explanation } }] }`) via _Constrained Decoding_ hart erzwingt — die Grammatik des Schemas wird direkt in die Token-Generierung eingebettet. Das eliminiert fehlerhafte JSON-Ausgaben und die Notwendigkeit von Retry-Logik bei Parse-Fehlern. Dennoch muss bei inhaltlich unvollständigen oder inhaltlich fehlerhaften Responses (falsches Aufteilen in Scaffolds, sinnlose Fragen) ein Output-Check und ggf. ein erneuter API-Call implementiert werden.
+- **System Prompt:** Code in didaktische Chunks _und_ passende Learning Cards in einem API-Call (`system-prompt.md`).
+- **Temperature:** Learn ~0.3, Ask ~0.55.
+- **Structured Outputs** (`output_config.format: json_schema`) für Learn; serverseitige Validierung + ein Retry bei Fehlern.
 
 ### 2. Monaco Editor — JavaScript-Integration & State-Verdrahtung
 
-Monaco ist keine Svelte-Komponenten-Bibliothek, sondern eine eigenständige, mächtige **JavaScript-Bibliothek** (VS Code Basis). Die Integration erfordert:
+- Lifecycle außerhalb Svelte (create/destroy/resize).
+- **viewZones** für Svelte-Learning-Cards zwischen Codezeilen.
+- Globaler Session-Store + lokaler Schritt-Index in der Editor-Komponente.
 
-- Manuelles Lifecycle-Management (Monaco instanziieren, destroyen, resizen) außerhalb des Svelte-Reaktivitätssystems
-- **viewZones** oder **overlayWidgets** als Monaco-eigene APIs, um Svelte-Komponenten (QuestionCard) _zwischen Codezeilen_ einzubetten — hier treffen zwei völlig unterschiedliche Rendering-Systeme aufeinander
-- Dynamisches State-Management der Zeilennummern: Wenn ein neuer Code-Chunk appended wird, verschieben sich alle viewZone-Positionen und müssen neu berechnet werden
-- Der Monaco-Inhalt und der globale Svelte-State müssen jederzeit synchron gehalten werden
+### 3. Chat-Fenster — Ask-Modus (Socratic Tutor)
 
-Diese Anforderung ist in der Praxis häufiger der Fall wenn konkrete Frontend Frameworks auf mächtige Javascript Komponenten treffen. Weiteres Beispiele: [Leaflet - a JavaScript library for interactive maps](https://leafletjs.com/), [Three.js – JavaScript 3D Library](https://threejs.org/), ...
-
-### 3. Chat-Fenster — eigener interaktiver Bereich
-
-Neben Monaco und den Inline-Fragen gibt es einen **Chat-Bereich** (Prompt → Antwort → Prompt → Antwort), der:
-
-- Eigene Komponenten benötigt (`ChatMessage`, scroll-to-bottom, Message-Typen: user vs. assistant)
-- Mit dem Session-State verknüpft ist (History überlebt Reload via localStorage)
-- Gleichzeitig mit Monaco und dem Fragen-State synchronisiert werden muss
+- Eigene Komponenten (`ChatPanel`, `ChatMessage`, SSE-Stream).
+- **Nicht** in localStorage persistiert (bewusst); unterstützt die laufende Lektion, ersetzt nicht den Learn-Gate.
 
 ---
 
 ## Wissenschaftlicher Ausblick
 
-Das Feature-Flag-Design (Friction vs. Agentic Mode) legt die Grundlage für eine mögliche empirische Studie im Bereich **Human-Centered AI (HCAI)**:
+Das Feature-Flag-Design (Friction vs. Agentic Mode) ist **geplant, nicht implementiert** — legt aber die Grundlage für eine mögliche HCAI-Studie:
 
-> Das A/B-Setting — Scaffolding mit Friction vs. klassisches Agentic Coding — ermöglicht eine empirische Auswertung der Lerneffektivität. Das Projektergebnis kann als Basis für eine HCAI-Studie zum Thema _Friction & Scaffolding als UX-Patterns in KI-gestützter Lernsoftware_ dienen.
+> A/B — Scaffolding mit Friction vs. klassisches Agentic Coding — zur empirischen Auswertung der Lerneffektivität (_Friction & Scaffolding als UX-Patterns in KI-gestützter Lernsoftware_).
