@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import ChatMessageList from '$lib/components/chat/chat-message-list.svelte';
 	import { streamChatReply } from '$lib/api/chat-stream.js';
 	import { requestScaffold } from '$lib/learn/request-scaffold.js';
@@ -46,7 +47,6 @@
 		'w-full resize-none px-3 py-2 placeholder:text-muted-foreground focus-visible:outline-none';
 
 	let messages = $state<ChatMessage[]>([]);
-	let boundAskSessionId = $state<string | null>(null);
 	let scrollViewport = $state<HTMLElement | null>(null);
 
 	let askAbort = $state<AbortController | null>(null);
@@ -70,28 +70,23 @@
 		scrollRaf = requestAnimationFrame(scrollToBottom);
 	}
 
+	/** Load Ask thread when session changes — do not subscribe to every store write. */
 	$effect(() => {
 		const id = sessionId;
 		if (mode !== 'ask' || !id || promptOnly) {
-			boundAskSessionId = null;
 			if (mode === 'ask') messages = [];
 			return;
 		}
-		if (boundAskSessionId === id) return;
-		boundAskSessionId = id;
-		messages = [...getAskMessages(id)];
+		messages = [...untrack(() => getAskMessages(id))];
 	});
 
-	$effect(() => {
+	function commitMessages(next: ChatMessage[]) {
+		messages = next;
 		const id = sessionId;
-		if (mode !== 'ask' || !id || promptOnly) return;
-		if (boundAskSessionId !== id) return;
-		void messages.length;
-		void messages
-			.map((message) => `${message.id}:${message.status}:${message.content.length}`)
-			.join('|');
-		setAskMessages(id, messages);
-	});
+		if (mode === 'ask' && id && !promptOnly) {
+			setAskMessages(id, next);
+		}
+	}
 
 	$effect(() => {
 		if (!isAskSession || !hasMessages) return;
@@ -113,16 +108,16 @@
 
 	async function submitLearn(text: string) {
 		const assistant = createAssistantPlaceholder();
-		messages = [...messages, createUserMessage(text), assistant];
+		commitMessages([...messages, createUserMessage(text), assistant]);
 
 		const resolvedSessionId = sessionId ?? crypto.randomUUID();
 
 		try {
 			await requestScaffold(text, resolvedSessionId);
-			messages = removeMessage(messages, assistant.id);
+			commitMessages(removeMessage(messages, assistant.id));
 		} catch (e) {
 			const message = e instanceof Error ? e.message : 'Request failed.';
-			messages = failAssistant(messages, assistant.id, message);
+			commitMessages(failAssistant(messages, assistant.id, message));
 		}
 	}
 
@@ -135,7 +130,7 @@
 
 		const history = toChatHistory(messages);
 		const assistant = createAssistantPlaceholder();
-		messages = [...messages, createUserMessage(text), assistant];
+		commitMessages([...messages, createUserMessage(text), assistant]);
 
 		let gotFirstToken = false;
 
@@ -149,25 +144,27 @@
 					if (signal.aborted) return;
 					if (!gotFirstToken) {
 						gotFirstToken = true;
-						messages = updateMessage(messages, assistant.id, {
-							status: 'streaming',
-							content: '',
-						});
+						commitMessages(
+							updateMessage(messages, assistant.id, {
+								status: 'streaming',
+								content: '',
+							}),
+						);
 					}
-					messages = appendToMessage(messages, assistant.id, delta);
+					commitMessages(appendToMessage(messages, assistant.id, delta));
 				},
 				onDone: () => {
 					if (signal.aborted) return;
-					messages = updateMessage(messages, assistant.id, { status: 'complete' });
+					commitMessages(updateMessage(messages, assistant.id, { status: 'complete' }));
 					askAbort = null;
 				},
 				onError: (message) => {
 					if (signal.aborted && message === 'Cancelled.') {
-						messages = removeMessage(messages, assistant.id);
+						commitMessages(removeMessage(messages, assistant.id));
 						askAbort = null;
 						return;
 					}
-					messages = failAssistant(messages, assistant.id, message);
+					commitMessages(failAssistant(messages, assistant.id, message));
 					askAbort = null;
 				},
 			},

@@ -6,9 +6,18 @@
 
 	/**
 	 * Conditional route split: empty state lives here (instant on first visit).
-	 * The list UI (cards, delete dialog, ScrollArea) loads only when sessions exist.
+	 * The list UI loads only when sessions exist — promise is cached once, not per render.
 	 */
 	const sessionCount = $derived(getSessions().length);
+
+	let sessionsPageModulePromise: Promise<
+		typeof import('$lib/components/sessions/sessions-page.svelte')
+	> | null = null;
+
+	function loadSessionsPage() {
+		sessionsPageModulePromise ??= import('$lib/components/sessions/sessions-page.svelte');
+		return sessionsPageModulePromise;
+	}
 
 	function goHome() {
 		goto(resolve('/'));
@@ -25,7 +34,7 @@
 		</Button>
 	</main>
 {:else}
-	{#await import('$lib/components/sessions/sessions-page.svelte')}
+	{#await loadSessionsPage()}
 		<div
 			class="flex h-full min-h-0 flex-1 items-center justify-center px-4 text-sm text-muted-foreground"
 			aria-live="polite"

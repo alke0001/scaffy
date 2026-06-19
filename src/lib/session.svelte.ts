@@ -176,17 +176,29 @@ function storableAskMessages(messages: ChatMessage[]): ChatMessage[] {
 	return messages.filter((message) => !IN_FLIGHT_ASK_STATUSES.has(message.status));
 }
 
+function askMessagesSnapshot(messages: ChatMessage[]): string {
+	return messages
+		.map(
+			(message) =>
+				`${message.id}:${message.status}:${message.content}:${message.errorMessage ?? ''}`,
+		)
+		.join('|');
+}
+
 export function getAskMessages(sessionId: string): ChatMessage[] {
 	return getSessionById(sessionId)?.askMessages ?? [];
 }
 
 /** In-memory only — not written to localStorage. */
 export function setAskMessages(sessionId: string, messages: ChatMessage[]): void {
-	if (!sessions.some((session) => session.id === sessionId)) return;
+	const session = getSessionById(sessionId);
+	if (!session) return;
 
 	const next = storableAskMessages(messages);
-	sessions = sessions.map((session) =>
-		session.id === sessionId ? { ...session, askMessages: next } : session,
+	if (askMessagesSnapshot(session.askMessages) === askMessagesSnapshot(next)) return;
+
+	sessions = sessions.map((entry) =>
+		entry.id === sessionId ? { ...entry, askMessages: next } : entry,
 	);
 }
 
