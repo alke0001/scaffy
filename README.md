@@ -2,39 +2,26 @@
 
 > AI that teaches you to build good code, not just builds for you.
 
-Scaffy generates code step by step and uses targeted questions to block the next chunk until the user answers correctly — combining scaffolding with deliberate friction to build real understanding.
+Scaffy generates code step by step and uses targeted questions to block the next chunk until you answer correctly — scaffolding with deliberate friction so concepts stick.
 
-**Stack:** SvelteKit 5 (SPA) · TypeScript · Monaco Editor · shadcn-svelte · Anthropic API · Vercel
-
----
-
-## How it works
-
-| Route              | Purpose                                                                                                    |
-| ------------------ | ---------------------------------------------------------------------------------------------------------- |
-| **`/`**            | Home — describe what you want to build in plain language and start a learning session.                     |
-| **`/session/:id`** | Workspace — Monaco editor (Learn) on the left, Ask tutor chat on the right, session tabs above the editor. |
-| **`/sessions`**    | My learning overview — resume or delete saved sessions.                                                    |
-
-**Learn mode**
-
-- Claude returns up to five ordered **scaffolds** (code snippet + Learning Card per step) via `POST /api/scaffold`.
-- Code appears in Monaco; a **Learning Card** (multiple-choice gate) is embedded in the editor via a Monaco **viewZone**.
-- The next scaffold unlocks only after a correct answer. Wrong answers show a structured feedback dialog (correct option + explanation).
-- The editor stays **read-only** until the session is completed; copying scaffold code is allowed.
-
-**Ask mode**
-
-- The right-hand chat is a Socratic tutor (`POST /api/chat`, SSE streaming, markdown replies).
-- It supports the lesson — it does not replace the Learn gate.
-
-Session progress (scaffolds, status, completion) is persisted in **`localStorage`** in the browser.
-
-**App shell (top bar):** Logo and **scaffy** link to home; **My Sessions** links to `/sessions`; on an open session, a chevron and truncated prompt title appear with the active route underlined in cyan. In-page navigation (session tabs, chips, cards) is unchanged.
+**Try it:** [scaffy.vercel.app](https://scaffy.vercel.app/) — access currently requires a [Vercel](https://vercel.com) account.  
+**More detail in the app:** open the **About** dialog (help icon in the top bar).
 
 ---
 
-## Getting started
+## What Scaffy does
+
+1. **Home** — describe what you want to build in plain language; start a session.
+2. **Session** — code appears in Monaco step by step; a **Learning Card** blocks each next step until you answer correctly. **Ask** chat on the right explains concepts without replacing the gate.
+3. **My Sessions** — resume or delete saved sessions (`localStorage`).
+
+**Architecture:** logical building blocks (ABB) and their concrete implementation (SSB) — see [`docs/architecture.md`](docs/architecture.md).
+
+---
+
+## For developers
+
+### Getting started
 
 **Prerequisites:** Node.js 20+ and [pnpm](https://pnpm.io/) 9.x
 
@@ -75,7 +62,7 @@ pnpm run dev
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-### Recommended editor extensions
+#### Recommended editor extensions
 
 Use [VS Code](https://code.visualstudio.com/) or [Cursor](https://cursor.com/). When you open the repo, the editor should prompt you to install the workspace recommendations from [`.vscode/extensions.json`](.vscode/extensions.json):
 
@@ -99,7 +86,7 @@ On Cursor, replace `code` with `cursor`.
 
 ---
 
-## Repository structure
+### Repository structure
 
 ```
 src/
@@ -134,11 +121,11 @@ src/
 - **API routes** are thin proxies: parse request → call Anthropic → return response.
 - **Server-only** logic lives in `src/lib/server/` (never imported from the client).
 
-**Architecture decisions** (context, alternatives, status): [`docs/decisions.md`](docs/decisions.md). Agent-facing invariants: [`CLAUDE.md`](CLAUDE.md). Test prompts for scaffold robustness: [`docs/run-test-prompts-profile-card.md`](docs/run-test-prompts-profile-card.md).
+**Architecture & stack:** [`docs/architecture.md`](docs/architecture.md) · **ADRs:** [`docs/decisions.md`](docs/decisions.md) · **Agent config:** [`CLAUDE.md`](CLAUDE.md)
 
 ---
 
-## Environment setup
+### Environment setup
 
 The AI API key is server-only and never exposed to the browser. Scaffold your local config from the committed template:
 
@@ -155,7 +142,7 @@ cp .env.example .env.local   # then edit .env.local
 
 ---
 
-## Development scripts
+### Development scripts
 
 | Script           | Command            | Purpose                                   |
 | ---------------- | ------------------ | ----------------------------------------- |
@@ -176,7 +163,7 @@ pnpm run preview
 
 ---
 
-## Code quality and Git hooks
+### Code quality and Git hooks
 
 **Pre-commit (Husky + lint-staged):** On `git commit`, staged files are auto-formatted with Prettier and ESLint-fixed (see `lint-staged` in `package.json`). Hooks are installed when you run `pnpm install` (`prepare` script).
 
@@ -195,7 +182,7 @@ pnpm exec eslint path/to/file
 
 ---
 
-## Continuous integration
+### Continuous integration
 
 Every push and pull request targeting `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
@@ -213,7 +200,7 @@ No extra GitHub configuration is required for Husky — hooks run locally only; 
 
 ---
 
-## Deployment
+### Continuous deployment
 
 Scaffy is deployed on [Vercel](https://vercel.com). The same environment variables from [Environment setup](#environment-setup) must be set on the Vercel project so serverless functions can reach the API.
 
@@ -239,7 +226,7 @@ vercel env pull .env.local
 
 ---
 
-## Agentic coding
+### Agentic coding
 
 This project is configured for AI-assisted development with three tools. All agents share the same design decisions and coding conventions defined in `CLAUDE.md`.
 
