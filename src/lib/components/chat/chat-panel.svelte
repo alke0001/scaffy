@@ -12,6 +12,7 @@
 		type ChatMode,
 	} from '$lib/chat/message-actions.js';
 	import { isThreadBusy, type ChatMessage } from '$lib/types/chat-message.js';
+	import { getAskMessages, setAskMessages } from '$lib/session.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
@@ -45,6 +46,7 @@
 		'w-full resize-none px-3 py-2 placeholder:text-muted-foreground focus-visible:outline-none';
 
 	let messages = $state<ChatMessage[]>([]);
+	let boundAskSessionId = $state<string | null>(null);
 	let scrollViewport = $state<HTMLElement | null>(null);
 
 	let askAbort = $state<AbortController | null>(null);
@@ -67,6 +69,29 @@
 		cancelAnimationFrame(scrollRaf);
 		scrollRaf = requestAnimationFrame(scrollToBottom);
 	}
+
+	$effect(() => {
+		const id = sessionId;
+		if (mode !== 'ask' || !id || promptOnly) {
+			boundAskSessionId = null;
+			if (mode === 'ask') messages = [];
+			return;
+		}
+		if (boundAskSessionId === id) return;
+		boundAskSessionId = id;
+		messages = [...getAskMessages(id)];
+	});
+
+	$effect(() => {
+		const id = sessionId;
+		if (mode !== 'ask' || !id || promptOnly) return;
+		if (boundAskSessionId !== id) return;
+		void messages.length;
+		void messages
+			.map((message) => `${message.id}:${message.status}:${message.content.length}`)
+			.join('|');
+		setAskMessages(id, messages);
+	});
 
 	$effect(() => {
 		if (!isAskSession || !hasMessages) return;

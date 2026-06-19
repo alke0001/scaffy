@@ -72,7 +72,7 @@
 				<Resizable.Handle />
 				<Resizable.Pane defaultSize={40} minSize={20} class="min-h-0">
 					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background p-2">
-						<ChatPanel mode="ask" />
+						<ChatPanel mode="ask" {sessionId} />
 					</div>
 				</Resizable.Pane>
 			</Resizable.PaneGroup>
@@ -88,7 +88,7 @@
 				<MonacoEditor class="min-h-0 flex-1" {sessionId} />
 			</section>
 			<div class="flex min-h-0 flex-2 flex-col overflow-hidden border-t border-scaffy-divider p-2">
-				<ChatPanel mode="ask" />
+				<ChatPanel mode="ask" {sessionId} />
 			</div>
 		</div>
 	</main>

@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import type { ChatMessage } from '$lib/types/chat-message.js';
 import type { Scaffold } from '$lib/types/scaffold';
 import { LESSON_SCAFFOLD_COUNT } from '$lib/types/scaffold';
 import { devLog } from '$lib/dev/log.js';
@@ -27,16 +28,16 @@ import { devLog } from '$lib/dev/log.js';
  * `idle` → `loading` (`startScaffoldRequest`) → `ready` (`setScaffolds`) | `error` (`setScaffoldError`).
  * `retryScaffoldRequest` resets to `loading`. `completed` flips via `markSessionCompleted()`.
  *
- * ## Not stored here
+ * ## Not stored in localStorage
  * - In-lesson step index / answered cards → `monaco-editor.svelte` (lost on reload).
- * - Ask chat history → `chat-panel.svelte` (lost on reload).
+ * - Ask chat (`askMessages`) → in-memory on `SessionRecord` only (survives SPA navigation; lost on reload).
  *
  * @see docs/decisions.md ADR-009, ADR-014
  */
 
 export type SessionStatus = 'idle' | 'loading' | 'ready' | 'error';
 
-/** One learning session — persisted in localStorage as part of `sessions[]`. */
+/** One learning session — core fields persisted in localStorage as part of `sessions[]`. */
 export type SessionRecord = {
 	id: string;
 	prompt: string;
@@ -45,7 +46,11 @@ export type SessionRecord = {
 	status: SessionStatus;
 	errorMessage: string | null;
 	completed: boolean;
+	/** Ask-mode thread — in-memory only (stripped before localStorage). */
+	askMessages: ChatMessage[];
 };
+
+type PersistedSessionRecord = Omit<SessionRecord, 'askMessages'>;
 
 const STORAGE_KEY = 'scaffy.sessions';
 const ACTIVE_SESSION_KEY = 'scaffy.activeSessionId';
@@ -68,9 +73,15 @@ function createSessionId() {
 
 // --- Persistence (localStorage) ---
 
+function toPersistedSession({ askMessages, ...rest }: SessionRecord): PersistedSessionRecord {
+	void askMessages;
+	return rest;
+}
+
 function persistSessions() {
 	if (!browser) return;
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+	const persisted = sessions.map(toPersistedSession);
+	localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
 	localStorage.setItem(ACTIVE_SESSION_KEY, activeSessionId ?? '');
 }
 
@@ -101,6 +112,7 @@ function restoreSessions() {
 						status,
 						errorMessage: item.errorMessage ?? null,
 						completed: item.completed ?? false,
+						askMessages: [],
 					};
 				});
 		}
@@ -157,6 +169,27 @@ export function getSessionError(): string | null {
 	return errorMessage;
 }
 
+const IN_FLIGHT_ASK_STATUSES = new Set<ChatMessage['status']>(['pending', 'loading', 'streaming']);
+
+/** Ask messages storable in the session singleton (drops in-flight assistant placeholders). */
+function storableAskMessages(messages: ChatMessage[]): ChatMessage[] {
+	return messages.filter((message) => !IN_FLIGHT_ASK_STATUSES.has(message.status));
+}
+
+export function getAskMessages(sessionId: string): ChatMessage[] {
+	return getSessionById(sessionId)?.askMessages ?? [];
+}
+
+/** In-memory only — not written to localStorage. */
+export function setAskMessages(sessionId: string, messages: ChatMessage[]): void {
+	if (!sessions.some((session) => session.id === sessionId)) return;
+
+	const next = storableAskMessages(messages);
+	sessions = sessions.map((session) =>
+		session.id === sessionId ? { ...session, askMessages: next } : session,
+	);
+}
+
 // --- Session mutations (persist after each change) ---
 
 export function startScaffoldRequest(prompt: string, preferredId?: string): string {
@@ -173,6 +206,7 @@ export function startScaffoldRequest(prompt: string, preferredId?: string): stri
 						status: 'loading',
 						errorMessage: null,
 						completed: false,
+						askMessages: [],
 					}
 				: session,
 		);
@@ -186,6 +220,7 @@ export function startScaffoldRequest(prompt: string, preferredId?: string): stri
 			status: 'loading',
 			errorMessage: null,
 			completed: false,
+			askMessages: [],
 		};
 		sessions = [session, ...sessions];
 	}
@@ -253,6 +288,7 @@ export function retryScaffoldRequest(sessionId: string): void {
 					status: 'loading',
 					errorMessage: null,
 					completed: false,
+					askMessages: [],
 				}
 			: session,
 	);
