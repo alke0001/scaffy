@@ -1,5 +1,10 @@
 import type { KnowledgeCheck } from '$lib/types/scaffold.js';
 
+/**
+ * Per-editor bridge between Monaco viewZone host and LearningCard UI.
+ * Not a global store — one instance per `monaco-editor.svelte`.
+ * Ephemeral: reset when the active scaffold step changes.
+ */
 export class KnowledgeZoneBridge {
 	question = $state<KnowledgeCheck | null>(null);
 	chunkIndex = $state(0);
