@@ -37,7 +37,7 @@
 | ✅ umgesetzt | **Externe API** — ≥1 Call mit User-Input                      | Learn: `POST /api/scaffold` (Structured JSON, `temperature: 0.3`, JSON-Schema). Ask: `POST /api/chat` (SSE, User-Prompt + History). Beide mit User-Input                                                                                                                        |
 | ✅ umgesetzt | **Formular** — ≥2 Validierungsregeln, davon ≥1 nicht-trivial  | Learn-Prompt: (1) nicht leer (`trim`), (2) Mindestlänge 10 Zeichen, (3) Submit blockiert während `isStarting` (Doppel-Submit-Schutz). Server spiegelt Mindestlänge auf `/api/scaffold`                                                                                          |
 | ✅ umgesetzt | **Loading- + Error-States** für API-Calls                     | Learn: In-Editor-Loading (Spinner + Typewriter-Text) + Error mit Retry + Fallback-JSON. Ask: `loading` / `streaming` / `complete` / `error` in `ChatMessage`                                                                                                                    |
-| ⚠️ teilweise | **Persistierung** (überlebt Reload)                           | **Ja:** Session-Liste, Prompt, Scaffold-JSON von Claude, `completed`, aktive Tab-ID (`crypto.randomUUID()`). **Nein:** Schritt-Index in der Lektion (`currentIndex`) und Ask-Chat-Verlauf — nach Reload startet die Lektion wieder bei Scaffold 1                               |
+| ⚠️ teilweise | **Persistierung** (überlebt Reload)                           | **Ja (localStorage):** Session-Liste, Prompt, Scaffold-JSON, `completed`, Tab-ID. **Ja (Singleton, nur Navigation):** Ask-Chat pro Session (`askMessages`). **Nein:** Schritt-Index (`currentIndex`) — nach Reload Lektion bei Scaffold 1; Chat nach Reload leer                |
 
 ---
 
@@ -45,14 +45,14 @@
 
 localStorage + Svelte State Management + Routing/URL (Details: `docs/architecture.md` §6)
 
-| Was wird gespeichert                                        | Wo             | Status                 |
-| ----------------------------------------------------------- | -------------- | ---------------------- |
-| Session-Liste inkl. Scaffold-Payloads (Claude-Antwort)      | `localStorage` | ✅ umgesetzt           |
-| Session-ID (anonym, `crypto.randomUUID()`)                  | `localStorage` | ✅ umgesetzt           |
-| Aktive Tab-ID                                               | `localStorage` | ✅ umgesetzt           |
-| `completed`-Flag pro Session                                | `localStorage` | ✅ umgesetzt           |
-| In-Lektion-Fortschritt (welcher Chunk / beantwortete Cards) | —              | ❌ nicht (noch)        |
-| Ask-Chat-Verlauf                                            | —              | ❌ bewusst weggelassen |
+| Was wird gespeichert                                        | Wo                        | Status                    |
+| ----------------------------------------------------------- | ------------------------- | ------------------------- |
+| Session-Liste inkl. Scaffold-Payloads (Claude-Antwort)      | `localStorage`            | ✅ umgesetzt              |
+| Session-ID (anonym, `crypto.randomUUID()`)                  | `localStorage`            | ✅ umgesetzt              |
+| Aktive Tab-ID                                               | `localStorage`            | ✅ umgesetzt              |
+| `completed`-Flag pro Session                                | `localStorage`            | ✅ umgesetzt              |
+| In-Lektion-Fortschritt (welcher Chunk / beantwortete Cards) | —                         | ❌ nicht (noch)           |
+| Ask-Chat-Verlauf (pro Session)                              | Singleton (`askMessages`) | ✅ Navigation · ❌ Reload |
 
 ---
 
@@ -89,7 +89,7 @@ Die Claude API wird nicht wie eine einfache Film- oder Wetter-REST-API konsumier
 ### 3. Chat-Fenster — Ask-Modus (Socratic Tutor)
 
 - Eigene Komponenten (`ChatPanel`, `ChatMessage`, SSE-Stream).
-- **Nicht** in localStorage persistiert (bewusst); unterstützt die laufende Lektion, ersetzt nicht den Learn-Gate.
+- Ask-Verlauf pro Session im **Singleton** (`askMessages`) — bleibt bei Navigation, nicht in `localStorage`.
 
 ---
 

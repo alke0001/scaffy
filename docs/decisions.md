@@ -406,6 +406,7 @@ Learning progress must survive reloads and back navigation ([`Projektsteckbrief_
 - [`session.svelte.ts`](../src/lib/session.svelte.ts) persists `SessionRecord[]` and the active session id to `localStorage` on change; restores on load.
 - Sessions overview page and session tabs read from the same store; no separate `LocalStorageSessionStore` adapter or `LearningSessionStore` port yet.
 - Step-level progress (current scaffold index, answered Learning Cards) is **not** fully persisted across reload — only session list, scaffolds payload, and `completed` flag.
+- **Ask chat** per session: `askMessages` on `SessionRecord` in the singleton — survives SPA navigation; **stripped** from `localStorage` JSON (lost on full reload).
 - Supabase adapter remains Phase 2 (optional).
 
 ### Decision (target architecture)
@@ -466,7 +467,7 @@ flowchart TB
 
 - New code under something like `$lib/persistence/` (`LearningSessionStore`, `local-storage-session-store.ts`, `create-session-store.ts`).
 - **Do not** import `$lib/server/*` from persistence adapters on the client; Supabase adapter uses `@supabase/supabase-js` + anon key + user JWT when added.
-- Ask-mode chat history stays **out of scope** for this ADR unless explicitly extended (Learn session + progress only).
+- Ask-mode chat: **in-memory** on `SessionRecord.askMessages` (navigation only); **not** in the localStorage port unless explicitly extended later.
 - When `SupabaseSessionStore` ships: add ADR changelog line, implement adapter + factory branch, document env vars in `.env.example` — **supersede nothing in Phase 1 port shape** unless a breaking schema change is intentional.
 
 ### Implementation checklist (for agents)
@@ -718,4 +719,4 @@ Lighthouse (and axe) report **`aria-hidden-focus`** on the session route: Monaco
 | 2026-06-17 | ADR-015: App shell breadcrumb (shadcn) replaces home/sessions nav; home saved-session count line under example chips.                       |
 | 2026-06-17 | ADR-015: persistent top nav (scaffy + My Sessions + session title); removed shadcn `ui/breadcrumb`; `/sessions` empty state.                |
 | 2026-06-19 | ADR-005: removed Learn prompt `<`/`{`/`;` heuristic — caused false 400s; min 10 characters remains.                                         |
-| 2026-06-19 | ADR-016: `/sessions` — eager empty state; lazy `sessions-page` chunk only when sessions exist.                                              |
+| 2026-06-19 | ADR-014: Ask chat per session in `session.svelte.ts` (`askMessages`) — SPA navigation only, not localStorage.                               |

@@ -217,19 +217,20 @@ flowchart LR
 | ---------- | --------------------------- | ------------------------ | ----------------------------------------------------------------------------------------- |
 | **URL**    | SvelteKit routes            | —                        | Which session/workspace is open (`/session/:id`)                                          |
 | **Global** | `src/lib/session.svelte.ts` | **Yes** → `localStorage` | Session list, prompt, scaffold JSON from Claude, API status, `completed` flag, active tab |
-| **Local**  | Component `$state`          | **No**                   | In-lesson step index, Learning Card UI, typewriter animation, Ask chat messages           |
+| **Local**  | Component `$state`          | **No**                   | In-lesson step index, Learning Card UI, typewriter animation, Ask prompt draft            |
 
 ### Global store (`session.svelte.ts`)
 
 Single app-wide singleton. Source of truth for **Learn data**.
 
-| In memory                                      | Also in `localStorage`     |
-| ---------------------------------------------- | -------------------------- |
-| `sessions[]` — all `SessionRecord` entries     | `scaffy.sessions`          |
-| `activeSessionId`                              | `scaffy.activeSessionId`   |
-| `status`, `errorMessage` — active session only | (restored from active row) |
+| In memory                                      | Also in `localStorage`            |
+| ---------------------------------------------- | --------------------------------- |
+| `sessions[]` — all `SessionRecord` entries     | `scaffy.sessions`                 |
+| `activeSessionId`                              | `scaffy.activeSessionId`          |
+| `status`, `errorMessage` — active session only | (restored from active row)        |
+| `askMessages[]` per session — Ask chat thread  | in-memory only (stripped on save) |
 
-**Per session:** `id`, `prompt`, `createdAt`, `scaffolds[]`, `status`, `errorMessage`, `completed`.
+**Per session:** `id`, `prompt`, `createdAt`, `scaffolds[]`, `status`, `errorMessage`, `completed`, `askMessages[]`.
 
 **Lifecycle:** `idle` → `loading` (`startScaffoldRequest`) → `ready` (`setScaffolds`) or `error` → retry → `loading`. `completed` via `markSessionCompleted()` after all gates passed.
 
@@ -237,11 +238,10 @@ Single app-wide singleton. Source of truth for **Learn data**.
 
 | Location                          | State                                                         | Lost on reload?                     |
 | --------------------------------- | ------------------------------------------------------------- | ----------------------------------- |
-| `monaco-editor.svelte`            | `currentIndex`, Learning Card UI, editor/typewriter animation | Yes — lesson restarts at scaffold 0 |
 | `knowledge-zone-bridge.svelte.ts` | Monaco viewZone ↔ Learning Card bridge (per editor instance)  | Yes                                 |
-| `chat-panel.svelte`               | Ask `messages[]`, streaming status, prompt draft              | Yes                                 |
+| `monaco-editor.svelte`            | `currentIndex`, Learning Card UI, editor/typewriter animation | Yes — lesson restarts at scaffold 0 |
 
-Scaffold payloads from Claude stay in `localStorage`; they are not re-fetched on reload. Ask chat history is out of scope (ADR-014). In-lesson step index is not yet persisted (ADR-014).
+**Ask chat:** `askMessages` on `SessionRecord` — survives SPA navigation (Home ↔ Session ↔ Sessions); **not** in `localStorage` (lost on full reload). In-lesson step index is not yet persisted (ADR-014).
 
 **Code:** file header and section comments in `src/lib/session.svelte.ts`.
 
