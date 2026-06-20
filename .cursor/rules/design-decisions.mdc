@@ -55,7 +55,7 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 
 ## Repository layout (source conventions)
 - **Routes:** `src/routes/**/+page.svelte` thin — import view from `lib/`; URL = folder (no `-page` suffix on route files).
-- **Feature views:** `src/lib/components/<area>/` (`home`, `history`, `chat`, `editor`, `shell`, …) — domain copy, data, wiring.
+- **Feature views:** `src/lib/components/<area>/` (`home`, `sessions`, `chat`, `editor`, `shell`, …) — domain copy, data, wiring.
 - **Generic UI:** `src/lib/components/ui/` — domain-agnostic primitives on **shadcn-svelte**; install via `shadcn-svelte add` before hand-rolling (ADR-017); custom `ui/` only when composing shadcn or documented in `docs/decisions.md`.
 - **Scrollbars:** hover-fade app-wide — default `ScrollArea` `type="hover"` (incl. modals); `--scaffy-scrollbar-*` in `scroll-area.css` + Monaco. No `type="always"` in product UI. See `scrollbars.mdc`.
 - **Assets:** `src/lib/assets/` — static SVG/images; avoid Svelte wrappers unless dynamic/themed.

@@ -11,7 +11,7 @@ All scrollable product surfaces use the **same hover-fade scrollbar** as Monaco 
 
 | Surface | Implementation |
 | ------- | -------------- |
-| App pages, chat, history | `{ ScrollArea }` from `ui/scroll-area` — **do not** pass `type`; default is `hover` |
+| App pages, chat, sessions | `{ ScrollArea }` from `ui/scroll-area` — **do not** pass `type`; default is `hover` |
 | Modals (About, etc.) | `ScaffyModalBody scroll` — wraps `ScrollArea` internally; **no** `type="always"` / `type="scroll"` |
 | Monaco editor | `monaco-editor.css` — same `--scaffy-scrollbar-*` tokens |
 | Markdown `<pre>` only | `native-scroll-x` in `scroll-area.css` (documented ADR-017 exception) |

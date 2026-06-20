@@ -14,19 +14,19 @@ When adding or moving Svelte UI, follow this split. **If placement is unclear, u
 - Do **not** suffix route files with `-page`; the folder already defines the page.
 
 ```svelte
-<!-- src/routes/history/+page.svelte -->
+<!-- src/routes/sessions/+page.svelte -->
 <script lang="ts">
-  import HistoryPage from '$lib/components/history/history-page.svelte';
+  import SessionsPage from '$lib/components/sessions/sessions-page.svelte';
 </script>
-<HistoryPage />
+<SessionsPage />
 ```
 
 ## 2. Feature / area views (`src/lib/components/<area>/`)
 
-- One subdirectory per product area: `home/`, `history/`, `chat/`, `editor/`, `shell/`, …
+- One subdirectory per product area: `home/`, `sessions/`, `chat/`, `editor/`, `shell/`, …
 - **Domain context lives here:** copy, example data, wiring to stores/API, page-specific layout.
 - Name by **feature**, not route mechanics (`start-learning-session.svelte`, not `home-route.svelte`).
-- Optional `-page` suffix on lib components only when it helps signal “single-route view” (e.g. `history-page.svelte`).
+- Optional `-page` suffix on lib components only when it helps signal “single-route view” (e.g. `sessions-page.svelte`).
 
 ## 3. Generic UI (`src/lib/components/ui/`)
 

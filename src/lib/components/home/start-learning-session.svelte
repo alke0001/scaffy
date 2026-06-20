@@ -21,6 +21,8 @@
 
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 
+	import { getSessions } from '$lib/session.svelte.js';
+
 	const MIN_PROMPT_LENGTH = 10;
 
 	let prompt = $state('');
@@ -28,6 +30,15 @@
 	let isStarting = $state(false);
 
 	const canStart = $derived(prompt.trim().length >= MIN_PROMPT_LENGTH && !isStarting);
+
+	const sessionCount = $derived(getSessions().length);
+
+	const hasSessions = $derived(sessionCount > 0);
+
+	function goToSessions() {
+		if (!hasSessions) return;
+		goto(resolve('/sessions'));
+	}
 
 	function fillPrompt(text: string) {
 		prompt = text;
@@ -70,13 +81,14 @@
 		<div class="mb-4 w-full max-w-2xl">
 			<Card.Root class="gap-0 border-border bg-card py-0 shadow-none ring-1 ring-border">
 				<Card.Content class="p-4 sm:p-5">
-					<p class="mb-3 text-xs font-medium tracking-widest text-muted-foreground uppercase">
-						Your prompt
-					</p>
-
-					<p class="mb-4 text-center text-sm text-muted-foreground">
-						Describe what you want to build in plain language.
-					</p>
+					<div class="mb-4 flex flex-col gap-1">
+						<p class="text-[0.6875rem] font-medium tracking-widest text-muted-foreground uppercase">
+							New learning session
+						</p>
+						<p class="text-base leading-snug text-foreground">
+							Describe what you want to build in plain language.
+						</p>
+					</div>
 
 					<ChatPanel mode="learn" promptOnly bind:prompt />
 				</Card.Content>
@@ -87,7 +99,7 @@
 					type="button"
 					variant="outline"
 					disabled={!canStart}
-					class="rounded-full border-primary text-primary hover:bg-primary/10 hover:text-primary disabled:border-primary/40 disabled:text-primary/40 disabled:opacity-100"
+					class="rounded-full border-primary text-primary hover:bg-primary/10 hover:text-primary disabled:border-border disabled:text-muted-foreground disabled:opacity-100"
 					onclick={startSession}
 				>
 					{isStarting ? 'Starting…' : 'start session'}
@@ -96,12 +108,22 @@
 				</Button>
 			</div>
 
-			<p class="mt-3 text-center text-xs text-muted-foreground">
-				<span class="text-scaffy-magenta">rule:</span>
-
-				prompt must be plain language —
-
-				<span class="text-scaffy-magenta">no &lt;, {'{'}, ; tokens</span>
+			<p class="mt-3 text-center font-mono text-sm" aria-disabled={!hasSessions}>
+				<span class="font-semibold text-scaffy-magenta"
+					>{sessionCount} saved session{sessionCount === 1 ? '' : 's'}</span
+				>
+				<span class="text-muted-foreground"> – continue in </span>
+				{#if hasSessions}
+					<button
+						type="button"
+						class="font-semibold text-foreground underline decoration-dotted underline-offset-4 hover:text-ring"
+						onclick={goToSessions}
+					>
+						My learning sessions →
+					</button>
+				{:else}
+					<span class="text-muted-foreground">My learning sessions →</span>
+				{/if}
 			</p>
 		</div>
 

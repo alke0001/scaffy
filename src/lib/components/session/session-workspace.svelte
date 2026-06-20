@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ChatPanel from '$lib/components/chat/chat-panel.svelte';
@@ -21,6 +22,20 @@
 	let { sessionId }: Props = $props();
 
 	const session = $derived(getSessionById(sessionId));
+
+	/** One Ask panel in the DOM — desktop and mobile layouts both hid a mounted instance before. */
+	let desktopLayout = $state(browser ? window.matchMedia('(min-width: 768px)').matches : true);
+
+	$effect(() => {
+		if (!browser) return;
+		const mq = window.matchMedia('(min-width: 768px)');
+		const sync = () => {
+			desktopLayout = mq.matches;
+		};
+		sync();
+		mq.addEventListener('change', sync);
+		return () => mq.removeEventListener('change', sync);
+	});
 
 	$effect(() => {
 		const sessions = getSessions();
@@ -72,7 +87,9 @@
 				<Resizable.Handle />
 				<Resizable.Pane defaultSize={40} minSize={20} class="min-h-0">
 					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background p-2">
-						<ChatPanel mode="ask" />
+						{#if desktopLayout}
+							<ChatPanel mode="ask" {sessionId} />
+						{/if}
 					</div>
 				</Resizable.Pane>
 			</Resizable.PaneGroup>
@@ -88,7 +105,9 @@
 				<MonacoEditor class="min-h-0 flex-1" {sessionId} />
 			</section>
 			<div class="flex min-h-0 flex-2 flex-col overflow-hidden border-t border-scaffy-divider p-2">
-				<ChatPanel mode="ask" />
+				{#if !desktopLayout}
+					<ChatPanel mode="ask" {sessionId} />
+				{/if}
 			</div>
 		</div>
 	</main>

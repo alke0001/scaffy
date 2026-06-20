@@ -1,12 +1,12 @@
 /**
- * Pane resize handle — neutral grey at rest, cyan on hover/drag.
- * Static chrome dividers use --scaffy-divider (grey, ~14% border) and stay quieter.
+ * Pane resize handle — neutral grey at rest (≥3:1 on background), cyan on hover/drag.
+ * Static chrome dividers use --scaffy-divider and stay quieter than active resize.
  */
 :root {
 	--scaffy-resize-hit-size: 0.5625rem;
 	--scaffy-resize-line-idle: 1px;
 	--scaffy-resize-line-active: 3px;
-	--scaffy-resize-line-idle-opacity: 0.38;
+	--scaffy-resize-line-idle-opacity: 1;
 	--scaffy-resize-line-active-opacity: 1;
 	--scaffy-resize-fade-in-duration: 140ms;
 	--scaffy-resize-fade-in-ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -37,7 +37,7 @@
 	translate: -50% 0;
 	width: var(--scaffy-resize-line-idle);
 	border-radius: 999px;
-	background: color-mix(in oklab, var(--border) 42%, transparent);
+	background: color-mix(in oklab, var(--border) 85%, var(--background));
 	opacity: var(--scaffy-resize-line-idle-opacity);
 	pointer-events: none;
 	transition:

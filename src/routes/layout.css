@@ -47,6 +47,9 @@
 	--accent: #1a1e21;
 	--destructive: #ef4444;
 	--destructive-foreground: #0b0d0e;
+	/* Tinted error surfaces — foreground text must stay AA on these (not destructive-foreground). */
+	--destructive-subtle: color-mix(in oklab, var(--destructive) 18%, var(--card));
+	--destructive-subtle-border: color-mix(in oklab, var(--destructive) 50%, var(--border));
 	--border: #6b7378;
 	--input: #1a1e21;
 	--ring: #6fc3df;
@@ -72,8 +75,8 @@
 	--scaffy-blue: #5b9bf5;
 	--scaffy-amber: #f4b860;
 
-	/* Structural chrome dividers (non-interactive) — keep quieter than resize/hover affordances */
-	--scaffy-divider: color-mix(in oklab, var(--border) 14%, transparent);
+	/* Structural chrome dividers — visible enough for ~3:1 UI contrast on card */
+	--scaffy-divider: color-mix(in oklab, var(--border) 85%, var(--card));
 
 	/* Logo palette — consumed by scaffy-logo.svelte (inline SVG; img cannot read page CSS vars) */
 	--scaffy-logo-teal: #64d2b4;
@@ -105,6 +108,9 @@
 	--accent-foreground: #e6e8e6;
 	--destructive: #ef4444;
 	--destructive-foreground: #0b0d0e;
+	/* Tinted error surfaces — foreground text must stay AA on these (not destructive-foreground). */
+	--destructive-subtle: color-mix(in oklab, var(--destructive) 18%, var(--card));
+	--destructive-subtle-border: color-mix(in oklab, var(--destructive) 50%, var(--border));
 	--border: #6b7378;
 	--input: #1a1e21;
 	--ring: #6fc3df;
@@ -137,6 +143,8 @@
 	--color-accent: var(--accent);
 	--color-accent-foreground: var(--accent-foreground);
 	--color-destructive: var(--destructive);
+	--color-destructive-subtle: var(--destructive-subtle);
+	--color-destructive-subtle-border: var(--destructive-subtle-border);
 	--color-border: var(--border);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
@@ -192,6 +200,13 @@
 	html {
 		@apply font-sans;
 	}
+}
+
+/* Error / warning surfaces — AA text on tinted destructive background */
+.scaffy-error-surface {
+	border: 1px solid var(--destructive-subtle-border);
+	background: var(--destructive-subtle);
+	color: var(--foreground);
 }
 
 /* Title-bar logo link — global classes so hover is not blocked by Svelte scope or Tailwind filter clashes */

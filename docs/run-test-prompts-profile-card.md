@@ -2,7 +2,7 @@
 
 Use these three **user prompts** (not system prompt edits) for your first **run test** against `/api/scaffold`. Goal: check whether Scaffy produces similarly solid `scaffolds` across **novice → semi-structured → task-style** wording — that is the real robustness test for [`src/lib/server/scaffold/system-prompt.md`](../src/lib/server/scaffold/system-prompt.md).
 
-Copy each block verbatim into the Claude Chat smoke test (or your client). Each prompt must still pass server-side heuristics (length, no `<` / `{` / `;` in the prompt string if those rules stay in place).
+Copy each block verbatim into the Claude Chat smoke test (or your client). Each prompt must be at least 10 characters (server-side length check on `/api/scaffold`).
 
 ---
 

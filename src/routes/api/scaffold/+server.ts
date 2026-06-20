@@ -108,9 +108,6 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	const trimmedPrompt = prompt.trim();
-	if (/[<{;]/.test(trimmedPrompt)) {
-		throw error(400, 'Prompt must not contain code snippets (heuristic: <, {, ;).');
-	}
 
 	const modelStr = typeof model === 'string' ? model : undefined;
 	const { apiModelId } = resolveModel(modelStr);

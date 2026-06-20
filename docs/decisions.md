@@ -35,6 +35,7 @@ ADR = Architecture Decision Record
 | [ADR-016](#adr-016-routes-feature-views-vs-ui-components)                 | Routes, feature views, vs ui/ components               | Accepted                                              |
 | [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                | ui/ primitives: shadcn-first; ScrollArea               | Accepted                                              |
 | [ADR-018](#adr-018-scaffy-modal-product-dialogs)                          | ScaffyModal — unified product dialogs                  | Accepted                                              |
+| [ADR-019](#adr-019-monaco-viewzone-aria-hidden-accepted)                  | Monaco viewZone aria-hidden — accepted trade-off       | Accepted                                              |
 
 ---
 
@@ -156,7 +157,7 @@ That fragility is **rooted in LLM non-determinism + structured-output constraint
 - Post-parse: `validateStructuredOutput()` → `validate-lesson.ts` (trim to 3 scaffolds if the model over-generates; **strict cumulative** `codeSnippet` chain; one **server retry** on validation failure).
 - **In-editor loading** while waiting (~45s): Braille spinner + rotating verbs rendered **inside Monaco** as animated comment text (not an HTML overlay).
 - **Resilience:** client auto-retry once; error state with retry + static `scaffold-fallback.json` (dev paste from localStorage).
-- **Prompt rules:** min 10 characters; heuristic reject `<`, `{`, `;` to discourage pasting code snippets into Learn prompts.
+- **Prompt rules:** min 10 characters (Learn and Ask).
 
 ### Alternatives considered
 
@@ -187,7 +188,7 @@ Ask is free-form Q&A; users expect token-by-token replies like other chat produc
 - **Temperature 0.55**, **`max_tokens` 2048** (teaching replies; ladder: UI concept → Runes → syntax).
 - **History cap:** last **30 messages** (~15 user/assistant turns) in `buildMessages()` — cost and context control; focused use per open question, not long threads.
 - **No** structured output schema; **scaffolded Socratic** tutor prompt in `src/lib/server/chat/system-prompt.md` (teach mental model first, then questions + small steps; not interrogation-only; topic-agnostic for any scaffold lesson; no MC spoilers).
-- **Prompt rules:** min 10 characters; **no** `<`/`{`/`;` heuristic (code questions allowed).
+- **Prompt rules:** min 10 characters (same as Learn).
 - **Lesson context** (current scaffold/knowledge check) — planned later; not in API body yet.
 - Client: `src/lib/api/chat-stream.ts` appends deltas; `request.signal` / `AbortController` for cancel.
 
@@ -396,15 +397,16 @@ Agent config files must stay small and synced across three tools; detailed ratio
 
 ### Context
 
-Learning progress must survive reloads and back navigation ([`Projektsteckbrief_Scaffy.md`](../Projektsteckbrief_Scaffy.md): `/session/:id`, `/history`, step index, answered knowledge checks). We considered persisting directly in **Supabase** with **Google Auth** and **RLS** (cross-device, per-user rows). That path needs dashboard setup, OAuth redirects, env secrets on Vercel, and sync/error UX before the core learn loop is proven in the UI.
+Learning progress must survive reloads and back navigation ([`Projektsteckbrief_Scaffy.md`](../Projektsteckbrief_Scaffy.md): `/session/:id`, `/sessions`, step index, answered knowledge checks). We considered persisting directly in **Supabase** with **Google Auth** and **RLS** (cross-device, per-user rows). That path needs dashboard setup, OAuth redirects, env secrets on Vercel, and sync/error UX before the core learn loop is proven in the UI.
 
 [`session.svelte.ts`](../src/lib/session.svelte.ts) already holds **runtime** scaffold data for Learn; persistence is a separate concern from ChatPanel and Claude API routes.
 
 ### Current state (shipped)
 
 - [`session.svelte.ts`](../src/lib/session.svelte.ts) persists `SessionRecord[]` and the active session id to `localStorage` on change; restores on load.
-- History page and session tabs read from the same store; no separate `LocalStorageSessionStore` adapter or `LearningSessionStore` port yet.
+- Sessions overview page and session tabs read from the same store; no separate `LocalStorageSessionStore` adapter or `LearningSessionStore` port yet.
 - Step-level progress (current scaffold index, answered Learning Cards) is **not** fully persisted across reload — only session list, scaffolds payload, and `completed` flag.
+- **Ask chat** per session: `askMessages` on `SessionRecord` in the singleton — survives SPA navigation; **stripped** from `localStorage` JSON (lost on full reload).
 - Supabase adapter remains Phase 2 (optional).
 
 ### Decision (target architecture)
@@ -447,7 +449,7 @@ flowchart TB
 
 | Reason                   | Detail                                                                                                                            |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| **Unblock product loop** | Step gating, `/session/:id`, `/history` testable without Supabase project or OAuth                                                |
+| **Unblock product loop** | Step gating, `/session/:id`, `/sessions` testable without Supabase project or OAuth                                               |
 | **Lower setup cost**     | No Google Cloud OAuth client, Supabase redirect URLs, or `PUBLIC_*` / service keys for v1                                         |
 | **Aligns with SPA**      | Fits current anonymous, single-browser use; matches steckbrief “anonymous session id via `crypto.randomUUID()`” until auth exists |
 | **Avoid throwaway work** | Port + adapter boundary prevents a later Supabase migration from touching every component                                         |
@@ -465,7 +467,7 @@ flowchart TB
 
 - New code under something like `$lib/persistence/` (`LearningSessionStore`, `local-storage-session-store.ts`, `create-session-store.ts`).
 - **Do not** import `$lib/server/*` from persistence adapters on the client; Supabase adapter uses `@supabase/supabase-js` + anon key + user JWT when added.
-- Ask-mode chat history stays **out of scope** for this ADR unless explicitly extended (Learn session + progress only).
+- Ask-mode chat: **in-memory** on `SessionRecord.askMessages` (navigation only); **not** in the localStorage port unless explicitly extended later.
 - When `SupabaseSessionStore` ships: add ADR changelog line, implement adapter + factory branch, document env vars in `.env.example` — **supersede nothing in Phase 1 port shape** unless a breaking schema change is intentional.
 
 ### Implementation checklist (for agents)
@@ -475,7 +477,7 @@ flowchart TB
 - [ ] `LocalStorageSessionStore` (+ namespaced keys, JSON parse errors handled)
 - [ ] `createSessionStore()` — Phase 1 returns local adapter only
 - [ ] Wire load/save from `session.svelte.ts` or a thin `session-persistence.svelte.ts` helper
-- [ ] Routes `/session/:id`, `/history` use the port, not storage APIs directly
+- [ ] Routes `/session/:id`, `/sessions` use the port, not storage APIs directly
 
 ---
 
@@ -491,8 +493,9 @@ The app previously rendered Monaco + ChatPanel on `/`. The product needs a focus
 
 - **`/`** — `StartLearningSession`: learn/scaffold only (`promptOnly` + **start session** → `requestScaffold`).
 - **`/session/[id]`** — `SessionWorkspace`: **Monaco + tabs (learn progress)** left; **`ChatPanel mode="ask"`** right (SSE tutor, unrelated to scaffold).
-- **`/history`** — `HistoryPage`: list of `getSessions()` from localStorage; select opens `/session/:id`.
-- **App shell:** `AppTitleBar` in root `+layout.svelte` — **home** and **history** nav buttons + About dialog (no route breadcrumb).
+- **`/sessions`** — `SessionsPage`: list of `getSessions()` from localStorage; select opens `/session/:id`. **`/history`** redirects to `/sessions`.
+- **App shell:** `AppTitleBar` in root `+layout.svelte` — persistent top nav (**scaffy** brand + **My Sessions** + optional session title with chevron on `/session/[id]`); cyan underline (`border-ring`) marks the active segment; logo and **scaffy** text both link to `/`; About dialog. No shadcn Breadcrumb.
+- **`/sessions` empty state:** when `getSessions()` is empty, centered copy + **Start your first learning session** → `/`.
 - **Navigation:** **start session** on home calls `requestScaffold` and `goto('/session/:id')`.
 - **Session id alignment:** `startScaffoldRequest(prompt, preferredId?)` uses the route id so Home navigation and localStorage tabs stay consistent.
 - **Example chips:** copy text into the chat textarea via DOM (`#chat-prompt`) to avoid ChatPanel prop changes.
@@ -508,7 +511,7 @@ The app previously rendered Monaco + ChatPanel on `/`. The product needs a focus
 
 - Sessions and scaffold payloads persist across reload via inline `localStorage` in `session.svelte.ts`; step index within an in-progress session is not yet restored (see ADR-014 current state).
 - Tab select navigates via `goto('/session/:id')`; closing the last tab returns to `/`.
-- New files: `src/lib/components/home/*`, `src/lib/components/session/*`, `src/routes/session/[id]/+page.svelte`, `src/routes/history/+page.svelte`, `src/lib/components/history/history-page.svelte`.
+- New files: `src/lib/components/home/*`, `src/lib/components/session/*`, `src/routes/session/[id]/+page.svelte`, `src/routes/sessions/+page.svelte`, `src/lib/components/sessions/sessions-page.svelte`.
 
 ---
 
@@ -518,21 +521,22 @@ The app previously rendered Monaco + ChatPanel on `/`. The product needs a focus
 
 ### Context
 
-Scaffy grew separate surfaces (home, session, history) plus shared chrome (`AppTitleBar`) and shadcn-style primitives. Without a clear split, agents and contributors mix **route files**, **screen-specific views**, and **generic UI** (e.g. example prompt lists inside `ui/`, or fat `+page.svelte` files). SvelteKit already encodes URLs in `src/routes/`; duplicating “page” in filenames adds noise.
+Scaffy grew separate surfaces (home, session, sessions overview) plus shared chrome (`AppTitleBar`) and shadcn-style primitives. Without a clear split, agents and contributors mix **route files**, **screen-specific views**, and **generic UI** (e.g. example prompt lists inside `ui/`, or fat `+page.svelte` files). SvelteKit already encodes URLs in `src/routes/`; duplicating “page” in filenames adds noise.
 
 ### Decision
 
 **Four layers:**
 
 1. **`src/routes/` — routing only**
-   - Folder path = URL (`/`, `/history`, `/session/[id]`).
+   - Folder path = URL (`/`, `/sessions`, `/session/[id]`; `/history` redirects to `/sessions`).
    - `+page.svelte` stays **thin**: import one view component from `lib/`, render it.
+   - **Lazy route (conditional):** `routes/sessions/+page.svelte` — empty state inline (instant when no sessions); `sessions-page.svelte` loads via dynamic `import()` only when `getSessions().length > 0`.
    - No `-page` suffix on route files; use SvelteKit conventions (`+page.svelte`, `+layout.svelte`).
 
 2. **`src/lib/components/<area>/` — feature / area views**
-   - Subdirectories by product area: `home/`, `history/`, `chat/`, `editor/`, `shell/`, …
+   - Subdirectories by product area: `home/`, `sessions/`, `chat/`, `editor/`, `shell/`, …
    - Holds **domain context**: user-facing copy, example data, store/API wiring, screen layout.
-   - Names describe the **feature** (`start-learning-session.svelte`, `history-page.svelte`), not the URL tree.
+   - Names describe the **feature** (`start-learning-session.svelte`, `sessions-page.svelte`), not the URL tree.
    - `-page` suffix on lib components is **optional** when it signals “view for a single route.”
 
 3. **`src/lib/components/ui/` — generic UI primitives**
@@ -549,13 +553,14 @@ Scaffy grew separate surfaces (home, session, history) plus shared chrome (`AppT
 
 ### Examples (this repo)
 
-| Piece           | Location                                        | Why                                   |
-| --------------- | ----------------------------------------------- | ------------------------------------- |
-| `/` route shell | `routes/+page.svelte` → `StartLearningSession`  | Thin route                            |
-| Home screen     | `components/home/start-learning-session.svelte` | Copy, ChatPanel wiring, examples      |
-| Chip grid       | `components/ui/chip/chip-grid.svelte`           | Generic; no “Try one of these” inside |
-| Logo            | `lib/assets/scaffy-logo.svelte`                 | Themed inline SVG (`--scaffy-logo-*`) |
-| App chrome      | `components/shell/app-title-bar.svelte`         | Cross-route shell, not `ui/`          |
+| Piece           | Location                                                  | Why                                               |
+| --------------- | --------------------------------------------------------- | ------------------------------------------------- |
+| `/` route shell | `routes/+page.svelte` → `StartLearningSession`            | Thin route                                        |
+| `/sessions`     | `routes/sessions/+page.svelte` → empty static / list lazy | Empty state eager; list chunk when sessions exist |
+| Home screen     | `components/home/start-learning-session.svelte`           | Copy, ChatPanel wiring, examples                  |
+| Chip grid       | `components/ui/chip/chip-grid.svelte`                     | Generic; no “Try one of these” inside             |
+| Logo            | `lib/assets/scaffy-logo.svelte`                           | Themed inline SVG (`--scaffy-logo-*`)             |
+| App chrome      | `components/shell/app-title-bar.svelte`                   | Cross-route shell, not `ui/`                      |
 
 ### Alternatives considered
 
@@ -644,6 +649,33 @@ Delete confirmation, Learning Card wrong-answer feedback, and About each used se
 
 ---
 
+## ADR-019: Monaco viewZone aria-hidden — accepted trade-off
+
+**Status:** Accepted
+
+### Context
+
+Lighthouse (and axe) report **`aria-hidden-focus`** on the session route: Monaco marks its `.view-zones` container `aria-hidden="true"`, while the interactive **Learning Card** (radio options) lives inside a viewZone so the card scrolls with code. Session Lighthouse accessibility is ~96 — still strong; fixing the audit would mean moving the card out of the viewZone.
+
+### Decision
+
+- **Keep Learning Card in a Monaco viewZone** — scroll-with-code is core pedagogy (ADR-011).
+- **Do not** move interactive knowledge checks to **overlay widgets**, portaled panels, or other DOM outside the viewZone solely to satisfy `aria-hidden-focus`.
+- **Accept** the resulting automated a11y finding; we do not target Lighthouse accessibility 100 on session.
+- **Ignore** `aria-hidden-focus` in Lighthouse/PageSpeed triage for `/session/*` unless product requirements change.
+
+### Alternatives considered
+
+- **Monaco overlay widget** for the Learning Card — rejected; decouples the card from line-aligned scroll position and adds layout/sync complexity.
+- **Portal Learning Card to `document.body`** — rejected for the same reason; used only for read-only hint and wrong-answer modal where scroll coupling is not required.
+
+### Consequences
+
+- Session route may retain `aria-hidden-focus` in audits; no agent or refactor should “fix” it without an explicit product decision to reverse this ADR.
+- Wrong-answer feedback and read-only hint remain portaled (ADR-011); only the inline gated quiz stays in the viewZone.
+
+---
+
 ## Planned / nice-to-have (not ADRs yet)
 
 - Supabase adapter + Google Auth (see [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) Phase 2)
@@ -655,29 +687,36 @@ Delete confirmation, Learning Card wrong-answer feedback, and About each used se
 
 ## Changelog
 
-| Date       | Change                                                                                                                                  |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-05-31 | Initial `docs/decisions.md` — documents decisions through ChatPanel, dual API, SSE Ask, session store, and proposed markdown rendering. |
-| 2026-05-31 | ADR-013: added `.cursor/rules/decisions-log.mdc` — mandatory `docs/decisions.md` updates after Agent-mode implementation.               |
-| 2026-05-31 | ADR-012 Accepted: Ask assistant markdown via `marked` + DOMPurify, rAF-throttled in `ChatMarkdown.svelte`.                              |
-| 2026-05-31 | ADR-014 Accepted: Learning session persistence port; localStorage adapter first, Supabase adapter later via same interface.             |
-| 2026-05-31 | Nice-to-have: Lottie icons/animations noted in decisions.md and agent configs.                                                          |
-| 2026-05-31 | ADR-006: Ask tutor — Socratic system prompt, temperature 0.5, history capped to 30 messages (~15 turns).                                |
-| 2026-05-31 | ADR-006: tightened Socratic prompt — no full code on first "how do I" reply; snippets only after engagement or second ask.              |
-| 2026-05-31 | ADR-006: scaffolded Socratic prompt — beginner-first teaching, max 2 question-only turns, generic (not single exercise storyline).      |
-| 2026-06-08 | ADR-016 Accepted: routes vs feature views vs ui/ components; `component-layout.mdc` for agents.                                         |
-| 2026-06-08 | ADR-012: `render-markdown.ts` co-located under `src/lib/components/chat/`.                                                              |
-| 2026-06-08 | ADR-015: session tabs from main integrated into `SessionWorkspace`; route id wired to `startScaffoldRequest`.                           |
-| 2026-06-16 | ADR-005: 3-scaffold single-shot lesson; two-phase experiment documented as rejected; in-editor Monaco loading; retry + fallback JSON.   |
-| 2026-06-10 | ADR-017: shadcn ScrollArea replaces custom scroll wrapper; `native-scroll-x` CSS only for markdown `<pre>`.                             |
-| 2026-06-10 | ADR-017: centralized `scroll-area.css` inset + default `type="always"`; content padding off ScrollArea root.                            |
-| 2026-06-10 | ADR-012: shared `ui/markdown/` (`MarkdownContent`, `render-markdown.ts`); About intro in `about-content.md`, FAQ in `about-faq.ts`.     |
-| 2026-06-10 | ADR-017: ScrollArea default `type="hover"`; slimmer inset thumb; symmetric gutter via track width = thumb width.                        |
-| 2026-06-11 | Design tokens: `scaffy-logo.svelte` uses CSS vars; session incomplete dot `bg-scaffy-amber`; ADR-015/016 token docs synced.             |
-| 2026-06-14 | ADR-011: knowledge check viewZone; Monaco read-only until session completed (copy allowed); typewriter still pending.                   |
-| 2026-06-14 | ADR-011: Learning Card UI rename; portaled feedback + read-only hint; Learning Card copy prevention (no paste into Ask chat).           |
-| 2026-06-14 | README + About copy synced to routes, Learning Cards, Husky/lint-staged; ADR-014 status (inline localStorage shipped).                  |
-| 2026-06-12 | ADR-018: ScaffyModal unifies About, delete confirm, and Learning Card feedback dialogs.                                                 |
-| 2026-06-12 | ADR-018: scrollable modal body uses central ScrollArea + lg grid height constraint.                                                     |
-| 2026-06-12 | ADR-017: unified hover-fade scrollbars (ScrollArea, Monaco, modals); `scrollbars.mdc` agent rule.                                       |
-| 2026-06-12 | ADR-018: backdrop click dismisses all ScaffyModals by default (same as secondary / Verstanden).                                         |
+| Date       | Change                                                                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-31 | Initial `docs/decisions.md` — documents decisions through ChatPanel, dual API, SSE Ask, session store, and proposed markdown rendering.     |
+| 2026-05-31 | ADR-013: added `.cursor/rules/decisions-log.mdc` — mandatory `docs/decisions.md` updates after Agent-mode implementation.                   |
+| 2026-05-31 | ADR-012 Accepted: Ask assistant markdown via `marked` + DOMPurify, rAF-throttled in `ChatMarkdown.svelte`.                                  |
+| 2026-05-31 | ADR-014 Accepted: Learning session persistence port; localStorage adapter first, Supabase adapter later via same interface.                 |
+| 2026-05-31 | Nice-to-have: Lottie icons/animations noted in decisions.md and agent configs.                                                              |
+| 2026-05-31 | ADR-006: Ask tutor — Socratic system prompt, temperature 0.5, history capped to 30 messages (~15 turns).                                    |
+| 2026-05-31 | ADR-006: tightened Socratic prompt — no full code on first "how do I" reply; snippets only after engagement or second ask.                  |
+| 2026-05-31 | ADR-006: scaffolded Socratic prompt — beginner-first teaching, max 2 question-only turns, generic (not single exercise storyline).          |
+| 2026-06-08 | ADR-016 Accepted: routes vs feature views vs ui/ components; `component-layout.mdc` for agents.                                             |
+| 2026-06-08 | ADR-012: `render-markdown.ts` co-located under `src/lib/components/chat/`.                                                                  |
+| 2026-06-08 | ADR-015: session tabs from main integrated into `SessionWorkspace`; route id wired to `startScaffoldRequest`.                               |
+| 2026-06-16 | ADR-005: 3-scaffold single-shot lesson; two-phase experiment documented as rejected; in-editor Monaco loading; retry + fallback JSON.       |
+| 2026-06-10 | ADR-017: shadcn ScrollArea replaces custom scroll wrapper; `native-scroll-x` CSS only for markdown `<pre>`.                                 |
+| 2026-06-10 | ADR-017: centralized `scroll-area.css` inset + default `type="always"`; content padding off ScrollArea root.                                |
+| 2026-06-10 | ADR-012: shared `ui/markdown/` (`MarkdownContent`, `render-markdown.ts`); About intro in `about-content.md`, FAQ in `about-faq.ts`.         |
+| 2026-06-10 | ADR-017: ScrollArea default `type="hover"`; slimmer inset thumb; symmetric gutter via track width = thumb width.                            |
+| 2026-06-11 | Design tokens: `scaffy-logo.svelte` uses CSS vars; session incomplete dot `bg-scaffy-amber`; ADR-015/016 token docs synced.                 |
+| 2026-06-14 | ADR-011: knowledge check viewZone; Monaco read-only until session completed (copy allowed); typewriter still pending.                       |
+| 2026-06-14 | ADR-011: Learning Card UI rename; portaled feedback + read-only hint; Learning Card copy prevention (no paste into Ask chat).               |
+| 2026-06-14 | README + About copy synced to routes, Learning Cards, Husky/lint-staged; ADR-014 status (inline localStorage shipped).                      |
+| 2026-06-12 | ADR-018: ScaffyModal unifies About, delete confirm, and Learning Card feedback dialogs.                                                     |
+| 2026-06-12 | ADR-018: scrollable modal body uses central ScrollArea + lg grid height constraint.                                                         |
+| 2026-06-12 | ADR-017: unified hover-fade scrollbars (ScrollArea, Monaco, modals); `scrollbars.mdc` agent rule.                                           |
+| 2026-06-12 | ADR-018: backdrop click dismisses all ScaffyModals by default (same as secondary / Verstanden).                                             |
+| 2026-06-17 | Design tokens: WCAG AA contrast pass — `--destructive-subtle*`, stronger `--scaffy-divider`, modal/chat/error-surface fixes.                |
+| 2026-06-17 | ADR-019: accept Monaco viewZone `aria-hidden-focus` on session; no overlay-widget refactor for Lighthouse. Sessions page `<main>` landmark. |
+| 2026-06-17 | ADR-015/016: `/history` renamed to `/sessions` (308 redirect); `SessionsPage` copy — “My learning overview”.                                |
+| 2026-06-17 | ADR-015: App shell breadcrumb (shadcn) replaces home/sessions nav; home saved-session count line under example chips.                       |
+| 2026-06-17 | ADR-015: persistent top nav (scaffy + My Sessions + session title); removed shadcn `ui/breadcrumb`; `/sessions` empty state.                |
+| 2026-06-19 | ADR-005: removed Learn prompt `<`/`{`/`;` heuristic — caused false 400s; min 10 characters remains.                                         |
+| 2026-06-19 | ADR-014: Ask chat per session in `session.svelte.ts` (`askMessages`) — SPA navigation only, not localStorage.                               |
