@@ -19,7 +19,12 @@
 	const showCursor = $derived(message.status === 'streaming');
 	const isError = $derived(message.status === 'error');
 	const useAskMarkdown = $derived(
-		isAsk && !isUser && !isError && !showSpinner && Boolean(message.content),
+		isAsk &&
+			!isUser &&
+			!isError &&
+			!showSpinner &&
+			Boolean(message.content) &&
+			message.status === 'complete',
 	);
 </script>
 

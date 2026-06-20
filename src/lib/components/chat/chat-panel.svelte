@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import ChatMessageList from '$lib/components/chat/chat-message-list.svelte';
 	import { streamChatReply } from '$lib/api/chat-stream.js';
 	import { requestScaffold } from '$lib/learn/request-scaffold.js';
@@ -7,13 +6,20 @@
 		appendToMessage,
 		createAssistantPlaceholder,
 		createUserMessage,
+		isAskComposerBusy,
 		removeMessage,
 		toChatHistory,
 		updateMessage,
 		type ChatMode,
 	} from '$lib/chat/message-actions.js';
-	import { isThreadBusy, type ChatMessage } from '$lib/types/chat-message.js';
-	import { getAskMessages, setAskMessages } from '$lib/session.svelte.js';
+	import type { ChatMessage } from '$lib/types/chat-message.js';
+	import {
+		acknowledgeIntroAndStartLesson,
+		canStartLesson,
+		getSessionById,
+		hasLessonStarted,
+		setAskMessages,
+	} from '$lib/session.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
@@ -27,6 +33,12 @@
 		'Enter at least 10 characters to ask Scaffy a question. We skip very short prompts to avoid unnecessary AI calls and reduce environmental impact.';
 	const LEARN_PLACEHOLDER =
 		'e.g. A login form with email validation and a forgot-password link\n(min. 10 characters)';
+	const SESSION_HINT = 'Ask questions here anytime while you work through the lesson.';
+	const INTRO_CTA_READY = 'Got it — start lesson';
+	const INTRO_CTA_WAIT_SCAFFOLD = 'Generating lesson…';
+	const INTRO_CTA_WAIT_INTRO = 'Reading concept preview…';
+	const INTRO_CTA_SCAFFOLD_TOOLTIP =
+		'Scaffy is still preparing your lesson on the left. When it is ready, the exercises appear there and you can start here.';
 
 	interface Props {
 		mode: ChatMode;
@@ -35,9 +47,17 @@
 		promptOnly?: boolean;
 		/** Bound prompt text (home screen shares state with start button). */
 		prompt?: string;
+		/** Session route — pinned composer, intro CTA, footer hint. */
+		sessionIntro?: boolean;
 	}
 
-	let { mode, sessionId, promptOnly = false, prompt = $bindable('') }: Props = $props();
+	let {
+		mode,
+		sessionId,
+		promptOnly = false,
+		prompt = $bindable(''),
+		sessionIntro = false,
+	}: Props = $props();
 
 	const learnPromptFieldShellClass =
 		'rounded-md border border-border bg-background text-sm focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/50 focus-within:ring-inset';
@@ -48,17 +68,33 @@
 
 	let messages = $state<ChatMessage[]>([]);
 	let scrollViewport = $state<HTMLElement | null>(null);
+	let lastSyncedMessagesKey = '';
 
 	let askAbort = $state<AbortController | null>(null);
 	let scrollRaf = 0;
 
-	const threadBusy = $derived(isThreadBusy(messages));
-	const canSubmit = $derived(prompt.trim().length >= MIN_PROMPT_LENGTH && !threadBusy);
+	const boundSession = $derived(sessionId ? getSessionById(sessionId) : null);
+	const askComposerBusy = $derived(isAskComposerBusy(messages));
+	const canSubmit = $derived(prompt.trim().length >= MIN_PROMPT_LENGTH && !askComposerBusy);
 	const hasMessages = $derived(messages.length > 0);
 	const isAskSession = $derived(mode === 'ask' && !promptOnly);
 	const showAskMinLengthTooltip = $derived(
-		isAskSession && !canSubmit && !threadBusy && prompt.trim().length < MIN_PROMPT_LENGTH,
+		isAskSession && !canSubmit && !askComposerBusy && prompt.trim().length < MIN_PROMPT_LENGTH,
 	);
+	const lessonStarted = $derived(sessionId && sessionIntro ? hasLessonStarted(sessionId) : true);
+	const showIntroCta = $derived(
+		Boolean(sessionIntro && sessionId && !lessonStarted && boundSession?.introStatus !== 'idle'),
+	);
+	const introCtaEnabled = $derived(Boolean(sessionId && canStartLesson(sessionId)));
+	const introCtaWaitingScaffold = $derived(
+		Boolean(showIntroCta && !introCtaEnabled && boundSession?.status !== 'ready'),
+	);
+	const introCtaLabel = $derived.by(() => {
+		if (!boundSession) return INTRO_CTA_WAIT_SCAFFOLD;
+		if (boundSession.status !== 'ready') return INTRO_CTA_WAIT_SCAFFOLD;
+		if (boundSession.introStatus === 'streaming') return INTRO_CTA_WAIT_INTRO;
+		return INTRO_CTA_READY;
+	});
 
 	function scrollToBottom() {
 		if (!scrollViewport) return;
@@ -70,14 +106,25 @@
 		scrollRaf = requestAnimationFrame(scrollToBottom);
 	}
 
-	/** Load Ask thread when session changes — do not subscribe to every store write. */
+	/** Sync Ask thread from session store (intro stream + follow-up asks). */
 	$effect(() => {
 		const id = sessionId;
 		if (mode !== 'ask' || !id || promptOnly) {
 			if (mode === 'ask') messages = [];
+			lastSyncedMessagesKey = '';
 			return;
 		}
-		messages = [...untrack(() => getAskMessages(id))];
+		const session = getSessionById(id);
+		const next = session?.askMessages ?? [];
+		const key = next
+			.map(
+				(message) =>
+					`${message.id}:${message.status}:${message.content}:${message.errorMessage ?? ''}`,
+			)
+			.join('|');
+		if (key === lastSyncedMessagesKey) return;
+		lastSyncedMessagesKey = key;
+		messages = [...next];
 	});
 
 	function commitMessages(next: ChatMessage[]) {
@@ -104,6 +151,11 @@
 			status: 'error',
 			errorMessage,
 		});
+	}
+
+	function handleStartLesson() {
+		if (!sessionId || !introCtaEnabled) return;
+		acknowledgeIntroAndStartLesson(sessionId);
 	}
 
 	async function submitLearn(text: string) {
@@ -174,7 +226,7 @@
 
 	async function submitFromPrompt() {
 		const text = prompt.trim();
-		if (text.length < MIN_PROMPT_LENGTH || threadBusy) return;
+		if (text.length < MIN_PROMPT_LENGTH || askComposerBusy) return;
 
 		prompt = '';
 
@@ -212,7 +264,7 @@
 				id="chat-prompt"
 				class="{promptTextareaClass} block min-h-[5.5rem] w-full border-0 bg-transparent pr-11 pb-10 sm:min-h-24"
 				bind:value={prompt}
-				disabled={threadBusy}
+				disabled={askComposerBusy}
 				placeholder={ASK_PLACEHOLDER}
 				onkeydown={handleAskPromptKeydown}
 			></textarea>
@@ -227,9 +279,9 @@
 										size="icon-sm"
 										disabled={!canSubmit}
 										class="hover:enabled:bg-primary/80 disabled:border disabled:border-border/50 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
-										aria-label={threadBusy ? 'Please wait' : 'Send message'}
+										aria-label={askComposerBusy ? 'Please wait' : 'Send message'}
 									>
-										{#if threadBusy}
+										{#if askComposerBusy}
 											<LoaderCircle class="size-4 animate-spin" aria-hidden="true" />
 										{:else}
 											<Send class="size-4" aria-hidden="true" />
@@ -259,12 +311,12 @@
 				id="chat-prompt"
 				class="{promptTextareaClass} min-h-24 w-full border-0 bg-transparent"
 				bind:value={prompt}
-				disabled={threadBusy}
+				disabled={askComposerBusy}
 				placeholder={LEARN_PLACEHOLDER}
 			></textarea>
 		</div>
 		<Button type="submit" disabled={!canSubmit} class="w-full sm:w-auto">
-			{threadBusy ? 'Please wait…' : 'Generate lesson'}
+			{askComposerBusy ? 'Please wait…' : 'Generate lesson'}
 		</Button>
 	</form>
 {/snippet}
@@ -277,7 +329,7 @@
 				id="chat-prompt"
 				class="{promptTextareaClass} min-h-[140px] w-full border-0 bg-transparent"
 				bind:value={prompt}
-				disabled={threadBusy}
+				disabled={askComposerBusy}
 				placeholder={LEARN_PLACEHOLDER}
 			></textarea>
 		</div>
@@ -295,10 +347,42 @@
 			<ScrollArea bind:viewportRef={scrollViewport} orientation="vertical" class="min-h-0 flex-1">
 				<ChatMessageList {messages} mode="ask" showEmptyState={false} />
 			</ScrollArea>
-			{@render askComposer(true)}
 		{:else}
-			{@render askComposer(false)}
+			<div class="min-h-0 flex-1" aria-hidden="true"></div>
 		{/if}
+		{#if sessionIntro}
+			{#if showIntroCta}
+				<div class="shrink-0 pb-2">
+					<Tooltip.Provider>
+						<Tooltip.Root disabled={!introCtaWaitingScaffold}>
+							<Tooltip.Trigger>
+								{#snippet child({ props })}
+									<span {...props} class="inline-flex w-full sm:w-auto">
+										<Button
+											type="button"
+											disabled={!introCtaEnabled}
+											class="w-full sm:w-auto"
+											onclick={handleStartLesson}
+										>
+											{introCtaLabel}
+										</Button>
+									</span>
+								{/snippet}
+							</Tooltip.Trigger>
+							<Tooltip.Content
+								side="top"
+								sideOffset={6}
+								class="max-w-xs text-left whitespace-normal"
+							>
+								{INTRO_CTA_SCAFFOLD_TOOLTIP}
+							</Tooltip.Content>
+						</Tooltip.Root>
+					</Tooltip.Provider>
+				</div>
+			{/if}
+			<p class="shrink-0 pb-2 text-xs text-muted-foreground">{SESSION_HINT}</p>
+		{/if}
+		{@render askComposer(true)}
 	{:else if promptOnly}
 		{@render homePromptComposer()}
 	{:else}
