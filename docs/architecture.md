@@ -21,20 +21,24 @@ flowchart TB
   User([User])
 
   Learn["Learn — gated scaffolds"]
+  Intro["Session intro — concept preview"]
   Ask["Ask — Socratic tutor"]
   Persist["Persist session progress"]
   Proxy["Secure AI proxy"]
 
   User --> Learn
+  User --> Intro
   User --> Ask
   User --> Persist
   Learn --> Proxy
+  Intro --> Proxy
   Ask --> Proxy
 ```
 
 | ABB                 | Responsibility                                                            |
 | ------------------- | ------------------------------------------------------------------------- |
 | **Learn**           | Deliver ordered code steps; a knowledge gate blocks each next step        |
+| **Session intro**   | Stream a concept preview in Ask while the lesson generates                |
 | **Ask**             | Side tutor that explains concepts without replacing the Learn gate        |
 | **Persist**         | Learning progress and session list survive browser reload                 |
 | **Secure AI proxy** | All model calls go through the server; credentials never reach the client |
@@ -55,7 +59,7 @@ flowchart TB
   end
 
   subgraph Vercel["Vercel — serverless"]
-    API["/api/scaffold · /api/chat"]
+    API["/api/scaffold · /api/chat · /api/session-intro"]
     AC["anthropic-client"]
   end
 
@@ -73,6 +77,7 @@ flowchart TB
 | **SvelteKit client**             | SPA shell, Learn UI (Monaco + Learning Cards), Ask chat panel |
 | **session store · localStorage** | Client-side persistence for sessions and scaffold progress    |
 | **`/api/scaffold`**              | Learn: REST, structured JSON, server-side schema validation   |
+| **`/api/session-intro`**         | Session intro: SSE concept preview while lesson loads         |
 | **`/api/chat`**                  | Ask: SSE stream from server → browser                         |
 | **anthropic-client**             | Shared server module; holds API key, model resolution         |
 | **Claude API**                   | External model provider                                       |
@@ -83,7 +88,8 @@ flowchart TB
 
 | ABB                 | Realized by (SSB)                                                             |
 | ------------------- | ----------------------------------------------------------------------------- |
-| **Learn**           | SvelteKit client (Monaco viewZones) + `POST /api/scaffold`                    |
+| **Learn**           | SvelteKit client (Monaco viewZones + `setValue`) + `POST /api/scaffold`       |
+| **Session intro**   | SvelteKit client (Ask panel intro slot) + `POST /api/session-intro` (SSE)     |
 | **Ask**             | SvelteKit client (chat panel) + `POST /api/chat` (SSE)                        |
 | **Persist**         | `session.svelte.ts` + `localStorage`                                          |
 | **Secure AI proxy** | SvelteKit `+server.ts` on Vercel + `anthropic-client` + `$env/static/private` |
@@ -180,18 +186,32 @@ sequenceDiagram
 
 Cross-cutting choices that cut across physical components. Listed here, not in the diagrams above.
 
-| Area          | Technology                                                 | Used for                                            |
-| ------------- | ---------------------------------------------------------- | --------------------------------------------------- |
-| **Framework** | SvelteKit 5 (SPA), Svelte 5 runes, TypeScript, Vite        | App shell, routing, components, build               |
-| **Bundling**  | Conditional dynamic `import()` on `/sessions`              | Empty state eager; list UI lazy when sessions exist |
-| **UI**        | Tailwind CSS 4, shadcn-svelte (bits-ui), Lucide icons      | Layout, design system, icons                        |
-| **Layout**    | paneforge                                                  | Resizable editor / chat split                       |
-| **Editor**    | Monaco Editor (`@monaco-editor/loader`)                    | Code display, viewZones for Learning Cards          |
-| **AI SDK**    | `@anthropic-ai/sdk`                                        | All server-side Claude calls (see §4)               |
-| **Markdown**  | `marked` + `dompurify`                                     | Ask replies and About dialog                        |
-| **State**     | Singleton `.svelte.ts` stores, URL routing, `localStorage` | See [§6 State management](#6-state-management)      |
-| **Deploy**    | `@sveltejs/adapter-vercel`, Vercel serverless              | Production hosting, API routes                      |
-| **Quality**   | Prettier, ESLint, Husky, lint-staged, GitHub Actions       | Format, lint, pre-commit, CI                        |
+| Area          | Technology                                                 | Used for                                                 |
+| ------------- | ---------------------------------------------------------- | -------------------------------------------------------- |
+| **Framework** | SvelteKit 5 (SPA), Svelte 5 runes, TypeScript, Vite        | App shell, routing, components, build                    |
+| **Bundling**  | Conditional dynamic `import()` on `/sessions`              | Empty state eager; list UI lazy when sessions exist      |
+| **UI**        | Tailwind CSS 4, shadcn-svelte (bits-ui), Lucide icons      | Layout, design system, icons                             |
+| **Layout**    | paneforge                                                  | Resizable editor / chat split                            |
+| **Editor**    | Monaco Editor (`@monaco-editor/loader`)                    | Code display, viewZones (Learning Card, loading spinner) |
+| **AI SDK**    | `@anthropic-ai/sdk`                                        | All server-side Claude calls (see §4)                    |
+| **Markdown**  | `marked` + `dompurify`                                     | Ask replies and About dialog                             |
+| **State**     | Singleton `.svelte.ts` stores, URL routing, `localStorage` | See [§6 State management](#6-state-management)           |
+| **Deploy**    | `@sveltejs/adapter-vercel`, Vercel serverless              | Production hosting, API routes                           |
+| **Quality**   | Prettier, ESLint, Husky, lint-staged, GitHub Actions       | Format, lint, pre-commit, CI                             |
+
+### Monaco APIs
+
+| API                        | Purpose                                                                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `editor.create`            | Standalone Learn editor (`monaco-editor.svelte`)                                                                             |
+| `setValue`                 | Scaffold snippets, loading/wait comments, errors, clear buffer                                                               |
+| `changeViewZones`          | **Learning Card** after last code line; **loading spinner** after comment block — DOM updates only, no per-frame model edits |
+| `deltaDecorations`         | Inline styling on scaffold error screen                                                                                      |
+| `setModelLanguage`         | `html` for scaffolds and loading states                                                                                      |
+| `updateOptions`            | `readOnly` (locked until lesson complete); loading cursor                                                                    |
+| `onDidAttemptReadOnlyEdit` | Read-only edit hint overlay                                                                                                  |
+
+**Code:** `monaco-editor.svelte`, `monaco-knowledge-view-zone.ts`, `monaco-scaffold-loading.ts`.
 
 **Models:** `claude-sonnet-4-5`, `claude-sonnet-4-6` (see `anthropic-client.ts`, `ANTHROPIC_DEFAULT_MODEL`).
 

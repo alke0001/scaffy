@@ -36,6 +36,7 @@ ADR = Architecture Decision Record
 | [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                | ui/ primitives: shadcn-first; ScrollArea               | Accepted                                              |
 | [ADR-018](#adr-018-scaffy-modal-product-dialogs)                          | ScaffyModal — unified product dialogs                  | Accepted                                              |
 | [ADR-019](#adr-019-monaco-viewzone-aria-hidden-accepted)                  | Monaco viewZone aria-hidden — accepted trade-off       | Accepted                                              |
+| [ADR-020](#adr-020-session-intro-stream-and-lesson-start-gate)            | Session intro stream + lesson start gate               | Accepted                                              |
 
 ---
 
@@ -676,6 +677,37 @@ Lighthouse (and axe) report **`aria-hidden-focus`** on the session route: Monaco
 
 ---
 
+## ADR-020: Session intro stream + lesson start gate
+
+**Status:** Accepted
+
+### Context
+
+Starting a session from home left the Ask panel empty for 10–30s while Monaco showed a loading spinner. Users had nothing to read and might not realize the chat is for questions during the lesson.
+
+### Decision
+
+- **`POST /api/session-intro`** — SSE stream with a dedicated system prompt (`src/lib/server/session-intro/system-prompt.md`); ephemeral system-prompt cache (`5m`) like `/api/chat` and `/api/scaffold`.
+- **Parallel to scaffold fetch** — `ensureSessionIntro(sessionId)` runs alongside `ensureScaffold` when `session.status === 'loading'`.
+- **Intro slot in Ask thread** — fixed message IDs (`intro-user`, `intro-assistant`); user bubble = session prompt; assistant streams concept preview (SFC, Runes, props — no solution code).
+- **Lesson start gate** — Monaco does not call `loadNextScaffold()` until `lessonStarted` is true; user clicks **Got it — start lesson** (existing shadcn `Button` in `ChatPanel`).
+- **Ask during intro** — intro stream does not block the Ask composer (`isAskComposerBusy` excludes intro message IDs).
+- **Retry / fallback** — scaffold retry clears chat and re-runs intro; fallback loads scaffolds and **regenerates** intro in-place (overwrite assistant bubble + stream animation).
+- **In-memory only** — `introStatus`, `lessonStarted`, intro messages follow ADR-014 (not localStorage); restored sessions with existing scaffolds skip the gate (`lessonStarted: true`).
+
+### Alternatives considered
+
+- Reuse `/api/chat` with an intent flag — rejected; Socratic Ask prompt and history semantics do not fit a one-shot preview.
+- Scroll-to-bottom or checkbox in model output — rejected; compliance theater; CTA is client UI only.
+
+### Consequences
+
+- Two Claude calls per new session (scaffold REST + intro SSE); intro failure does not block scaffold.
+- Intro content is inferred from the user prompt only — may diverge from scaffold steps; prompt uses cooperative tone without hedging (“vermutlich”).
+- UI footer hint (“Ask questions here…”) is static app copy, not model output.
+
+---
+
 ## Planned / nice-to-have (not ADRs yet)
 
 - Supabase adapter + Google Auth (see [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) Phase 2)
@@ -720,3 +752,4 @@ Lighthouse (and axe) report **`aria-hidden-focus`** on the session route: Monaco
 | 2026-06-17 | ADR-015: persistent top nav (scaffy + My Sessions + session title); removed shadcn `ui/breadcrumb`; `/sessions` empty state.                |
 | 2026-06-19 | ADR-005: removed Learn prompt `<`/`{`/`;` heuristic — caused false 400s; min 10 characters remains.                                         |
 | 2026-06-19 | ADR-014: Ask chat per session in `session.svelte.ts` (`askMessages`) — SPA navigation only, not localStorage.                               |
+| 2026-06-19 | ADR-020: `/api/session-intro` parallel SSE; intro gate via `lessonStarted`; regenerate on scaffold fallback.                                |
