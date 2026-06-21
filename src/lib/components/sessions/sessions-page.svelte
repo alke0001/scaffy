@@ -7,6 +7,7 @@
 	import DeleteConfirmationDialog from '$lib/components/session/delete-confirmation-dialog.svelte';
 	import { cn } from '$lib/utils.js';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import { messages } from '$lib/i18n/index.js';
 
 	const sessionCard =
 		'rounded-lg border border-border bg-card transition-[colors,transform,box-shadow] duration-150 hover:border-primary/50 active:translate-y-px active:bg-muted/40 active:shadow-[inset_0_2px_6px_rgba(0,0,0,0.18)] focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2';
@@ -30,10 +31,10 @@
 	}
 
 	function statusLabel(session: SessionRecord) {
-		if (session.completed) return 'Completed';
-		if (session.status === 'loading') return 'Loading';
-		if (session.status === 'error') return 'Error';
-		return 'In progress';
+		if (session.completed) return $messages['session.status.completed'];
+		if (session.status === 'loading') return $messages['session.status.loading'];
+		if (session.status === 'error') return $messages['session.status.error'];
+		return $messages['session.status.inProgress'];
 	}
 
 	function openSession(id: string) {
@@ -69,8 +70,8 @@
 <ScrollArea orientation="vertical" class="h-full bg-background text-foreground">
 	<main class="mx-auto w-full max-w-6xl px-4 py-8">
 		<header>
-			<h1 class="text-lg font-medium">Learning overview</h1>
-			<p class="mt-1 text-sm text-muted-foreground">Pick up where you left off anytime.</p>
+			<h1 class="text-lg font-medium">{$messages['sessions.title']}</h1>
+			<p class="mt-1 text-sm text-muted-foreground">{$messages['sessions.subtitle']}</p>
 		</header>
 
 		<ul

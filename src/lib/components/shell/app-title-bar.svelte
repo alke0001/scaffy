@@ -9,6 +9,7 @@
 	import ScaffyLogo from '$lib/assets/scaffy-logo.svelte';
 	import { getSessionById } from '$lib/session.svelte.js';
 	import { cn } from '$lib/utils.js';
+	import { language, AVAILABLE_LANGUAGES, messages, type LanguageCode } from '$lib/i18n/index.js';
 
 	let aboutOpen = $state(false);
 
@@ -36,6 +37,10 @@
 		goto(resolve('/'));
 	}
 
+	function setLanguage(code: LanguageCode) {
+		language.set(code);
+	}
+
 	function goSessions(event: MouseEvent) {
 		event.preventDefault();
 		goto(resolve('/sessions'));
@@ -60,10 +65,10 @@
 		<span class="h-5 shrink-0 border-l border-scaffy-divider" aria-hidden="true"></span>
 
 		{#if isSessions}
-			<span class={cn(navItemClass, navActiveClass)} aria-current="page">My Sessions</span>
+			<span class={cn(navItemClass, navActiveClass)} aria-current="page">{$messages['app.mySessions']}</span>
 		{:else}
 			<a href={resolve('/sessions')} class={cn(navItemClass, navLinkClass)} onclick={goSessions}>
-				My Sessions
+				{$messages['app.mySessions']}
 			</a>
 		{/if}
 
@@ -83,10 +88,26 @@
 	</nav>
 
 	<div class="flex shrink-0 items-center gap-2">
+		{#each AVAILABLE_LANGUAGES as lang}
+			<Button
+				type="button"
+				variant="ghost"
+				size="icon-sm"
+				class={cn(
+					'uppercase tracking-[0.16em] text-xs font-semibold',
+					lang.code === $language ? 'text-foreground' : 'text-muted-foreground',
+				)}
+				onclick={() => setLanguage(lang.code)}
+				aria-label={`${$messages['app.languageLabel']} ${lang.name}`}
+			>
+				{lang.label}
+			</Button>
+		{/each}
+
 		<Button
 			variant="ghost"
 			size="icon-sm"
-			aria-label="About Scaffy"
+			aria-label={$messages['app.aboutAriaLabel']}
 			class="text-muted-foreground hover:text-foreground"
 			onclick={() => (aboutOpen = true)}
 		>

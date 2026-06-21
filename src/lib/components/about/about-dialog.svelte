@@ -8,6 +8,8 @@
 		ScaffyModalActions,
 		ScaffyModalButton,
 	} from '$lib/components/ui/scaffy-modal/index.js';
+	import { messages } from '$lib/i18n/index.js';
+
 	import aboutContent from './about-content.md?raw';
 	import { ABOUT_FAQ } from './about-faq.js';
 
@@ -27,7 +29,7 @@
 				<MarkdownContent content={aboutContent} />
 
 				<section class="space-y-3">
-					<h3 class="text-sm font-semibold text-muted-foreground">FAQ</h3>
+					<h3 class="text-sm font-semibold text-muted-foreground">{$messages['about.faqHeading']}</h3>
 
 					<Accordion.Root type="single">
 						{#each ABOUT_FAQ as item (item.id)}
