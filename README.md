@@ -113,8 +113,9 @@ src/
     ├── sessions/          # Sessions overview (lazy-loaded view)
     ├── session/[id]/      # Session workspace
     └── api/
-        ├── scaffold/      # POST /api/scaffold — structured JSON (Learn)
-        └── chat/          # POST /api/chat — SSE tutor (Ask)
+        ├── scaffold/      # POST /api/scaffold — REST structured JSON (Learn)
+        ├── chat/          # POST /api/chat — SSE tutor (Ask)
+        └── session-intro/ # POST /api/session-intro — SSE concept preview
 ```
 
 - **Routes** stay thin; feature views live under `src/lib/components/<area>/`. `/sessions` shows an **eager** empty state when there are no sessions; the list UI is **lazy-loaded** only when `localStorage` has sessions (conditional code split).

@@ -41,16 +41,17 @@ These three files must stay semantically identical in their shared project assum
 
 - User submits a prompt (e.g. _"Generate a Svelte 5 login dialog component with password validation"_)
 - Claude returns the full response as **structured JSON** — ordered **scaffolds** (`codeSnippet` + `knowledgeCheck` per step) in one shot (no streaming)
-- Each scaffold’s code is revealed via a **typewriter effect** in Monaco (`editor.executeEdits()`, ~15 ms per character)
-- A framework-specific question appears as a Monaco `viewZone` between code lines before the next scaffold’s code renders
-- The next scaffold is only revealed after the user answers correctly (or acknowledges the explainer)
+- Parallel **session intro** streams a concept preview in Ask while scaffolds generate (`POST /api/session-intro`, SSE)
+- Each unlocked scaffold’s code is applied via **`editor.setValue()`** (full chunk; per-character typewriter via `executeEdits` is **planned**, ADR-011)
+- The **Learning Card** appears in a Monaco **`viewZone`** after the last code line; the next scaffold unlocks only after a correct answer
+- **Lesson start gate:** first scaffold waits until user clicks **Got it — start lesson** (`lessonStarted`, ADR-020)
 
 ### Claude API — Architecture
 
 #### No direct browser API calls
 
 - The API key is **never in the client bundle** — it would be visible in the browser network tab
-- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** proxies: `scaffold` → `POST /api/scaffold`; `chat` → `POST /api/chat` (SSE streaming for Ask mode)
+- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** proxies: `scaffold` (REST), `chat` (SSE), `session-intro` (SSE)
 - Key is stored as an environment variable in Vercel (`ANTHROPIC_API_KEY`)
 - Client calls only same-origin **`/api/...`** — never `api.anthropic.com` directly
 
@@ -60,16 +61,9 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 
 #### Streaming vs REST
 
-- **`/api/scaffold` (Learn):** REST only — structured JSON cannot be parsed incrementally. The full JSON is returned at once; each scaffold’s `codeSnippet` is typed into Monaco with a client-side typewriter effect (~15 ms per character).
-- **`/api/chat` (Ask):** SSE streaming; scaffolded Socratic tutor (concept ladder, explain Runes before `$…` syntax); temperature 0.55; max_tokens 2048; history cap 30 messages server-side. ChatPanel statuses: `loading`, `streaming`, `complete`, `error`.
-
-```ts
-// Typewriter principle in Monaco
-for (const char of scaffold.codeSnippet) {
-	editor.executeEdits('', [{ range: cursorPosition, text: char }]);
-	await new Promise((r) => setTimeout(r, 15));
-}
-```
+- **`/api/scaffold` (Learn):** REST only — structured JSON (`json_schema`); one `fetch`, full `{ scaffolds }` before Monaco updates
+- **`/api/session-intro`:** SSE — concept preview while lesson loads; dedicated `system-prompt.md`; parallel to scaffold fetch
+- **`/api/chat` (Ask):** SSE streaming; Socratic tutor; temperature 0.55; max_tokens 2048; history cap 30 messages server-side
 
 #### Environment variables
 
@@ -94,18 +88,20 @@ These conventions keep the codebase navigable as we add endpoints (for example *
 - **Svelte UI components:** `src/lib/components/<area>/` — one subdirectory per product area (`chat`, `editor`, future `questions`, …). Do not add new loose `*.svelte` files at `src/lib/` root unless they are tiny one-offs. When an area grows large (many components plus `*.svelte.ts` and helpers), consider promoting it to `src/lib/features/<name>/` instead of deepening `components/` indefinitely.
 - **Routes vs views vs ui/ (ADR-016, ADR-017):** `src/routes/**/+page.svelte` stays thin (import view only). Screen copy, example data, and wiring live in `components/<area>/`. Domain-agnostic primitives in `components/ui/` built on **shadcn-svelte** — install via `shadcn-svelte add` before hand-rolling (ScrollArea, Dialog, …); custom `ui/` only when composing shadcn or documented in `docs/decisions.md`. Static logos/images in `src/lib/assets/`. If placement is unclear when adding a component, ask before creating files.
 - **Scrollbars (ADR-017):** hover-fade everywhere — default `ScrollArea` `type="hover"` (incl. `ScaffyModalBody scroll`); tokens in `scroll-area.css` + `monaco-editor.css`. No `type="always"` in product UI. See `.cursor/rules/scrollbars.mdc`.
-- **HTTP API (SvelteKit routes):** `src/routes/api/<endpoint>/+server.ts` — **one folder per HTTP surface**. `scaffold` (`POST /api/scaffold`, REST JSON), `chat` (`POST /api/chat`, SSE). Keep handlers thin (parse body → call Anthropic → return).
-- **Server-only library code:** `src/lib/server/` — must never be imported from client components. Use **subfolders per endpoint or concern** alongside shared files at the `server/` root:
-  - **`src/lib/server/scaffold/`** — structured-output JSON schema, `output-schema.ts` validation, `system-prompt.md` for the scaffold API.
-  - **`src/lib/server/chat/`** — Ask-mode tutor system prompt (plain text, separate from scaffold pedagogy).
-  - **Shared:** `anthropic-client.ts` and similar cross-route modules stay at `src/lib/server/` until multiple shared modules justify a `src/lib/server/shared/` folder.
+- **HTTP API (SvelteKit routes):** `src/routes/api/<endpoint>/+server.ts` — one folder per surface: `scaffold` (REST), `chat` (SSE), `session-intro` (SSE)
+- **Server-only library code:** `src/lib/server/` — never imported from client components. Subfolders per endpoint:
+  - **`src/lib/server/scaffold/`** — JSON schema, validation, `system-prompt.md`
+  - **`src/lib/server/chat/`** — Ask tutor `system-prompt.md`
+  - **`src/lib/server/session-intro/`** — concept preview `system-prompt.md`
+  - **Shared:** `anthropic-client.ts` at `server/` root
 - **Routes vs `lib`:** `src/routes/` defines URLs, layouts, and thin `+server.ts` handlers. Reusable UI and domain logic live under `src/lib/`.
 
 ### Monaco + Svelte Integration
 
-- `viewZones` for inline question components between code lines
-- `overlayWidgets` as an alternative
-- Typewriter effect via `editor.executeEdits()` — character by character with ~15 ms delay
+- **`changeViewZones`** — custom DOM in the editor flow: **Learning Card** (Svelte via `mount`) and **loading spinner** (plain DOM, rAF)
+- **`setValue`** — scaffold snippets; loading/wait `<!-- HTML comments -->`; errors
+- **`overlayWidgets`** — fallback when viewZones are insufficient
+- Per-scaffold **typewriter** (`executeEdits`, ~15 ms/char) — planned (ADR-011); currently full-chunk `setValue`
 
 ### Nice to Have
 

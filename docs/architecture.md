@@ -72,44 +72,45 @@ flowchart TB
   AC --> Claude
 ```
 
-| SSB                              | Role                                                          |
-| -------------------------------- | ------------------------------------------------------------- |
-| **SvelteKit client**             | SPA shell, Learn UI (Monaco + Learning Cards), Ask chat panel |
-| **session store · localStorage** | Client-side persistence for sessions and scaffold progress    |
-| **`/api/scaffold`**              | Learn: REST, structured JSON, server-side schema validation   |
-| **`/api/session-intro`**         | Session intro: SSE concept preview while lesson loads         |
-| **`/api/chat`**                  | Ask: SSE stream from server → browser                         |
-| **anthropic-client**             | Shared server module; holds API key, model resolution         |
-| **Claude API**                   | External model provider                                       |
+| SSB                              | Role                                                                       |
+| -------------------------------- | -------------------------------------------------------------------------- |
+| **SvelteKit client**             | SPA shell, Learn UI (Monaco + Learning Cards), Ask chat panel              |
+| **session store · localStorage** | Client-side persistence for sessions and scaffold progress                 |
+| **`/api/scaffold`**              | Learn: REST, structured JSON, server-side schema validation                |
+| **`/api/session-intro`**         | Session intro: Server-Sent Events (SSE) concept preview while lesson loads |
+| **`/api/chat`**                  | Ask: Server-Sent Events (SSE) stream from server → browser                 |
+| **anthropic-client**             | Shared server module; holds API key, model resolution                      |
+| **Claude API**                   | External model provider                                                    |
 
 ---
 
 ## 3. Logical → physical mapping
 
-| ABB                 | Realized by (SSB)                                                             |
-| ------------------- | ----------------------------------------------------------------------------- |
-| **Learn**           | SvelteKit client (Monaco viewZones + `setValue`) + `POST /api/scaffold`       |
-| **Session intro**   | SvelteKit client (Ask panel intro slot) + `POST /api/session-intro` (SSE)     |
-| **Ask**             | SvelteKit client (chat panel) + `POST /api/chat` (SSE)                        |
-| **Persist**         | `session.svelte.ts` + `localStorage`                                          |
-| **Secure AI proxy** | SvelteKit `+server.ts` on Vercel + `anthropic-client` + `$env/static/private` |
+| ABB                 | Realized by (SSB)                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------- |
+| **Learn**           | SvelteKit client (Monaco viewZones + `setValue`) + `POST /api/scaffold`                  |
+| **Session intro**   | SvelteKit client (Ask panel intro slot) + `POST /api/session-intro` (Server-Sent Events) |
+| **Ask**             | SvelteKit client (chat panel) + `POST /api/chat` (Server-Sent Events)                    |
+| **Persist**         | `session.svelte.ts` + `localStorage`                                                     |
+| **Secure AI proxy** | SvelteKit `+server.ts` on Vercel + `anthropic-client` + `$env/static/private`            |
 
 ---
 
-## 4. HTTP API flows (Learn vs Ask)
+## 4. HTTP API flows
 
-Both endpoints use **`@anthropic-ai/sdk`** on the server only. The browser never calls Anthropic directly.  
-The two modes differ in **SDK method**, **Anthropic feature**, and **how the response reaches the browser**.
+Three **`POST /api/*`** surfaces — each with its own **`system-prompt.md`** under `src/lib/server/<endpoint>/`. The browser never calls Anthropic directly; all use `@anthropic-ai/sdk` on the server.
 
-|                         | **Learn** `POST /api/scaffold`                                        | **Ask** `POST /api/chat`                                  |
-| ----------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- |
-| **SDK call**            | `client.messages.create(...)`                                         | `client.messages.stream(...)`                             |
-| **Anthropic feature**   | Structured output (`output_config.format: json_schema`)               | Text streaming (token deltas)                             |
-| **Response to browser** | Single JSON body `{ scaffolds }`                                      | Many SSE chunks (`text/event-stream`)                     |
-| **Client code**         | `src/lib/learn/request-scaffold.ts` — one `fetch`, wait for full JSON | `src/lib/api/chat-stream.ts` — `fetch` + manual SSE parse |
-| **Perceived UX**        | Code typewriter in Monaco _after_ download (client-only)              | Chat text grows live while tokens arrive                  |
+> **Server-Sent Events (SSE)** — one HTTP response stays open; the server pushes many `data: …` lines as text arrives (`Content-Type: text/event-stream`). Used for Ask chat and session intro. Scaffy parses them with **`fetch` POST** + `getReader()` (not the browser’s `EventSource`, which only supports GET).
 
-### Learn — structured output (REST, no stream)
+| Surface             | Route                     | Transport                       | Output / Anthropic feature      | Client module                           |
+| ------------------- | ------------------------- | ------------------------------- | ------------------------------- | --------------------------------------- |
+| **Learn scaffolds** | `POST /api/scaffold`      | **REST** (single JSON response) | Structured JSON (`json_schema`) | `request-scaffold.ts`                   |
+| **Ask tutor**       | `POST /api/chat`          | **Server-Sent Events (SSE)**    | Plain text stream               | `chat-stream.ts` → `streamChatReply`    |
+| **Session intro**   | `POST /api/session-intro` | **Server-Sent Events (SSE)**    | Plain text concept preview      | `chat-stream.ts` → `streamSessionIntro` |
+
+On **`/session/[id]`** load, **scaffold REST** and **session intro (SSE)** run **in parallel** (`ensureScaffold` + `ensureSessionIntro`). Intro failure does not block the lesson.
+
+### Learn — structured output (REST)
 
 Claude must return JSON matching a fixed schema (scaffolds + knowledge checks). The SDK enforces the shape; the server validates content and may retry once.
 
@@ -121,7 +122,7 @@ sequenceDiagram
   participant SDK as @anthropic-ai/sdk
   participant C as Claude API
 
-  B->>R: start session
+  B->>R: start session (parallel with intro)
   R->>S: POST { prompt }
   S->>SDK: messages.create + output_config json_schema
   SDK->>C: constrained JSON generation
@@ -130,7 +131,7 @@ sequenceDiagram
   S->>S: JSON.parse + validate-lesson.ts
   S-->>R: 200 { scaffolds }
   R-->>B: store in session
-  Note over B: Monaco typewriter (~15 ms/char, client-only)
+  Note over B: Monaco setValue per scaffold when step unlocks (typewriter planned, ADR-011)
 ```
 
 **Key files**
@@ -139,15 +140,29 @@ sequenceDiagram
 | ---------- | -------------------------------------------- | --------------------------------------------- |
 | Client     | `src/lib/learn/request-scaffold.ts`          | `POST /api/scaffold`, stores scaffolds        |
 | Server     | `src/routes/api/scaffold/+server.ts`         | Proxy, retry on validation failure            |
+| Prompt     | `src/lib/server/scaffold/system-prompt.md`   | Learn pedagogy for structured output          |
 | Schema     | `src/lib/server/scaffold/output.schema.json` | Wire schema for `output_config.format.schema` |
 | Validation | `src/lib/server/scaffold/validate-lesson.ts` | Count, cumulative code chain, option rules    |
 
-### Ask — streaming (SDK on server, custom SSE to browser)
+### Session intro — streaming (Server-Sent Events)
+
+One-shot concept preview in the Ask panel while scaffolds generate. Same Server-Sent Events bridge as Ask (`chat-stream.ts`).
+
+| Layer  | File                                            | Role                                     |
+| ------ | ----------------------------------------------- | ---------------------------------------- |
+| Client | `src/lib/learn/request-session-intro.ts`        | Intro slot, batched store updates        |
+| Client | `src/lib/api/chat-stream.ts`                    | Shared Server-Sent Events parser         |
+| Server | `src/routes/api/session-intro/+server.ts`       | SDK stream → Server-Sent Events response |
+| Prompt | `src/lib/server/session-intro/system-prompt.md` | Concept preview (no solution code)       |
+
+**Gate:** Monaco waits for **Got it — start lesson** (`lessonStarted`) before first scaffold — ADR-020.
+
+### Ask — streaming (Server-Sent Events)
 
 Two hops — do not conflate them:
 
 1. **`@anthropic-ai/sdk`** streams Claude → Vercel (`messages.stream`, `on('text')`).
-2. **Custom bridge** (no library): `ReadableStream` in `+server.ts` re-emits chunks as SSE; `chat-stream.ts` reads them with `fetch` + `getReader()` (not browser `EventSource`, because the route is `POST`).
+2. **Custom bridge** (no library): `ReadableStream` in `+server.ts` re-emits chunks as **Server-Sent Events**; `chat-stream.ts` reads them with `fetch` + `getReader()` (not browser `EventSource`, because the route is `POST`).
 
 ```mermaid
 sequenceDiagram
@@ -173,12 +188,13 @@ sequenceDiagram
 
 **Key files**
 
-| Layer  | File                                        | Role                                        |
-| ------ | ------------------------------------------- | ------------------------------------------- |
-| UI     | `src/lib/components/chat/chat-panel.svelte` | Calls `streamChatReply`                     |
-| Client | `src/lib/api/chat-stream.ts`                | `fetch` POST, parse `data: …` lines         |
-| Server | `src/routes/api/chat/+server.ts`            | SDK stream → `ReadableStream` → SSE headers |
-| Shared | `src/lib/server/anthropic-client.ts`        | `new Anthropic({ apiKey })`                 |
+| Layer  | File                                        | Role                                                       |
+| ------ | ------------------------------------------- | ---------------------------------------------------------- |
+| UI     | `src/lib/components/chat/chat-panel.svelte` | Calls `streamChatReply`                                    |
+| Client | `src/lib/api/chat-stream.ts`                | `fetch` POST, parse `data: …` lines                        |
+| Server | `src/routes/api/chat/+server.ts`            | SDK stream → `ReadableStream` → Server-Sent Events headers |
+| Prompt | `src/lib/server/chat/system-prompt.md`      | Socratic Ask tutor                                         |
+| Shared | `src/lib/server/anthropic-client.ts`        | `new Anthropic({ apiKey })`                                |
 
 ---
 
@@ -201,15 +217,15 @@ Cross-cutting choices that cut across physical components. Listed here, not in t
 
 ### Monaco APIs
 
-| API                        | Purpose                                                                                                                      |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `editor.create`            | Standalone Learn editor (`monaco-editor.svelte`)                                                                             |
-| `setValue`                 | Scaffold snippets, loading/wait comments, errors, clear buffer                                                               |
-| `changeViewZones`          | **Learning Card** after last code line; **loading spinner** after comment block — DOM updates only, no per-frame model edits |
-| `deltaDecorations`         | Inline styling on scaffold error screen                                                                                      |
-| `setModelLanguage`         | `html` for scaffolds and loading states                                                                                      |
-| `updateOptions`            | `readOnly` (locked until lesson complete); loading cursor                                                                    |
-| `onDidAttemptReadOnlyEdit` | Read-only edit hint overlay                                                                                                  |
+| API                        | Purpose                                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `editor.create`            | Standalone Learn editor (`monaco-editor.svelte`)                                                              |
+| `setValue`                 | Scaffold snippets (full chunk); loading/wait **`<!-- HTML comments -->`**; errors; clear buffer               |
+| `changeViewZones`          | **Custom DOM in editor flow** — Learning Card (Svelte); loading spinner (plain DOM). No per-frame model edits |
+| `deltaDecorations`         | Inline styling on scaffold error screen                                                                       |
+| `setModelLanguage`         | `html` for scaffolds and loading states                                                                       |
+| `updateOptions`            | `readOnly` (locked until lesson complete); loading cursor                                                     |
+| `onDidAttemptReadOnlyEdit` | Read-only edit hint overlay                                                                                   |
 
 **Code:** `monaco-editor.svelte`, `monaco-knowledge-view-zone.ts`, `monaco-scaffold-loading.ts`.
 
@@ -237,7 +253,7 @@ flowchart LR
 | ---------- | --------------------------- | ------------------------ | ----------------------------------------------------------------------------------------- |
 | **URL**    | SvelteKit routes            | —                        | Which session/workspace is open (`/session/:id`)                                          |
 | **Global** | `src/lib/session.svelte.ts` | **Yes** → `localStorage` | Session list, prompt, scaffold JSON from Claude, API status, `completed` flag, active tab |
-| **Local**  | Component `$state`          | **No**                   | In-lesson step index, Learning Card UI, typewriter animation, Ask prompt draft            |
+| **Local**  | Component `$state`          | **No**                   | In-lesson step index, Learning Card UI, loading spinner rAF, Ask prompt draft             |
 
 ### Global store (`session.svelte.ts`)
 
@@ -250,16 +266,17 @@ Single app-wide singleton. Source of truth for **Learn data**.
 | `status`, `errorMessage` — active session only | (restored from active row)        |
 | `askMessages[]` per session — Ask chat thread  | in-memory only (stripped on save) |
 
-**Per session:** `id`, `prompt`, `createdAt`, `scaffolds[]`, `status`, `errorMessage`, `completed`, `askMessages[]`.
+**Per session:** `id`, `prompt`, `createdAt`, `scaffolds[]`, `status`, `errorMessage`, `completed`, `askMessages[]`, `introStatus`, `lessonStarted` (last two in-memory only).
 
-**Lifecycle:** `idle` → `loading` (`startScaffoldRequest`) → `ready` (`setScaffolds`) or `error` → retry → `loading`. `completed` via `markSessionCompleted()` after all gates passed.
+**Lifecycle:** `idle` → `loading` (`startScaffoldRequest` + parallel intro) → `ready` (`setScaffolds`) or `error` → retry → `loading`. **`lessonStarted`** gates first scaffold in Monaco (ADR-020). `completed` via `markSessionCompleted()` after all gates passed.
 
 ### Ephemeral (not in store)
 
-| Location                          | State                                                         | Lost on reload?                     |
-| --------------------------------- | ------------------------------------------------------------- | ----------------------------------- |
-| `knowledge-zone-bridge.svelte.ts` | Monaco viewZone ↔ Learning Card bridge (per editor instance)  | Yes                                 |
-| `monaco-editor.svelte`            | `currentIndex`, Learning Card UI, editor/typewriter animation | Yes — lesson restarts at scaffold 0 |
+| Location                          | State                                                        | Lost on reload?                     |
+| --------------------------------- | ------------------------------------------------------------ | ----------------------------------- |
+| `knowledge-zone-bridge.svelte.ts` | Monaco viewZone ↔ Learning Card bridge (per editor instance) | Yes                                 |
+| `monaco-scaffold-loading.ts`      | Loading spinner viewZone (plain DOM, rAF)                    | Yes                                 |
+| `monaco-editor.svelte`            | `currentIndex`, Learning Card UI, step reveal                | Yes — lesson restarts at scaffold 0 |
 
 **Ask chat:** `askMessages` on `SessionRecord` — survives SPA navigation (Home ↔ Session ↔ Sessions); **not** in `localStorage` (lost on full reload). In-lesson step index is not yet persisted (ADR-014).
 
