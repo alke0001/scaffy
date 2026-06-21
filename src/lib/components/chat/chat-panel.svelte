@@ -16,6 +16,7 @@
 	import {
 		acknowledgeIntroAndStartLesson,
 		canStartLesson,
+		getAskMessages,
 		getSessionById,
 		hasLessonStarted,
 		setAskMessages,
@@ -135,6 +136,19 @@
 		}
 	}
 
+	/** Read the latest Ask thread (store wins on session route). */
+	function currentAskMessages(): ChatMessage[] {
+		const id = sessionId;
+		if (mode === 'ask' && id && !promptOnly) {
+			return getAskMessages(id);
+		}
+		return messages;
+	}
+
+	function mutateAskMessages(updater: (current: ChatMessage[]) => ChatMessage[]) {
+		commitMessages(updater(currentAskMessages()));
+	}
+
 	$effect(() => {
 		if (!isAskSession || !hasMessages) return;
 		void messages.length;
@@ -180,9 +194,9 @@
 		askAbort = new AbortController();
 		const signal = askAbort.signal;
 
-		const history = toChatHistory(messages);
+		const history = toChatHistory(currentAskMessages());
 		const assistant = createAssistantPlaceholder();
-		commitMessages([...messages, createUserMessage(text), assistant]);
+		mutateAskMessages((current) => [...current, createUserMessage(text), assistant]);
 
 		let gotFirstToken = false;
 
@@ -196,27 +210,29 @@
 					if (signal.aborted) return;
 					if (!gotFirstToken) {
 						gotFirstToken = true;
-						commitMessages(
-							updateMessage(messages, assistant.id, {
+						mutateAskMessages((current) =>
+							updateMessage(current, assistant.id, {
 								status: 'streaming',
 								content: '',
 							}),
 						);
 					}
-					commitMessages(appendToMessage(messages, assistant.id, delta));
+					mutateAskMessages((current) => appendToMessage(current, assistant.id, delta));
 				},
 				onDone: () => {
 					if (signal.aborted) return;
-					commitMessages(updateMessage(messages, assistant.id, { status: 'complete' }));
+					mutateAskMessages((current) =>
+						updateMessage(current, assistant.id, { status: 'complete' }),
+					);
 					askAbort = null;
 				},
 				onError: (message) => {
 					if (signal.aborted && message === 'Cancelled.') {
-						commitMessages(removeMessage(messages, assistant.id));
+						mutateAskMessages((current) => removeMessage(current, assistant.id));
 						askAbort = null;
 						return;
 					}
-					commitMessages(failAssistant(messages, assistant.id, message));
+					mutateAskMessages((current) => failAssistant(current, assistant.id, message));
 					askAbort = null;
 				},
 			},

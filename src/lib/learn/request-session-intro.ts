@@ -4,6 +4,7 @@ import {
 	INTRO_USER_MESSAGE_ID,
 	appendToMessage,
 	createIntroMessagePair,
+	isIntroMessageId,
 	updateMessage,
 } from '$lib/chat/message-actions.js';
 import { devLog } from '$lib/dev/log.js';
@@ -21,27 +22,33 @@ const abortControllers = new Map<string, AbortController>();
 /** Batch intro stream writes — throttle so chat markdown does not block the UI thread. */
 function createIntroMessageBatcher(sessionId: string) {
 	const FLUSH_MS = 250;
-	let messages: ChatMessage[] = [];
+	/** Intro slot only — follow-up Ask turns are merged from the store on each flush. */
+	let introMessages: ChatMessage[] = [];
 	let flushTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function mergeIntroWithFollowUps(): ChatMessage[] {
+		const followUps = followUpMessages(getAskMessages(sessionId));
+		return [...introMessages, ...followUps];
+	}
 
 	function flushNow() {
 		if (flushTimer) {
 			clearTimeout(flushTimer);
 			flushTimer = undefined;
 		}
-		setAskMessages(sessionId, messages);
+		setAskMessages(sessionId, mergeIntroWithFollowUps());
 	}
 
 	function scheduleFlush() {
 		if (flushTimer) return;
 		flushTimer = setTimeout(() => {
 			flushTimer = undefined;
-			setAskMessages(sessionId, messages);
+			setAskMessages(sessionId, mergeIntroWithFollowUps());
 		}, FLUSH_MS);
 	}
 
 	function setMessages(next: ChatMessage[]) {
-		messages = next;
+		introMessages = next.filter((message) => isIntroMessageId(message.id));
 		scheduleFlush();
 	}
 
@@ -107,6 +114,7 @@ async function runIntroStream(sessionId: string, regenerate: boolean): Promise<v
 			? resetIntroAssistant(existing)
 			: upsertIntroSlot(existing, session.prompt)
 		: upsertIntroSlot(existing, session.prompt);
+	messages = messages.filter((message) => isIntroMessageId(message.id));
 
 	const batcher = createIntroMessageBatcher(sessionId);
 
