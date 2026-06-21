@@ -1,18 +1,19 @@
 import { streamSessionIntro } from '$lib/api/chat-stream.js';
 import {
 	INTRO_ASSISTANT_MESSAGE_ID,
-	INTRO_USER_MESSAGE_ID,
 	appendToMessage,
 	createIntroMessagePair,
+	followUpAskMessages,
 	isIntroMessageId,
+	mergeIntroSlotWithFollowUps,
 	updateMessage,
 } from '$lib/chat/message-actions.js';
 import { devLog } from '$lib/dev/log.js';
 import {
 	getAskMessages,
 	getSessionById,
-	setAskMessages,
 	setIntroStatus,
+	updateAskMessages,
 } from '$lib/session.svelte.js';
 import type { ChatMessage } from '$lib/types/chat-message.js';
 
@@ -26,24 +27,21 @@ function createIntroMessageBatcher(sessionId: string) {
 	let introMessages: ChatMessage[] = [];
 	let flushTimer: ReturnType<typeof setTimeout> | undefined;
 
-	function mergeIntroWithFollowUps(): ChatMessage[] {
-		const followUps = followUpMessages(getAskMessages(sessionId));
-		return [...introMessages, ...followUps];
-	}
-
 	function flushNow() {
 		if (flushTimer) {
 			clearTimeout(flushTimer);
 			flushTimer = undefined;
 		}
-		setAskMessages(sessionId, mergeIntroWithFollowUps());
+		updateAskMessages(sessionId, (current) => mergeIntroSlotWithFollowUps(introMessages, current));
 	}
 
 	function scheduleFlush() {
 		if (flushTimer) return;
 		flushTimer = setTimeout(() => {
 			flushTimer = undefined;
-			setAskMessages(sessionId, mergeIntroWithFollowUps());
+			updateAskMessages(sessionId, (current) =>
+				mergeIntroSlotWithFollowUps(introMessages, current),
+			);
 		}, FLUSH_MS);
 	}
 
@@ -62,15 +60,8 @@ function createIntroMessageBatcher(sessionId: string) {
 	return { setMessages, flushNow, cancel };
 }
 
-function followUpMessages(messages: ChatMessage[]): ChatMessage[] {
-	return messages.filter(
-		(m) => m.id !== INTRO_USER_MESSAGE_ID && m.id !== INTRO_ASSISTANT_MESSAGE_ID,
-	);
-}
-
 function upsertIntroSlot(messages: ChatMessage[], prompt: string): ChatMessage[] {
-	const followUps = followUpMessages(messages);
-	return [...createIntroMessagePair(prompt), ...followUps];
+	return [...createIntroMessagePair(prompt), ...followUpAskMessages(messages)];
 }
 
 function resetIntroAssistant(messages: ChatMessage[]): ChatMessage[] {

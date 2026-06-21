@@ -20,6 +20,7 @@
 		getSessionById,
 		hasLessonStarted,
 		setAskMessages,
+		updateAskMessages,
 	} from '$lib/session.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
@@ -69,16 +70,19 @@
 
 	let messages = $state<ChatMessage[]>([]);
 	let scrollViewport = $state<HTMLElement | null>(null);
-	let lastSyncedMessagesKey = '';
 
 	let askAbort = $state<AbortController | null>(null);
 	let scrollRaf = 0;
 
-	const boundSession = $derived(sessionId ? getSessionById(sessionId) : null);
-	const askComposerBusy = $derived(isAskComposerBusy(messages));
-	const canSubmit = $derived(prompt.trim().length >= MIN_PROMPT_LENGTH && !askComposerBusy);
-	const hasMessages = $derived(messages.length > 0);
 	const isAskSession = $derived(mode === 'ask' && !promptOnly);
+	const boundSession = $derived(sessionId ? getSessionById(sessionId) : null);
+	const usesSessionAskStore = $derived(isAskSession && Boolean(sessionId));
+	const displayMessages = $derived(
+		usesSessionAskStore && boundSession ? boundSession.askMessages : messages,
+	);
+	const askComposerBusy = $derived(isAskComposerBusy(displayMessages));
+	const canSubmit = $derived(prompt.trim().length >= MIN_PROMPT_LENGTH && !askComposerBusy);
+	const hasMessages = $derived(displayMessages.length > 0);
 	const showAskMinLengthTooltip = $derived(
 		isAskSession && !canSubmit && !askComposerBusy && prompt.trim().length < MIN_PROMPT_LENGTH,
 	);
@@ -107,36 +111,33 @@
 		scrollRaf = requestAnimationFrame(scrollToBottom);
 	}
 
-	/** Sync Ask thread from session store (intro stream + follow-up asks). */
+	/** Abort in-flight Ask stream when switching sessions or unmounting. */
 	$effect(() => {
-		const id = sessionId;
-		if (mode !== 'ask' || !id || promptOnly) {
-			if (mode === 'ask') messages = [];
-			lastSyncedMessagesKey = '';
-			return;
-		}
-		const session = getSessionById(id);
-		const next = session?.askMessages ?? [];
-		const key = next
-			.map(
-				(message) =>
-					`${message.id}:${message.status}:${message.content}:${message.errorMessage ?? ''}`,
-			)
+		void sessionId;
+		return () => {
+			askAbort?.abort();
+			askAbort = null;
+		};
+	});
+
+	$effect(() => {
+		if (!isAskSession || !hasMessages) return;
+		void displayMessages.length;
+		void displayMessages
+			.map((message) => `${message.id}:${message.content}:${message.status}`)
 			.join('|');
-		if (key === lastSyncedMessagesKey) return;
-		lastSyncedMessagesKey = key;
-		messages = [...next];
+		scheduleScroll();
 	});
 
 	function commitMessages(next: ChatMessage[]) {
-		messages = next;
 		const id = sessionId;
 		if (mode === 'ask' && id && !promptOnly) {
 			setAskMessages(id, next);
+			return;
 		}
+		messages = next;
 	}
 
-	/** Read the latest Ask thread (store wins on session route). */
 	function currentAskMessages(): ChatMessage[] {
 		const id = sessionId;
 		if (mode === 'ask' && id && !promptOnly) {
@@ -146,15 +147,13 @@
 	}
 
 	function mutateAskMessages(updater: (current: ChatMessage[]) => ChatMessage[]) {
-		commitMessages(updater(currentAskMessages()));
+		const id = sessionId;
+		if (mode === 'ask' && id && !promptOnly) {
+			updateAskMessages(id, updater);
+			return;
+		}
+		messages = updater(messages);
 	}
-
-	$effect(() => {
-		if (!isAskSession || !hasMessages) return;
-		void messages.length;
-		void messages.map((message) => `${message.id}:${message.content}:${message.status}`).join('|');
-		scheduleScroll();
-	});
 
 	function failAssistant(
 		current: ChatMessage[],
@@ -188,6 +187,9 @@
 	}
 
 	async function submitAsk(text: string) {
+		const activeSessionId = sessionId;
+		if (!activeSessionId) return;
+
 		if (askAbort) {
 			askAbort.abort();
 		}
@@ -196,48 +198,59 @@
 
 		const history = toChatHistory(currentAskMessages());
 		const assistant = createAssistantPlaceholder();
+		const assistantId = assistant.id;
 		mutateAskMessages((current) => [...current, createUserMessage(text), assistant]);
 
 		let gotFirstToken = false;
 
-		await streamChatReply(
-			{ prompt: text, history },
-			{
-				onReady: () => {
-					if (signal.aborted) return;
-				},
-				onDelta: (delta) => {
-					if (signal.aborted) return;
-					if (!gotFirstToken) {
-						gotFirstToken = true;
+		const isActive = () => sessionId === activeSessionId && !signal.aborted;
+
+		try {
+			await streamChatReply(
+				{ prompt: text, history },
+				{
+					onReady: () => {
+						if (!isActive()) return;
+					},
+					onDelta: (delta) => {
+						if (!isActive()) return;
+						if (!gotFirstToken) {
+							gotFirstToken = true;
+							mutateAskMessages((current) =>
+								updateMessage(current, assistantId, {
+									status: 'streaming',
+									content: '',
+								}),
+							);
+						}
+						mutateAskMessages((current) => appendToMessage(current, assistantId, delta));
+					},
+					onDone: () => {
+						if (!isActive()) return;
 						mutateAskMessages((current) =>
-							updateMessage(current, assistant.id, {
-								status: 'streaming',
-								content: '',
-							}),
+							updateMessage(current, assistantId, { status: 'complete' }),
 						);
-					}
-					mutateAskMessages((current) => appendToMessage(current, assistant.id, delta));
-				},
-				onDone: () => {
-					if (signal.aborted) return;
-					mutateAskMessages((current) =>
-						updateMessage(current, assistant.id, { status: 'complete' }),
-					);
-					askAbort = null;
-				},
-				onError: (message) => {
-					if (signal.aborted && message === 'Cancelled.') {
-						mutateAskMessages((current) => removeMessage(current, assistant.id));
 						askAbort = null;
-						return;
-					}
-					mutateAskMessages((current) => failAssistant(current, assistant.id, message));
-					askAbort = null;
+					},
+					onError: (message) => {
+						if (!isActive()) return;
+						if (message === 'Cancelled.') {
+							mutateAskMessages((current) => removeMessage(current, assistantId));
+							askAbort = null;
+							return;
+						}
+						mutateAskMessages((current) => failAssistant(current, assistantId, message));
+						askAbort = null;
+					},
 				},
-			},
-			signal,
-		);
+				signal,
+			);
+		} catch (e) {
+			if (!isActive()) return;
+			const message = e instanceof Error ? e.message : 'Request failed.';
+			mutateAskMessages((current) => failAssistant(current, assistantId, message));
+			askAbort = null;
+		}
 	}
 
 	async function submitFromPrompt() {
@@ -361,7 +374,7 @@
 		{#if hasMessages}
 			<AskChatHeader />
 			<ScrollArea bind:viewportRef={scrollViewport} orientation="vertical" class="min-h-0 flex-1">
-				<ChatMessageList {messages} mode="ask" showEmptyState={false} />
+				<ChatMessageList messages={displayMessages} mode="ask" showEmptyState={false} />
 			</ScrollArea>
 		{:else}
 			<div class="min-h-0 flex-1" aria-hidden="true"></div>

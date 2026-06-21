@@ -46,9 +46,19 @@
 	});
 
 	$effect(() => {
-		if (session?.status === 'loading') {
+		if (!session) return;
+		if (session.status === 'loading') {
 			devLog('workspace', 'ensureScaffold triggered', { sessionId, status: session.status });
 			void ensureScaffold(sessionId);
+			void ensureSessionIntro(sessionId);
+			return;
+		}
+		if (
+			session.status === 'ready' &&
+			session.scaffolds.length > 0 &&
+			session.introStatus === 'idle'
+		) {
+			devLog('workspace', 'ensureSessionIntro for stored session', { sessionId });
 			void ensureSessionIntro(sessionId);
 		}
 	});

@@ -13,6 +13,20 @@ export function isIntroMessageId(id: string): boolean {
 	return id === INTRO_USER_MESSAGE_ID || id === INTRO_ASSISTANT_MESSAGE_ID;
 }
 
+/** Ask turns after the fixed intro slot (user + assistant follow-ups). */
+export function followUpAskMessages(messages: ChatMessage[]): ChatMessage[] {
+	return messages.filter((message) => !isIntroMessageId(message.id));
+}
+
+/** Replace intro slot only — preserves follow-up Ask turns from `current`. */
+export function mergeIntroSlotWithFollowUps(
+	introSlot: ChatMessage[],
+	current: ChatMessage[],
+): ChatMessage[] {
+	const intro = introSlot.filter((message) => isIntroMessageId(message.id));
+	return [...intro, ...followUpAskMessages(current)];
+}
+
 export function createIntroUserMessage(content: string): ChatMessage {
 	return {
 		id: INTRO_USER_MESSAGE_ID,

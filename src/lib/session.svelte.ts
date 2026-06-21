@@ -1,6 +1,5 @@
 import { browser } from '$app/environment';
 import type { ChatMessage } from '$lib/types/chat-message.js';
-import { isIntroMessageId } from '$lib/chat/message-actions.js';
 import type { Scaffold } from '$lib/types/scaffold';
 import { LESSON_SCAFFOLD_COUNT } from '$lib/types/scaffold';
 import { devLog } from '$lib/dev/log.js';
@@ -186,15 +185,6 @@ export function getSessionError(): string | null {
 	return errorMessage;
 }
 
-const IN_FLIGHT_ASK_STATUSES = new Set<ChatMessage['status']>(['pending', 'loading', 'streaming']);
-
-/** Ask messages storable in the session singleton (drops in-flight except session intro slot). */
-function storableAskMessages(messages: ChatMessage[]): ChatMessage[] {
-	return messages.filter(
-		(message) => isIntroMessageId(message.id) || !IN_FLIGHT_ASK_STATUSES.has(message.status),
-	);
-}
-
 function askMessagesSnapshot(messages: ChatMessage[]): string {
 	return messages
 		.map(
@@ -252,12 +242,22 @@ export function setAskMessages(sessionId: string, messages: ChatMessage[]): void
 	const session = getSessionById(sessionId);
 	if (!session) return;
 
-	const next = storableAskMessages(messages);
+	const next = messages;
 	if (askMessagesSnapshot(session.askMessages) === askMessagesSnapshot(next)) return;
 
 	sessions = sessions.map((entry) =>
-		entry.id === sessionId ? { ...entry, askMessages: next } : entry,
+		entry.id === sessionId ? { ...entry, askMessages: [...next] } : entry,
 	);
+}
+
+/** Atomic read-modify-write for the Ask thread (intro slot + follow-ups). */
+export function updateAskMessages(
+	sessionId: string,
+	updater: (current: ChatMessage[]) => ChatMessage[],
+): void {
+	const session = getSessionById(sessionId);
+	if (!session) return;
+	setAskMessages(sessionId, updater(session.askMessages));
 }
 
 // --- Session mutations (persist after each change) ---
