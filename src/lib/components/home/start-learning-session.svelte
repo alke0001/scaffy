@@ -23,9 +23,11 @@
 
 	import { getSessions } from '$lib/session.svelte.js';
 
-	import { messages } from '$lib/i18n/index.js';
+	import { language, messages } from '$lib/i18n/index.js';
 
 	const MIN_PROMPT_LENGTH = 10;
+
+	const examplePrompts = $derived(HOME_EXAMPLE_PROMPTS[$language]);
 
 	let prompt = $state('');
 
@@ -71,7 +73,9 @@
 			<div class="flex items-center gap-3">
 				<ScaffyLogo width={52} height={52} class="shrink-0" />
 
-				<span class="text-3xl tracking-tight text-foreground lowercase">{$messages['app.title']}</span>
+				<span class="text-3xl tracking-tight text-foreground lowercase"
+					>{$messages['app.title']}</span
+				>
 			</div>
 
 			<p class="max-w-md text-sm leading-relaxed text-muted-foreground">
@@ -84,10 +88,10 @@
 				<Card.Content class="p-4 sm:p-5">
 					<div class="mb-4 flex flex-col gap-1">
 						<p class="text-[0.6875rem] font-medium tracking-widest text-muted-foreground uppercase">
-						{$messages['home.newLearningSession']}
+							{$messages['home.newLearningSession']}
 						</p>
 						<p class="text-base leading-snug text-foreground">
-						{$messages['home.describePrompt']}
+							{$messages['home.describePrompt']}
 						</p>
 					</div>
 
@@ -103,7 +107,7 @@
 					class="rounded-full border-primary text-primary hover:bg-primary/10 hover:text-primary disabled:border-border disabled:text-muted-foreground disabled:opacity-100"
 					onclick={startSession}
 				>
-						{isStarting ? $messages['home.starting'] : $messages['home.startSession']}
+					{isStarting ? $messages['home.starting'] : $messages['home.startSession']}
 
 					<CornerDownLeft class="size-4" aria-hidden="true" />
 				</Button>
@@ -111,19 +115,22 @@
 
 			<p class="mt-3 text-center font-mono text-sm" aria-disabled={!hasSessions}>
 				<span class="font-semibold text-scaffy-magenta"
-					>{sessionCount} {sessionCount === 1 ? $messages['home.savedSession'] : $messages['home.savedSessions']}</span
+					>{sessionCount}
+					{sessionCount === 1
+						? $messages['home.savedSession']
+						: $messages['home.savedSessions']}</span
 				>
-						<span class="text-muted-foreground"> – {$messages['home.continueIn']} </span>
+				<span class="text-muted-foreground"> – {$messages['home.continueIn']} </span>
 				{#if hasSessions}
 					<button
 						type="button"
 						class="font-semibold text-foreground underline decoration-dotted underline-offset-4 hover:text-ring"
 						onclick={goToSessions}
 					>
-							{$messages['home.myLearningSessions']}
+						{$messages['home.myLearningSessions']}
 					</button>
-					{:else}
-						<span class="text-muted-foreground">{$messages['home.myLearningSessions']}</span>
+				{:else}
+					<span class="text-muted-foreground">{$messages['home.myLearningSessions']}</span>
 				{/if}
 			</p>
 		</div>
@@ -136,7 +143,7 @@
 				{$messages['home.tryOneOfThese']}
 			</h2>
 
-			<ChipGrid items={HOME_EXAMPLE_PROMPTS} onSelect={fillPrompt} />
+			<ChipGrid items={examplePrompts} onSelect={fillPrompt} />
 		</section>
 	</main>
 </ScrollArea>

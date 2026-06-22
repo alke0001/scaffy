@@ -30,6 +30,7 @@
 	import ReadOnlyHint from '$lib/components/editor/read-only-hint.svelte';
 	import { cn } from '$lib/utils.js';
 	import { devLog } from '$lib/dev/log.js';
+	import { messages } from '$lib/i18n/index.js';
 	import './monaco-editor.css';
 
 	let {
@@ -475,7 +476,9 @@
 
 	{#if activeStatus === 'error'}
 		<div class="scaffy-editor-actions flex shrink-0 flex-wrap gap-2 px-1 py-2">
-			<Button type="button" size="sm" onclick={handleRetryScaffold}>Erneut versuchen</Button>
+			<Button type="button" size="sm" onclick={handleRetryScaffold}
+				>{$messages['editor.retry']}</Button
+			>
 			<Button
 				type="button"
 				size="sm"
@@ -483,7 +486,7 @@
 				disabled={!fallbackAvailable}
 				onclick={handleLoadFallback}
 			>
-				Fallback laden
+				{$messages['editor.loadFallback']}
 			</Button>
 		</div>
 	{/if}

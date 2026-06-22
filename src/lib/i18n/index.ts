@@ -1,6 +1,11 @@
 import { browser } from '$app/environment';
 import { derived, get, writable } from 'svelte/store';
-import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE, TRANSLATIONS, type LanguageCode } from './translations.js';
+import {
+	AVAILABLE_LANGUAGES,
+	DEFAULT_LANGUAGE,
+	TRANSLATIONS,
+	type LanguageCode,
+} from './translations.js';
 
 const STORAGE_KEY = 'scaffy.language';
 
@@ -14,7 +19,10 @@ const initialLanguage = (() => {
 })();
 
 export const language = writable<LanguageCode>(initialLanguage);
-export const messages = derived(language, ($language) => TRANSLATIONS[$language] ?? TRANSLATIONS[DEFAULT_LANGUAGE]);
+export const messages = derived(
+	language,
+	($language) => TRANSLATIONS[$language] ?? TRANSLATIONS[DEFAULT_LANGUAGE],
+);
 
 language.subscribe((value) => {
 	if (!browser) return;

@@ -21,9 +21,9 @@
 	const isSession = $derived(Boolean(sessionId && pathname.startsWith('/session/')));
 
 	const sessionPromptLabel = $derived.by(() => {
-		if (!sessionId) return 'Session';
+		if (!sessionId) return $messages['app.session'];
 		const session = getSessionById(sessionId);
-		if (!session) return 'Session';
+		if (!session) return $messages['app.session'];
 		return session.prompt;
 	});
 
@@ -65,7 +65,9 @@
 		<span class="h-5 shrink-0 border-l border-scaffy-divider" aria-hidden="true"></span>
 
 		{#if isSessions}
-			<span class={cn(navItemClass, navActiveClass)} aria-current="page">{$messages['app.mySessions']}</span>
+			<span class={cn(navItemClass, navActiveClass)} aria-current="page"
+				>{$messages['app.mySessions']}</span
+			>
 		{:else}
 			<a href={resolve('/sessions')} class={cn(navItemClass, navLinkClass)} onclick={goSessions}>
 				{$messages['app.mySessions']}
@@ -88,13 +90,13 @@
 	</nav>
 
 	<div class="flex shrink-0 items-center gap-2">
-		{#each AVAILABLE_LANGUAGES as lang}
+		{#each AVAILABLE_LANGUAGES as lang (lang.code)}
 			<Button
 				type="button"
 				variant="ghost"
 				size="icon-sm"
 				class={cn(
-					'uppercase tracking-[0.16em] text-xs font-semibold',
+					'text-xs font-semibold tracking-[0.16em] uppercase',
 					lang.code === $language ? 'text-foreground' : 'text-muted-foreground',
 				)}
 				onclick={() => setLanguage(lang.code)}

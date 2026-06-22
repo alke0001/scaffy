@@ -3,13 +3,18 @@
 	import { resolve } from '$app/paths';
 	import { getSessions } from '$lib/session.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-import { messages } from '$lib/i18n/index.js';
+	import { messages } from '$lib/i18n/index.js';
 
-/**
- * Conditional route split: empty state lives here (instant on first visit).
- * The list UI loads only when sessions exist — promise is cached once, not per render.
- */
-const sessionCount = $derived(getSessions().length);
+	/**
+	 * Conditional route split: empty state lives here (instant on first visit).
+	 * The list UI loads only when sessions exist — promise is cached once, not per render.
+	 */
+	const sessionCount = $derived(getSessions().length);
+
+	let sessionsPageModulePromise: Promise<
+		typeof import('$lib/components/sessions/sessions-page.svelte')
+	> | null = null;
+
 	function loadSessionsPage() {
 		sessionsPageModulePromise ??= import('$lib/components/sessions/sessions-page.svelte');
 		return sessionsPageModulePromise;
@@ -45,7 +50,8 @@ const sessionCount = $derived(getSessions().length);
 			role="alert"
 		>
 			<p class="text-muted-foreground">{$messages['sessions.loadError']}</p>
-			<a href={resolve('/')} class="text-primary underline-offset-4 hover:underline">{$messages['sessions.backToHome']}</a
+			<a href={resolve('/')} class="text-primary underline-offset-4 hover:underline"
+				>{$messages['sessions.backToHome']}</a
 			>
 		</div>
 	{/await}

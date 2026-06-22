@@ -28,13 +28,12 @@
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import Send from '@lucide/svelte/icons/send';
 	import AskChatHeader from '$lib/components/chat/ask-chat-header.svelte';
+	import { messages as i18nMessages } from '$lib/i18n/index.js';
 
 	const MIN_PROMPT_LENGTH = 10;
-	const ASK_PLACEHOLDER = 'Ask scaffy a question about the code (min. 10 characters)';
-	const ASK_MIN_LENGTH_TOOLTIP =
-		'Enter at least 10 characters to ask Scaffy a question. We skip very short prompts to avoid unnecessary AI calls and reduce environmental impact.';
-	const LEARN_PLACEHOLDER =
-		'e.g. A login form with email validation and a forgot-password link\n(min. 10 characters)';
+	const ASK_PLACEHOLDER = $derived($i18nMessages['chat.askPlaceholder']);
+	const ASK_MIN_LENGTH_TOOLTIP = $derived($i18nMessages['chat.askMinLengthTooltip']);
+	const LEARN_PLACEHOLDER = $derived($i18nMessages['chat.learnPlaceholder']);
 	const SESSION_HINT = 'Ask questions here anytime while you work through the lesson.';
 	const INTRO_CTA_READY = 'Got it — start lesson';
 	const INTRO_CTA_WAIT_SCAFFOLD = 'Generating lesson…';

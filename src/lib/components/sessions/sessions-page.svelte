@@ -92,7 +92,7 @@
 					>
 						{#if isLatest}
 							<span class="text-xs font-medium text-ring">
-								continue with latest learning session
+								{$messages['sessions.latestSession']}
 							</span>
 						{/if}
 
@@ -120,7 +120,7 @@
 					<button
 						type="button"
 						class="absolute top-2 right-2 z-10 rounded-full p-1.5 opacity-70 transition hover:bg-foreground/10 hover:opacity-100 active:translate-y-px active:opacity-100"
-						aria-label="Delete session"
+						aria-label={$messages['session.deleteSession']}
 						onclick={(event) => handleDelete(event, session.id)}
 					>
 						<Trash2 class="size-4" aria-hidden="true" />
@@ -134,7 +134,7 @@
 					class="scaffy-dashed-ring-surface scaffy-dashed-ring-surface--hover flex h-full w-full items-center justify-center p-4 text-sm font-medium text-ring"
 					onclick={goHome}
 				>
-					Start new session
+					{$messages['session.startNewSession']}
 				</button>
 			</li>
 		</ul>
