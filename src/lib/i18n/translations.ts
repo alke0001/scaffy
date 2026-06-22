@@ -85,9 +85,51 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 			'Enter at least 10 characters to ask Scaffy a question. We skip very short prompts to avoid unnecessary AI calls and reduce environmental impact.',
 		'chat.learnPlaceholder':
 			'e.g. A login form with email validation and a forgot-password link\n(min. 10 characters)',
+		'chat.sessionHint':
+			'Ask questions here anytime while you work through the lesson.',
 
+		'chat.introCtaReady':
+			'Got it — start lesson',
+
+		'chat.introCtaWaitScaffold':
+			'Generating lesson…',
+
+		'chat.introCtaWaitIntro':
+			'Reading concept preview…',
+
+		'chat.introCtaScaffoldTooltip':
+			'Scaffy is still preparing your lesson on the left. When it is ready, the exercises appear there and you can start here.',
 		'editor.retry': 'Try again',
 		'editor.loadFallback': 'Load fallback',
+		'editor.loadingTitle': 'scaffy · generating lesson',
+		'editor.loadingHint1':
+			'Read the concept preview in the Scaffy tutor panel on the right. 👉',
+		'editor.loadingHint2':
+			'When the preview is ready, click "Got it — start lesson" in the tutor panel.',
+		'editor.lessonReadyTitle':
+			'scaffy · lesson ready',
+		'editor.lessonReadyHint1':
+			'Read the concept preview in the Scaffy tutor panel on the right. 👉',
+		'editor.lessonReadyHint2':
+			'Click "Got it — start lesson" there when you are ready.',
+		'editor.errorRetryHint':
+			'Try again or load the fallback version below.',
+		'editor.loadingVerb1':
+			'Waking up Scaffy...',
+		'editor.loadingVerb2':
+			'Rubber-ducking the architecture...',
+		'editor.loadingVerb3':
+			'Turning tutorials into real skills...',
+		'editor.loadingVerb4':
+			'Caramelizing onions...',
+		'editor.loadingVerb5':
+			'Translating coffee into code...',
+		'editor.loadingVerb6':
+			'Helping variables find their purpose...',
+		'editor.loadingVerb7':
+			'Preparing emotional support for TypeScript...',
+		'tutor.title': 'scaffy tutor',
+		'tutor.subtitle': 'Guides you to the answer',
 	},
 	de: {
 		'app.title': 'scaffy',
@@ -167,8 +209,48 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 			'Gib mindestens 10 Zeichen ein, um Scaffy eine Frage zu stellen. Sehr kurze Eingaben überspringen wir, um unnötige KI-Aufrufe zu vermeiden und die Umweltbelastung zu reduzieren.',
 		'chat.learnPlaceholder':
 			'z. B. Ein Login-Formular mit E-Mail-Validierung und einem Link zum Passwort-Zurücksetzen\n(mind. 10 Zeichen)',
+		'chat.sessionHint':
+			'Stelle hier jederzeit Fragen, während du die Lektion durcharbeitest.',
 
+		'chat.introCtaReady':
+			'Verstanden — Lektion starten',
+
+		'chat.introCtaWaitScaffold':
+			'Lektion wird erstellt…',
+
+		'chat.introCtaWaitIntro':
+			'Konzeptvorschau wird gelesen…',
+
+		'chat.introCtaScaffoldTooltip':
+			'Scaffy bereitet deine Lektion links noch vor. Sobald sie bereit ist, erscheinen dort die Übungen und du kannst hier starten.',
 		'editor.retry': 'Erneut versuchen',
 		'editor.loadFallback': 'Fallback laden',
+		'editor.loadingVerb1': 'Scaffy wird aufgeweckt...',
+		'editor.loadingVerb2': 'Architektur wird mit der Gummiente besprochen...',
+		'editor.loadingVerb3': 'Tutorials werden in echte Fähigkeiten verwandelt...',
+		'editor.loadingVerb4': 'Zwiebeln werden karamellisiert...',
+		'editor.loadingVerb5': 'Kaffee wird in Code übersetzt...',
+		'editor.loadingVerb6': 'Variablen finden ihren Sinn...',
+		'editor.loadingVerb7': 'Emotionale Unterstützung für TypeScript wird vorbereitet...',
+		'editor.loadingTitle': 'scaffy · lektion wird erstellt',
+		'editor.loadingHint1':
+			'Lies die Konzeptvorschau im Scaffy-Tutorbereich rechts. 👉',
+
+		'editor.loadingHint2':
+			'Sobald die Vorschau bereit ist, klicke dort auf „Verstanden — Lektion starten“.',
+
+		'editor.lessonReadyTitle':
+			'scaffy · lektion bereit',
+
+		'editor.lessonReadyHint1':
+			'Lies die Konzeptvorschau im Scaffy-Tutorbereich rechts. 👉',
+
+		'editor.lessonReadyHint2':
+			'Klicke dort auf „Verstanden — Lektion starten“, wenn du bereit bist.',
+
+		'editor.errorRetryHint':
+			'Versuche es erneut oder lade unten die Fallback-Version.',
+		'tutor.title': 'scaffy tutor',
+		'tutor.subtitle': 'Führt dich zur Antwort',
 	},
 };

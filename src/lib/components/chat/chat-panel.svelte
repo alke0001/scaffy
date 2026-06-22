@@ -34,13 +34,12 @@
 	const ASK_PLACEHOLDER = $derived($i18nMessages['chat.askPlaceholder']);
 	const ASK_MIN_LENGTH_TOOLTIP = $derived($i18nMessages['chat.askMinLengthTooltip']);
 	const LEARN_PLACEHOLDER = $derived($i18nMessages['chat.learnPlaceholder']);
-	const SESSION_HINT = 'Ask questions here anytime while you work through the lesson.';
-	const INTRO_CTA_READY = 'Got it — start lesson';
-	const INTRO_CTA_WAIT_SCAFFOLD = 'Generating lesson…';
-	const INTRO_CTA_WAIT_INTRO = 'Reading concept preview…';
-	const INTRO_CTA_SCAFFOLD_TOOLTIP =
-		'Scaffy is still preparing your lesson on the left. When it is ready, the exercises appear there and you can start here.';
-
+	const SESSION_HINT = $derived($i18nMessages['chat.sessionHint']);
+	const INTRO_CTA_READY = $derived($i18nMessages['chat.introCtaReady']);
+	const INTRO_CTA_WAIT_SCAFFOLD = $derived($i18nMessages['chat.introCtaWaitScaffold']);
+	const INTRO_CTA_WAIT_INTRO = $derived($i18nMessages['chat.introCtaWaitIntro']);
+	const INTRO_CTA_SCAFFOLD_TOOLTIP = $derived($i18nMessages['chat.introCtaScaffoldTooltip']);
+	
 	interface Props {
 		mode: ChatMode;
 		sessionId?: string;
