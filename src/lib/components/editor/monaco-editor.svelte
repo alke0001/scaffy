@@ -19,9 +19,11 @@
 		LoadingTypewriter,
 		SPINNER_FRAMES,
 		SPINNER_FRAME_MS,
-		TYPEWRITER_CHAR_MS,
 	} from '$lib/components/editor/scaffold-loading-content.js';
-	import { buildErrorContent } from '$lib/components/editor/scaffold-loading-content.js';
+	import {
+		buildErrorContent,
+		buildLessonReadyWaitContent,
+	} from '$lib/components/editor/scaffold-loading-content.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { KnowledgeViewZoneController } from '$lib/components/editor/monaco-knowledge-view-zone.js';
 	import { KnowledgeZoneBridge } from '$lib/components/editor/knowledge-zone-bridge.svelte.js';
@@ -50,9 +52,12 @@
 	const viewZoneController = new KnowledgeViewZoneController(zoneBridge);
 
 	const boundSession = $derived(sessionId ? getSessionById(sessionId) : getActiveSession());
+	const storeSessionId = $derived(boundSession?.id ?? null);
 	const activeStatus = $derived(boundSession?.status ?? 'idle');
 	const sessionError = $derived(boundSession?.errorMessage ?? null);
 	const scaffolds = $derived(boundSession?.scaffolds ?? []);
+	const sessionCompleted = $derived(boundSession?.completed ?? false);
+	const lessonStarted = $derived(boundSession?.lessonStarted ?? false);
 	const fallbackAvailable = $derived(isFallbackScaffoldAvailable());
 	const isEditorEditable = $derived(
 		Boolean(boundSession?.completed && activeStatus !== 'loading' && activeStatus !== 'idle'),
@@ -62,8 +67,6 @@
 	let currentQuestion = $state<KnowledgeCheck | null>(null);
 	let selectedOption = $state<string | null>(null);
 	let showLearningCard = $state(false);
-	let loadingTypedVerb = $state('');
-	let loadingSpinnerFrame = $state('⠋');
 	let errorDecorationIds = $state<string[]>([]);
 	let lastErrorMessage = $state<string | null>(null);
 	let monacoApi = $state<typeof Monaco | null>(null);
@@ -208,6 +211,15 @@
 		}
 	}
 
+	function showLessonReadyWait() {
+		if (!editor || !monacoApi) return;
+		loadingAnimator.exitLoadingMode();
+		clearErrorDecorations();
+		resetEditorState();
+		ensureCodeLanguage();
+		editor.setValue(buildLessonReadyWaitContent());
+	}
+
 	function ensureCodeLanguage() {
 		if (!editor || !monacoApi) return;
 		setCodeLanguage(editor, monacoApi);
@@ -252,9 +264,9 @@
 	$effect(() => {
 		if (!editorReady || !editor) return;
 
-		const sessionIdForLog = boundSession?.id ?? sessionId ?? null;
+		const sessionIdForLog = storeSessionId ?? sessionId ?? null;
 
-		if (!boundSession || activeStatus === 'idle') {
+		if (!storeSessionId || activeStatus === 'idle') {
 			devLog('monaco', 'effect → idle (clear editor)', {
 				sessionId: sessionIdForLog,
 				activeStatus,
@@ -268,19 +280,20 @@
 		}
 
 		if (activeStatus === 'loading') {
-			devLog('monaco', 'effect → loading', {
-				sessionId: sessionIdForLog,
-				sessionChanged: currentSessionId !== boundSession.id,
-				loadingMode: loadingAnimator.isInLoadingMode(),
-			});
-			const sessionChanged = currentSessionId !== boundSession.id;
+			const sessionChanged = currentSessionId !== storeSessionId;
 			if (sessionChanged || !loadingAnimator.isInLoadingMode()) {
+				devLog('monaco', 'effect → loading', {
+					sessionId: sessionIdForLog,
+					sessionChanged,
+				});
 				loadingAnimator.enterLoadingMode();
 			}
-			clearErrorDecorations();
-			lastErrorMessage = null;
-			resetEditorState();
-			currentSessionId = boundSession.id;
+			if (sessionChanged) {
+				clearErrorDecorations();
+				lastErrorMessage = null;
+				resetEditorState();
+				currentSessionId = storeSessionId;
+			}
 			return;
 		}
 
@@ -288,18 +301,18 @@
 			devLog('monaco', 'effect → error', { sessionId: sessionIdForLog, sessionError });
 			loadingAnimator.exitLoadingMode();
 			const message = sessionError ?? 'Request failed.';
-			if (lastErrorMessage !== message || currentSessionId !== boundSession.id) {
+			if (lastErrorMessage !== message || currentSessionId !== storeSessionId) {
 				showErrorInEditor(message);
 				lastErrorMessage = message;
 			}
-			currentSessionId = boundSession.id;
+			currentSessionId = storeSessionId;
 			return;
 		}
 
 		devLog('monaco', 'effect → ready', {
 			sessionId: sessionIdForLog,
 			scaffoldCount: scaffolds.length,
-			completed: boundSession.completed,
+			completed: sessionCompleted,
 		});
 
 		lastErrorMessage = null;
@@ -307,7 +320,7 @@
 		loadingAnimator.exitLoadingMode();
 		clearErrorDecorations();
 
-		if (boundSession.completed) {
+		if (sessionCompleted) {
 			const lastCode = scaffolds.at(-1)?.codeSnippet ?? '';
 			ensureCodeLanguage();
 			editor.setValue(lastCode);
@@ -317,13 +330,23 @@
 			showLearningCard = false;
 			zoneBridge.reset();
 			viewZoneController.refresh();
-			currentSessionId = boundSession.id;
+			currentSessionId = storeSessionId;
 			return;
 		}
 
-		const sessionSwitched = boundSession.id !== currentSessionId;
+		if (!lessonStarted && scaffolds.length > 0) {
+			const sessionSwitched = storeSessionId !== currentSessionId;
+			if (sessionSwitched) {
+				currentSessionId = storeSessionId;
+			}
+			showLessonReadyWait();
+			currentSessionId = storeSessionId;
+			return;
+		}
+
+		const sessionSwitched = storeSessionId !== currentSessionId;
 		if (sessionSwitched) {
-			currentSessionId = boundSession.id;
+			currentSessionId = storeSessionId;
 			resetEditorState();
 		}
 
@@ -335,38 +358,32 @@
 	});
 
 	$effect(() => {
-		if (!editorReady || activeStatus !== 'loading') {
-			loadingTypedVerb = '';
-			loadingSpinnerFrame = SPINNER_FRAMES[0];
-			return;
-		}
+		if (!editorReady || activeStatus !== 'loading') return;
 
 		const typewriter = new LoadingTypewriter();
 		let frameIndex = 0;
+		let lastFrameAt = 0;
+		let rafId = 0;
 
-		const paint = () => {
-			const frame = SPINNER_FRAMES[frameIndex] ?? SPINNER_FRAMES[0];
-			const typed = typewriter.getTypedText();
-			loadingSpinnerFrame = frame;
-			loadingTypedVerb = typed;
-			loadingAnimator.renderLoadingDisplay(frame, typed);
+		const tick = (now: number) => {
+			typewriter.advance(now);
+
+			if (!lastFrameAt || now - lastFrameAt >= SPINNER_FRAME_MS) {
+				frameIndex = (frameIndex + 1) % SPINNER_FRAMES.length;
+				lastFrameAt = now;
+			}
+
+			loadingAnimator.renderLoadingDisplay(
+				SPINNER_FRAMES[frameIndex] ?? SPINNER_FRAMES[0],
+				typewriter.getTypedText(),
+			);
+			rafId = requestAnimationFrame(tick);
 		};
 
-		paint();
-
-		const spinnerTimer = setInterval(() => {
-			frameIndex = (frameIndex + 1) % SPINNER_FRAMES.length;
-			paint();
-		}, SPINNER_FRAME_MS);
-
-		const typewriterTimer = setInterval(() => {
-			typewriter.tick();
-			paint();
-		}, TYPEWRITER_CHAR_MS);
+		rafId = requestAnimationFrame(tick);
 
 		return () => {
-			clearInterval(spinnerTimer);
-			clearInterval(typewriterTimer);
+			cancelAnimationFrame(rafId);
 		};
 	});
 
@@ -454,18 +471,6 @@
 <div class={cn('scaffy-monaco-editor flex min-h-0 flex-1 flex-col', className)}>
 	<div class="editor-wrapper relative min-h-0 flex-1">
 		<div bind:this={editorContainer} class="editor h-full min-h-0 w-full"></div>
-		{#if activeStatus === 'loading'}
-			<div class="scaffy-editor-loading" aria-live="polite">
-				<p class="scaffy-editor-loading__label">scaffy · generating lesson</p>
-				<p class="scaffy-editor-loading__status">
-					<span class="scaffy-editor-loading__spinner">{loadingSpinnerFrame}</span>
-					<span class="scaffy-editor-loading__verb">
-						{loadingTypedVerb}<span class="scaffy-editor-loading__cursor" aria-hidden="true">▋</span
-						>
-					</span>
-				</p>
-			</div>
-		{/if}
 	</div>
 
 	{#if activeStatus === 'error'}
@@ -482,10 +487,6 @@
 			</Button>
 		</div>
 	{/if}
-
-	{#if !currentQuestion && scaffolds.length > 0 && currentIndex < scaffolds.length}
-		<button type="button" class="dev-continue shrink-0" onclick={loadNextScaffold}>Weiter</button>
-	{/if}
 </div>
 
 {#if readOnlyHint}
@@ -499,76 +500,5 @@
 
 	.editor {
 		overflow: hidden;
-	}
-
-	.scaffy-editor-loading {
-		position: absolute;
-		inset: 0;
-		z-index: 3;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 0.75rem;
-		padding: 1.5rem;
-		border-radius: 0.75rem;
-		background: color-mix(in oklch, var(--background) 88%, transparent);
-		pointer-events: none;
-		text-align: center;
-	}
-
-	.scaffy-editor-loading__label {
-		margin: 0;
-		font-size: 0.8125rem;
-		font-style: italic;
-		color: var(--muted-foreground);
-	}
-
-	.scaffy-editor-loading__status {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: center;
-		gap: 0.5rem 0.75rem;
-		margin: 0;
-		max-width: 28rem;
-		font-family: var(--font-mono, ui-monospace, monospace);
-		font-size: 0.9375rem;
-		line-height: 1.4;
-	}
-
-	.scaffy-editor-loading__spinner {
-		color: var(--primary);
-		font-weight: 600;
-	}
-
-	.scaffy-editor-loading__verb {
-		color: var(--scaffy-cyan);
-	}
-
-	.scaffy-editor-loading__cursor {
-		color: var(--scaffy-cyan);
-		animation: scaffy-loading-cursor-blink 1s step-end infinite;
-	}
-
-	@keyframes scaffy-loading-cursor-blink {
-		50% {
-			opacity: 0;
-		}
-	}
-
-	.dev-continue {
-		padding: 0.75rem 1rem;
-		border: none;
-		border-radius: 8px;
-		background: var(--primary);
-		color: var(--primary-foreground);
-		cursor: pointer;
-		font-weight: 600;
-	}
-
-	.dev-continue:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
 	}
 </style>

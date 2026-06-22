@@ -19,6 +19,11 @@ type ChatRequestBody = {
 	history?: { role: 'user' | 'assistant'; content: string }[];
 };
 
+type SessionIntroRequestBody = {
+	prompt: string;
+	model?: string;
+};
+
 function parseSseLine(line: string): ChatStreamEvent | null {
 	if (!line.startsWith('data: ')) return null;
 	const payload = line.slice(6).trim();
@@ -30,12 +35,13 @@ function parseSseLine(line: string): ChatStreamEvent | null {
 	}
 }
 
-export async function streamChatReply(
-	body: ChatRequestBody,
+export async function streamSsePost(
+	path: string,
+	body: unknown,
 	callbacks: ChatStreamCallbacks,
 	signal?: AbortSignal,
 ): Promise<void> {
-	const res = await fetch('/api/chat', {
+	const res = await fetch(path, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(body),
@@ -96,4 +102,20 @@ export async function streamChatReply(
 	} finally {
 		reader.releaseLock();
 	}
+}
+
+export async function streamChatReply(
+	body: ChatRequestBody,
+	callbacks: ChatStreamCallbacks,
+	signal?: AbortSignal,
+): Promise<void> {
+	return streamSsePost('/api/chat', body, callbacks, signal);
+}
+
+export async function streamSessionIntro(
+	body: SessionIntroRequestBody,
+	callbacks: ChatStreamCallbacks,
+	signal?: AbortSignal,
+): Promise<void> {
+	return streamSsePost('/api/session-intro', body, callbacks, signal);
 }

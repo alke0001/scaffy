@@ -1,7 +1,9 @@
 import type * as Monaco from 'monaco-editor';
 import {
-	buildLoadingContent,
-	LOADING_SPINNER_LINE,
+	buildLoadingCommentBlock,
+	LOADING_CURSOR,
+	LOADING_SPINNER_AFTER_LINE,
+	LOADING_SPINNER_ZONE_HEIGHT_PX,
 } from '$lib/components/editor/scaffold-loading-content.js';
 import { devLog } from '$lib/dev/log.js';
 
@@ -17,11 +19,90 @@ export function setCodeLanguage(
 	}
 }
 
-/** Renders scaffold loading text inside the Monaco editor buffer (no timers — driven by the view). */
+/**
+ * Spinner row as Monaco viewZone — same integration as Learning Card (`KnowledgeViewZoneController`).
+ * Static HTML comments live in the model; animation updates DOM only (no model edits).
+ */
+class LoadingSpinnerViewZone {
+	private zoneId: string | null = null;
+	private domNode: HTMLDivElement | null = null;
+	private spinnerSpan: HTMLSpanElement | null = null;
+	private verbSpan: HTMLSpanElement | null = null;
+
+	private ensureDomNode(): HTMLDivElement {
+		if (this.domNode) return this.domNode;
+
+		const root = document.createElement('div');
+		root.className = 'scaffy-loading-spinner-view-zone';
+
+		const spinnerSpan = document.createElement('span');
+		spinnerSpan.className = 'scaffy-loading-spinner';
+
+		const verbSpan = document.createElement('span');
+		verbSpan.className = 'scaffy-loading-verb';
+
+		const cursorSpan = document.createElement('span');
+		cursorSpan.className = 'scaffy-loading-cursor';
+		cursorSpan.textContent = LOADING_CURSOR;
+		cursorSpan.setAttribute('aria-hidden', 'true');
+
+		root.append(spinnerSpan, verbSpan, cursorSpan);
+		this.domNode = root;
+		this.spinnerSpan = spinnerSpan;
+		this.verbSpan = verbSpan;
+		return root;
+	}
+
+	mount(editor: Monaco.editor.IStandaloneCodeEditor): void {
+		if (this.zoneId) return;
+
+		const domNode = this.ensureDomNode();
+
+		editor.changeViewZones((accessor) => {
+			this.zoneId = accessor.addZone({
+				afterLineNumber: LOADING_SPINNER_AFTER_LINE,
+				heightInPx: LOADING_SPINNER_ZONE_HEIGHT_PX,
+				domNode,
+				suppressMouseDown: true,
+			});
+		});
+	}
+
+	unmount(editor: Monaco.editor.IStandaloneCodeEditor): void {
+		if (!this.zoneId) return;
+
+		const zoneId = this.zoneId;
+		editor.changeViewZones((accessor) => {
+			accessor.removeZone(zoneId);
+		});
+		this.zoneId = null;
+	}
+
+	dispose(): void {
+		this.domNode = null;
+		this.spinnerSpan = null;
+		this.verbSpan = null;
+	}
+
+	update(spinnerFrame: string, typedVerb: string): void {
+		if (!this.spinnerSpan || !this.verbSpan) return;
+
+		if (this.spinnerSpan.textContent !== spinnerFrame) {
+			this.spinnerSpan.textContent = spinnerFrame;
+		}
+
+		const verbText = typedVerb ? `  ${typedVerb}` : '';
+		if (this.verbSpan.textContent !== verbText) {
+			this.verbSpan.textContent = verbText;
+		}
+	}
+}
+
+/** Static comment block in Monaco; spinner animates via viewZone only. */
 export class ScaffoldLoadingAnimator {
 	private editor: Monaco.editor.IStandaloneCodeEditor | null = null;
 	private monaco: typeof Monaco | null = null;
-	private decorationIds: string[] = [];
+	private spinnerZone: LoadingSpinnerViewZone | null = null;
 	private loadingMode = false;
 
 	attach(editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco): void {
@@ -31,29 +112,41 @@ export class ScaffoldLoadingAnimator {
 	}
 
 	enterLoadingMode(): void {
-		if (!this.editor || this.loadingMode) return;
+		if (!this.editor || !this.monaco || this.loadingMode) return;
 		this.loadingMode = true;
 		devLog('loading', 'enter loading mode');
 
-		const model = this.editor.getModel();
-		if (model && this.monaco) {
-			this.monaco.editor.setModelLanguage(model, 'plaintext');
-		}
+		const editor = this.editor;
+		const monaco = this.monaco;
 
-		this.editor.updateOptions({
+		setCodeLanguage(editor, monaco);
+
+		editor.updateOptions({
 			cursorStyle: 'line-thin',
 			renderLineHighlight: 'none',
 		});
 
-		this.renderLoadingDisplay('⠋', '');
+		editor.setValue(buildLoadingCommentBlock());
+
+		this.spinnerZone = new LoadingSpinnerViewZone();
+		this.spinnerZone.mount(editor);
+		this.spinnerZone.update('⠋', '');
 	}
 
 	exitLoadingMode(): void {
 		if (!this.loadingMode) return;
 		devLog('loading', 'exit loading mode');
 		this.loadingMode = false;
-		this.clearDecorations();
-		this.restoreLanguage();
+
+		if (this.editor && this.spinnerZone) {
+			this.spinnerZone.unmount(this.editor);
+			this.spinnerZone.dispose();
+		}
+		this.spinnerZone = null;
+
+		if (this.editor && this.monaco) {
+			setCodeLanguage(this.editor, this.monaco);
+		}
 	}
 
 	isInLoadingMode(): boolean {
@@ -67,94 +160,7 @@ export class ScaffoldLoadingAnimator {
 	}
 
 	renderLoadingDisplay(spinnerFrame: string, typedVerb: string): void {
-		this.paint(spinnerFrame, typedVerb);
-	}
-
-	private restoreLanguage(): void {
-		const editor = this.editor;
-		if (editor && this.monaco) {
-			setCodeLanguage(editor, this.monaco);
-		}
-	}
-
-	private clearDecorations(): void {
-		if (!this.editor || this.decorationIds.length === 0) return;
-		this.editor.deltaDecorations(this.decorationIds, []);
-		this.decorationIds = [];
-	}
-
-	private paint(spinnerFrame: string, typedVerb: string): void {
-		const editor = this.editor;
-		if (!editor) return;
-
-		const content = buildLoadingContent(spinnerFrame, typedVerb);
-
-		const model = editor.getModel();
-		if (!model) {
-			editor.setValue(content);
-		} else {
-			const fullRange = model.getFullModelRange();
-			editor.executeEdits('scaffy-loading', [{ range: fullRange, text: content }]);
-		}
-
-		this.applyDecorations(spinnerFrame, typedVerb);
-	}
-
-	private applyDecorations(frame: string, typedVerb: string): void {
-		const editor = this.editor;
-		if (!editor) return;
-
-		const line = LOADING_SPINNER_LINE;
-		const spinnerStart = 1;
-		const spinnerEnd = spinnerStart + frame.length;
-		const verbStart = spinnerEnd + 2;
-		const verbEnd = verbStart + typedVerb.length;
-		const cursorColumn = verbEnd;
-
-		const decorations: Monaco.editor.IModelDeltaDecoration[] = [
-			{
-				range: {
-					startLineNumber: 1,
-					startColumn: 1,
-					endLineNumber: 1,
-					endColumn: 200,
-				},
-				options: { inlineClassName: 'scaffy-loading-label' },
-			},
-			{
-				range: {
-					startLineNumber: line,
-					startColumn: spinnerStart,
-					endLineNumber: line,
-					endColumn: spinnerEnd + 1,
-				},
-				options: { inlineClassName: 'scaffy-loading-spinner' },
-			},
-		];
-
-		if (typedVerb.length > 0) {
-			decorations.push({
-				range: {
-					startLineNumber: line,
-					startColumn: verbStart,
-					endLineNumber: line,
-					endColumn: verbEnd + 1,
-				},
-				options: { inlineClassName: 'scaffy-loading-verb' },
-			});
-		}
-
-		decorations.push({
-			range: {
-				startLineNumber: line,
-				startColumn: cursorColumn,
-				endLineNumber: line,
-				endColumn: cursorColumn + 1,
-			},
-			options: { inlineClassName: 'scaffy-loading-cursor' },
-		});
-
-		this.decorationIds = editor.deltaDecorations(this.decorationIds, decorations);
+		this.spinnerZone?.update(spinnerFrame, typedVerb);
 	}
 }
 
@@ -165,16 +171,12 @@ export function applyErrorDecorations(
 ): string[] {
 	const model = editor.getModel();
 	if (model) {
-		monaco.editor.setModelLanguage(model, 'plaintext');
+		setCodeLanguage(editor, monaco);
 	}
 	editor.setValue(content);
 	return editor.deltaDecorations(
 		[],
 		[
-			{
-				range: { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 200 },
-				options: { inlineClassName: 'scaffy-loading-label' },
-			},
 			{
 				range: { startLineNumber: 3, startColumn: 1, endLineNumber: 3, endColumn: 2 },
 				options: { inlineClassName: 'scaffy-error-mark' },

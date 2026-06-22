@@ -7,6 +7,7 @@
 	import SessionTabs from '$lib/components/session/session-tabs.svelte';
 	import * as Resizable from '$lib/components/ui/resizable/index.js';
 	import { ensureScaffold } from '$lib/learn/request-scaffold.js';
+	import { ensureSessionIntro } from '$lib/learn/request-session-intro.js';
 	import { devLog } from '$lib/dev/log.js';
 	import {
 		getActiveSessionId,
@@ -45,9 +46,20 @@
 	});
 
 	$effect(() => {
-		if (session?.status === 'loading') {
+		if (!session) return;
+		if (session.status === 'loading') {
 			devLog('workspace', 'ensureScaffold triggered', { sessionId, status: session.status });
 			void ensureScaffold(sessionId);
+			void ensureSessionIntro(sessionId);
+			return;
+		}
+		if (
+			session.status === 'ready' &&
+			session.scaffolds.length > 0 &&
+			session.introStatus === 'idle'
+		) {
+			devLog('workspace', 'ensureSessionIntro for stored session', { sessionId });
+			void ensureSessionIntro(sessionId);
 		}
 	});
 
@@ -88,7 +100,7 @@
 				<Resizable.Pane defaultSize={40} minSize={20} class="min-h-0">
 					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background p-2">
 						{#if desktopLayout}
-							<ChatPanel mode="ask" {sessionId} />
+							<ChatPanel mode="ask" {sessionId} sessionIntro />
 						{/if}
 					</div>
 				</Resizable.Pane>
@@ -106,7 +118,7 @@
 			</section>
 			<div class="flex min-h-0 flex-2 flex-col overflow-hidden border-t border-scaffy-divider p-2">
 				{#if !desktopLayout}
-					<ChatPanel mode="ask" {sessionId} />
+					<ChatPanel mode="ask" {sessionId} sessionIntro />
 				{/if}
 			</div>
 		</div>

@@ -7,7 +7,9 @@ import {
 	setScaffolds,
 	startScaffoldRequest,
 	getSessionById,
+	resetLessonStarted,
 } from '$lib/session.svelte.js';
+import { regenerateSessionIntro } from '$lib/learn/request-session-intro.js';
 import { validateCumulativeChain } from '$lib/scaffold/validate-cumulative.js';
 import { LESSON_SCAFFOLD_COUNT, type StructuredScaffoldOutput } from '$lib/types/scaffold.js';
 
@@ -129,4 +131,6 @@ export function loadFallbackScaffolds(sessionId: string): void {
 		return;
 	}
 	setScaffolds(fallbackData.scaffolds, sessionId);
+	resetLessonStarted(sessionId);
+	void regenerateSessionIntro(sessionId);
 }

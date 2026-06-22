@@ -37,6 +37,8 @@ import { devLog } from '$lib/dev/log.js';
 
 export type SessionStatus = 'idle' | 'loading' | 'ready' | 'error';
 
+export type SessionIntroStatus = 'idle' | 'streaming' | 'complete' | 'error';
+
 /** One learning session — core fields persisted in localStorage as part of `sessions[]`. */
 export type SessionRecord = {
 	id: string;
@@ -48,9 +50,13 @@ export type SessionRecord = {
 	completed: boolean;
 	/** Ask-mode thread — in-memory only (stripped before localStorage). */
 	askMessages: ChatMessage[];
+	/** Session intro stream lifecycle — in-memory only. */
+	introStatus: SessionIntroStatus;
+	/** User acknowledged intro and started the gated lesson — in-memory only. */
+	lessonStarted: boolean;
 };
 
-type PersistedSessionRecord = Omit<SessionRecord, 'askMessages'>;
+type PersistedSessionRecord = Omit<SessionRecord, 'askMessages' | 'introStatus' | 'lessonStarted'>;
 
 const STORAGE_KEY = 'scaffy.sessions';
 const ACTIVE_SESSION_KEY = 'scaffy.activeSessionId';
@@ -73,8 +79,15 @@ function createSessionId() {
 
 // --- Persistence (localStorage) ---
 
-function toPersistedSession({ askMessages, ...rest }: SessionRecord): PersistedSessionRecord {
+function toPersistedSession({
+	askMessages,
+	introStatus,
+	lessonStarted,
+	...rest
+}: SessionRecord): PersistedSessionRecord {
 	void askMessages;
+	void introStatus;
+	void lessonStarted;
 	return rest;
 }
 
@@ -113,6 +126,9 @@ function restoreSessions() {
 						errorMessage: item.errorMessage ?? null,
 						completed: item.completed ?? false,
 						askMessages: [],
+						introStatus: 'idle' as const,
+						// Sessions restored from storage already have scaffolds — skip intro gate.
+						lessonStarted: scaffolds.length > 0 && status === 'ready',
 					};
 				});
 		}
@@ -169,13 +185,6 @@ export function getSessionError(): string | null {
 	return errorMessage;
 }
 
-const IN_FLIGHT_ASK_STATUSES = new Set<ChatMessage['status']>(['pending', 'loading', 'streaming']);
-
-/** Ask messages storable in the session singleton (drops in-flight assistant placeholders). */
-function storableAskMessages(messages: ChatMessage[]): ChatMessage[] {
-	return messages.filter((message) => !IN_FLIGHT_ASK_STATUSES.has(message.status));
-}
-
 function askMessagesSnapshot(messages: ChatMessage[]): string {
 	return messages
 		.map(
@@ -190,16 +199,65 @@ export function getAskMessages(sessionId: string): ChatMessage[] {
 }
 
 /** In-memory only — not written to localStorage. */
+export function getIntroStatus(sessionId: string): SessionIntroStatus {
+	return getSessionById(sessionId)?.introStatus ?? 'idle';
+}
+
+export function hasLessonStarted(sessionId: string): boolean {
+	return getSessionById(sessionId)?.lessonStarted ?? false;
+}
+
+export function canStartLesson(sessionId: string): boolean {
+	const session = getSessionById(sessionId);
+	if (!session) return false;
+	if (session.status !== 'ready' || session.scaffolds.length === 0) return false;
+	return session.introStatus === 'complete' || session.introStatus === 'error';
+}
+
+export function setIntroStatus(sessionId: string, introStatus: SessionIntroStatus): void {
+	sessions = sessions.map((entry) => (entry.id === sessionId ? { ...entry, introStatus } : entry));
+}
+
+export function acknowledgeIntroAndStartLesson(sessionId: string): void {
+	sessions = sessions.map((entry) =>
+		entry.id === sessionId ? { ...entry, lessonStarted: true } : entry,
+	);
+	devLog('session', 'acknowledgeIntroAndStartLesson', { sessionId });
+}
+
+export function resetLessonStarted(sessionId: string): void {
+	sessions = sessions.map((entry) =>
+		entry.id === sessionId ? { ...entry, lessonStarted: false } : entry,
+	);
+}
+
+function resetIntroGate(): Pick<SessionRecord, 'introStatus' | 'lessonStarted'> {
+	return {
+		introStatus: 'idle',
+		lessonStarted: false,
+	};
+}
+
 export function setAskMessages(sessionId: string, messages: ChatMessage[]): void {
 	const session = getSessionById(sessionId);
 	if (!session) return;
 
-	const next = storableAskMessages(messages);
+	const next = messages;
 	if (askMessagesSnapshot(session.askMessages) === askMessagesSnapshot(next)) return;
 
 	sessions = sessions.map((entry) =>
-		entry.id === sessionId ? { ...entry, askMessages: next } : entry,
+		entry.id === sessionId ? { ...entry, askMessages: [...next] } : entry,
 	);
+}
+
+/** Atomic read-modify-write for the Ask thread (intro slot + follow-ups). */
+export function updateAskMessages(
+	sessionId: string,
+	updater: (current: ChatMessage[]) => ChatMessage[],
+): void {
+	const session = getSessionById(sessionId);
+	if (!session) return;
+	setAskMessages(sessionId, updater(session.askMessages));
 }
 
 // --- Session mutations (persist after each change) ---
@@ -219,6 +277,7 @@ export function startScaffoldRequest(prompt: string, preferredId?: string): stri
 						errorMessage: null,
 						completed: false,
 						askMessages: [],
+						...resetIntroGate(),
 					}
 				: session,
 		);
@@ -233,6 +292,8 @@ export function startScaffoldRequest(prompt: string, preferredId?: string): stri
 			errorMessage: null,
 			completed: false,
 			askMessages: [],
+			introStatus: 'idle',
+			lessonStarted: false,
 		};
 		sessions = [session, ...sessions];
 	}
@@ -301,6 +362,7 @@ export function retryScaffoldRequest(sessionId: string): void {
 					errorMessage: null,
 					completed: false,
 					askMessages: [],
+					...resetIntroGate(),
 				}
 			: session,
 	);
