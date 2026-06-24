@@ -20,19 +20,11 @@ export const VERB_HOLD_MS = 3_200;
 export const LOADING_CURSOR = '▋';
 
 export function getLessonReadyLines(): string[] {
-	return [
-		t('editor.lessonReadyTitle'),
-		t('editor.lessonReadyHint1'),
-		t('editor.lessonReadyHint2'),
-	];
+	return [t('editor.lessonReadyTitle'), t('editor.lessonReadyHint1'), t('editor.lessonReadyHint2')];
 }
 
 export function getLoadingCommentLines(): string[] {
-	return [
-		t('editor.loadingTitle'),
-		t('editor.loadingHint1'),
-		t('editor.loadingHint2'),
-	];
+	return [t('editor.loadingTitle'), t('editor.loadingHint1'), t('editor.loadingHint2')];
 }
 
 /** viewZone anchor — after comment block + blank spacer line (same slot as Learning Card uses `afterLineNumber`). */
@@ -66,7 +58,7 @@ export class LoadingTypewriter {
 	}
 
 	getTypedText(): string {
-	return getLoadingVerbs()[this.verbIndex].slice(0, this.typedCharCount);
+		return getLoadingVerbs()[this.verbIndex].slice(0, this.typedCharCount);
 	}
 
 	advance(now: number, charMs = TYPEWRITER_CHAR_MS, holdMs = VERB_HOLD_MS): void {
@@ -94,7 +86,8 @@ export class LoadingTypewriter {
 		}
 
 		if (now >= this.holdUntil) {
-			this.verbIndex = (this.verbIndex + 1) % getLoadingVerbs().length;			this.typedCharCount = 0;
+			this.verbIndex = (this.verbIndex + 1) % getLoadingVerbs().length;
+			this.typedCharCount = 0;
 			this.holdUntil = 0;
 			this.charAccumulator = 0;
 		}

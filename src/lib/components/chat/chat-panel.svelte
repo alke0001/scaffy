@@ -41,7 +41,7 @@
 	const INTRO_CTA_WAIT_SCAFFOLD = $derived($i18nMessages['chat.introCtaWaitScaffold']);
 	const INTRO_CTA_WAIT_INTRO = $derived($i18nMessages['chat.introCtaWaitIntro']);
 	const INTRO_CTA_SCAFFOLD_TOOLTIP = $derived($i18nMessages['chat.introCtaScaffoldTooltip']);
-	
+
 	interface Props {
 		mode: ChatMode;
 		sessionId?: string;

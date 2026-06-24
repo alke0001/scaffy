@@ -438,16 +438,13 @@
 			zoneBridge.reset();
 			viewZoneController.refresh();
 
-			if (currentIndex >= scaffolds.length ) {
+			if (currentIndex >= scaffolds.length) {
 				markSessionCompleted(boundSession?.id);
 				return;
 			}
 
 			loadNextScaffold();
-			if (
-				currentIndex >= scaffolds.length &&
-				!currentQuestion
-			) {
+			if (currentIndex >= scaffolds.length && !currentQuestion) {
 				markSessionCompleted(boundSession?.id);
 			}
 			return;

@@ -19,7 +19,7 @@ const inFlight = new Map<string, Promise<void>>();
 function isValidFallback(data: unknown): data is StructuredScaffoldOutput {
 	if (typeof data !== 'object' || data === null || !('scaffolds' in data)) return false;
 	const { scaffolds } = data as { scaffolds: unknown };
-	if (!Array.isArray(scaffolds) || scaffolds.length === 0 ) return false;
+	if (!Array.isArray(scaffolds) || scaffolds.length === 0) return false;
 	for (const step of scaffolds) {
 		if (typeof step !== 'object' || step === null) return false;
 		const s = step as Record<string, unknown>;
@@ -39,8 +39,8 @@ async function fetchScaffoldOnce(prompt: string, sessionId: string): Promise<voi
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
-		prompt,
-		language: get(language)
+			prompt,
+			language: get(language),
 		}),
 	});
 	setScaffolds(data.scaffolds, sessionId);

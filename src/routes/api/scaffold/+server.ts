@@ -113,10 +113,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const modelStr = typeof model === 'string' ? model : undefined;
 	const { apiModelId } = resolveModel(modelStr);
-	const systemPromptFinal = systemPrompt.replaceAll(
-		'{{COURSE_LANGUAGE}}',
-		language ?? 'de'
-	);
+	const systemPromptFinal = systemPrompt.replaceAll('{{COURSE_LANGUAGE}}', language ?? 'de');
 
 	try {
 		let result = parseAndValidate(
@@ -124,9 +121,9 @@ export const POST: RequestHandler = async ({ request }) => {
 				await callAnthropicScaffold({
 					apiModelId,
 					userContent: trimmedPrompt,
-					systemPrompt: systemPromptFinal
+					systemPrompt: systemPromptFinal,
 				})
-			).text
+			).text,
 		);
 
 		if (!result.ok) {
@@ -134,7 +131,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				await callAnthropicScaffold({
 					apiModelId,
 					userContent: buildRetryUserContent(trimmedPrompt, result.message),
-					systemPrompt: systemPromptFinal
+					systemPrompt: systemPromptFinal,
 				})
 			).text;
 			result = parseAndValidate(retryText);

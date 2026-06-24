@@ -25,14 +25,10 @@ export function normalizeScaffoldCount(
 		return { ok: true, scaffolds, trimmed: false };
 	}
 	return {
-	ok: true,
-	scaffolds: [
-		scaffolds[0],
-		scaffolds[1],
-		scaffolds[scaffolds.length - 1],
-	],
-	trimmed: true,
-};
+		ok: true,
+		scaffolds: [scaffolds[0], scaffolds[1], scaffolds[scaffolds.length - 1]],
+		trimmed: true,
+	};
 }
 
 export function validateLessonOutput(parsed: unknown): LessonValidation {

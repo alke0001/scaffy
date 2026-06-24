@@ -75,14 +75,11 @@ export const POST: RequestHandler = async ({ request }) => {
 	const modelStr = typeof model === 'string' ? model : undefined;
 	const { apiModelId } = resolveModel(modelStr);
 
-	const messages = buildMessages(
-		trimmedPrompt,
-		Array.isArray(history) ? history : undefined
-	);
+	const messages = buildMessages(trimmedPrompt, Array.isArray(history) ? history : undefined);
 
 	const systemPromptFinal = systemPrompt.replaceAll(
 		'{{COURSE_LANGUAGE}}',
-		typeof language === 'string' ? language : 'de'
+		typeof language === 'string' ? language : 'de',
 	);
 
 	const stream = new ReadableStream({
@@ -98,13 +95,13 @@ export const POST: RequestHandler = async ({ request }) => {
 							text: systemPromptFinal.trim(),
 							cache_control: {
 								type: 'ephemeral',
-								ttl: CONFIG.systemPromptCacheTtl
+								ttl: CONFIG.systemPromptCacheTtl,
 							},
 						},
 					],
 					messages,
 				},
-				{ signal: request.signal }
+				{ signal: request.signal },
 			);
 
 			controller.enqueue(encodeSse({ type: 'ready' }));

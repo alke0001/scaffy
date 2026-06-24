@@ -379,7 +379,7 @@ export function markSessionCompleted(sessionId?: string): void {
 
 	const session = sessions.find((entry) => entry.id === id);
 	if (!session) return;
-	if (session.status !== 'ready' || session.scaffolds.length === 0 ) return;
+	if (session.status !== 'ready' || session.scaffolds.length === 0) return;
 
 	sessions = sessions.map((session) =>
 		session.id === id

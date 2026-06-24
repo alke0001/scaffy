@@ -95,7 +95,9 @@
 							{/if}
 
 							{#if session.status === 'loading'}
-								<span class="ml-2 text-muted-foreground">({$messages['session.status.loading']})</span>
+								<span class="ml-2 text-muted-foreground"
+									>({$messages['session.status.loading']})</span
+								>
 							{/if}
 
 							{#if session.status === 'error'}

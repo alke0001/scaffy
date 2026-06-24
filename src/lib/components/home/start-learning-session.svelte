@@ -73,9 +73,7 @@
 			<div class="flex items-center gap-3">
 				<ScaffyLogo width={52} height={52} class="shrink-0" />
 
-				<span class="text-3xl tracking-tight text-foreground"
-					>{$messages['app.title']}</span
-				>
+				<span class="text-3xl tracking-tight text-foreground">{$messages['app.title']}</span>
 			</div>
 
 			<p class="max-w-md text-sm leading-relaxed text-muted-foreground">
