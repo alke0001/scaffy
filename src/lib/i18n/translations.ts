@@ -1,14 +1,14 @@
-export type LanguageCode = 'en' | 'de';
+export type LanguageCode = 'englisch' | 'deutsch';
 
-export const DEFAULT_LANGUAGE: LanguageCode = 'en';
+export const DEFAULT_LANGUAGE: LanguageCode = 'englisch';
 
 export const AVAILABLE_LANGUAGES = [
-	{ code: 'en', label: 'Eng', name: 'English' },
-	{ code: 'de', label: 'Deu', name: 'Deutsch' },
+	{ code: 'englisch', label: 'Eng', name: 'English' },
+	{ code: 'deutsch', label: 'Deu', name: 'Deutsch' },
 ] as const;
 
 export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
-	en: {
+	englisch: {
 		'app.title': 'Scaffy',
 		'app.about': 'About Scaffy',
 		'app.aboutAriaLabel': 'About Scaffy',
@@ -132,8 +132,9 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 			'Preparing emotional support for TypeScript...',
 		'tutor.title': 'Scaffy tutor',
 		'tutor.subtitle': 'Guides you to the answer',
+		'scaffold.emptyCodeSnippet': '// Please answer the question',
 	},
-	de: {
+	deutsch: {
 		'app.title': 'Scaffy',
 		'app.about': 'Über Scaffy',
 		'app.aboutAriaLabel': 'Über Scaffy',
@@ -254,7 +255,8 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 			'Versuche es erneut oder lade unten die Fallback-Version.',
 		'editor.errorScaffyLessonFailed':
 			'Scaffy · Anfrage fehlgeschlagen',
-		'tutor.title': 'Scaffy tutor',
+		'tutor.title': 'Scaffy Tutor',
 		'tutor.subtitle': 'Führt dich zur Antwort',
+		'scaffold.emptyCodeSnippet': '// Bitte Frage beantworten',
 	},
 };

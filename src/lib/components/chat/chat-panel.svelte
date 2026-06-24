@@ -29,6 +29,8 @@
 	import Send from '@lucide/svelte/icons/send';
 	import AskChatHeader from '$lib/components/chat/ask-chat-header.svelte';
 	import { messages as i18nMessages } from '$lib/i18n/index.js';
+	import { language } from '$lib/i18n';
+	import { get } from 'svelte/store';
 
 	const MIN_PROMPT_LENGTH = 10;
 	const ASK_PLACEHOLDER = $derived($i18nMessages['chat.askPlaceholder']);
@@ -205,7 +207,11 @@
 
 		try {
 			await streamChatReply(
-				{ prompt: text, history },
+				{
+					prompt: text,
+					history,
+					language: get(language),
+				},
 				{
 					onReady: () => {
 						if (!isActive()) return;

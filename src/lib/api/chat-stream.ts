@@ -17,6 +17,7 @@ type ChatRequestBody = {
 	prompt: string;
 	model?: string;
 	history?: { role: 'user' | 'assistant'; content: string }[];
+	language?: unknown;
 };
 
 type SessionIntroRequestBody = {

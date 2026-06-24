@@ -32,6 +32,7 @@
 	import { devLog } from '$lib/dev/log.js';
 	import { messages } from '$lib/i18n/index.js';
 	import './monaco-editor.css';
+	import { t } from '$lib/i18n';
 
 	let {
 		class: className,
@@ -413,9 +414,9 @@
 
 		const code =
 			scaffold.codeSnippet.trim().length === 0
-				? '// Bitte Frage beantworten'
+				? t('scaffold.emptyCodeSnippet')
 				: scaffold.codeSnippet;
-
+		console.log('[code] loading scaffold', { index: currentIndex, code });
 		ensureCodeLanguage();
 		editor.setValue(code);
 		selectedOption = null;
