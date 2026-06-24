@@ -1,14 +1,14 @@
-export type LanguageCode = 'englisch' | 'deutsch';
+export type LanguageCode = 'en' | 'de';
 
-export const DEFAULT_LANGUAGE: LanguageCode = 'englisch';
+export const DEFAULT_LANGUAGE: LanguageCode = 'en';
 
 export const AVAILABLE_LANGUAGES = [
-	{ code: 'englisch', label: 'Eng', name: 'English' },
-	{ code: 'deutsch', label: 'Deu', name: 'Deutsch' },
+	{ code: 'en', label: 'Eng', name: 'English' },
+	{ code: 'de', label: 'Deu', name: 'Deutsch' },
 ] as const;
 
 export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
-	englisch: {
+	en: {
 		'app.title': 'Scaffy',
 		'app.about': 'About Scaffy',
 		'app.aboutAriaLabel': 'About Scaffy',
@@ -118,7 +118,7 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 		'tutor.subtitle': 'Guides you to the answer',
 		'scaffold.emptyCodeSnippet': '// Please answer the question',
 	},
-	deutsch: {
+	de: {
 		'app.title': 'Scaffy',
 		'app.about': 'Über Scaffy',
 		'app.aboutAriaLabel': 'Über Scaffy',
