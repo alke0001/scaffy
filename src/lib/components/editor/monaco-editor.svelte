@@ -8,7 +8,7 @@
 		loadFallbackScaffolds,
 		retryScaffold,
 	} from '$lib/learn/request-scaffold.js';
-	import { LESSON_SCAFFOLD_COUNT, type KnowledgeCheck } from '$lib/types/scaffold.js';
+	import { type KnowledgeCheck } from '$lib/types/scaffold.js';
 	import {
 		ScaffoldLoadingAnimator,
 		applyErrorDecorations,
@@ -437,7 +437,7 @@
 			zoneBridge.reset();
 			viewZoneController.refresh();
 
-			if (currentIndex >= scaffolds.length && scaffolds.length >= LESSON_SCAFFOLD_COUNT) {
+			if (currentIndex >= scaffolds.length ) {
 				markSessionCompleted(boundSession?.id);
 				return;
 			}
@@ -445,8 +445,7 @@
 			loadNextScaffold();
 			if (
 				currentIndex >= scaffolds.length &&
-				!currentQuestion &&
-				scaffolds.length >= LESSON_SCAFFOLD_COUNT
+				!currentQuestion
 			) {
 				markSessionCompleted(boundSession?.id);
 			}

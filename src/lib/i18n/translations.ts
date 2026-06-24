@@ -9,7 +9,7 @@ export const AVAILABLE_LANGUAGES = [
 
 export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 	en: {
-		'app.title': 'scaffy',
+		'app.title': 'Scaffy',
 		'app.about': 'About Scaffy',
 		'app.aboutAriaLabel': 'About Scaffy',
 		'app.mySessions': 'My Sessions',
@@ -80,7 +80,7 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 		'home.myLearningSessions': 'My learning sessions →',
 		'home.tryOneOfThese': 'Try one of these',
 
-		'chat.askPlaceholder': 'Ask scaffy a question about the code (min. 10 characters)',
+		'chat.askPlaceholder': 'Ask Scaffy a question about the code (min. 10 characters)',
 		'chat.askMinLengthTooltip':
 			'Enter at least 10 characters to ask Scaffy a question. We skip very short prompts to avoid unnecessary AI calls and reduce environmental impact.',
 		'chat.learnPlaceholder':
@@ -101,19 +101,21 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 			'Scaffy is still preparing your lesson on the left. When it is ready, the exercises appear there and you can start here.',
 		'editor.retry': 'Try again',
 		'editor.loadFallback': 'Load fallback',
-		'editor.loadingTitle': 'scaffy · generating lesson',
+		'editor.loadingTitle': 'Scaffy · generating lesson',
 		'editor.loadingHint1':
 			'Read the concept preview in the Scaffy tutor panel on the right. 👉',
 		'editor.loadingHint2':
 			'When the preview is ready, click "Got it — start lesson" in the tutor panel.',
 		'editor.lessonReadyTitle':
-			'scaffy · lesson ready',
+			'Scaffy · lesson ready',
 		'editor.lessonReadyHint1':
 			'Read the concept preview in the Scaffy tutor panel on the right. 👉',
 		'editor.lessonReadyHint2':
 			'Click "Got it — start lesson" there when you are ready.',
 		'editor.errorRetryHint':
 			'Try again or load the fallback version below.',
+		'editor.errorScaffyLessonFailed':
+			'Scaffy · lesson failed',
 		'editor.loadingVerb1':
 			'Waking up Scaffy...',
 		'editor.loadingVerb2':
@@ -128,11 +130,11 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 			'Helping variables find their purpose...',
 		'editor.loadingVerb7':
 			'Preparing emotional support for TypeScript...',
-		'tutor.title': 'scaffy tutor',
+		'tutor.title': 'Scaffy tutor',
 		'tutor.subtitle': 'Guides you to the answer',
 	},
 	de: {
-		'app.title': 'scaffy',
+		'app.title': 'Scaffy',
 		'app.about': 'Über Scaffy',
 		'app.aboutAriaLabel': 'Über Scaffy',
 		'app.mySessions': 'Meine Sessions',
@@ -232,7 +234,7 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 		'editor.loadingVerb5': 'Kaffee wird in Code übersetzt...',
 		'editor.loadingVerb6': 'Variablen finden ihren Sinn...',
 		'editor.loadingVerb7': 'Emotionale Unterstützung für TypeScript wird vorbereitet...',
-		'editor.loadingTitle': 'scaffy · lektion wird erstellt',
+		'editor.loadingTitle': 'Scaffy · lektion wird erstellt',
 		'editor.loadingHint1':
 			'Lies die Konzeptvorschau im Scaffy-Tutorbereich rechts. 👉',
 
@@ -240,7 +242,7 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 			'Sobald die Vorschau bereit ist, klicke dort auf „Verstanden — Lektion starten“.',
 
 		'editor.lessonReadyTitle':
-			'scaffy · lektion bereit',
+			'Scaffy · lektion bereit',
 
 		'editor.lessonReadyHint1':
 			'Lies die Konzeptvorschau im Scaffy-Tutorbereich rechts. 👉',
@@ -250,7 +252,9 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 
 		'editor.errorRetryHint':
 			'Versuche es erneut oder lade unten die Fallback-Version.',
-		'tutor.title': 'scaffy tutor',
+		'editor.errorScaffyLessonFailed':
+			'Scaffy · Anfrage fehlgeschlagen',
+		'tutor.title': 'Scaffy tutor',
 		'tutor.subtitle': 'Führt dich zur Antwort',
 	},
 };

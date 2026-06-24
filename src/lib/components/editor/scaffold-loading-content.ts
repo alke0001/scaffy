@@ -114,7 +114,7 @@ export function verbIndexForElapsed(elapsedMs: number): number {
 export function buildErrorContent(message: string): string {
 	const safe = message.replace(/\r?\n/g, ' ').trim().slice(0, 240);
 	return [
-		'<!-- scaffy · lesson failed -->',
+		`<!-- ${t('editor.errorScaffyLessonFailed')} -->`,
 		'',
 		`✖  ${safe}`,
 		'',

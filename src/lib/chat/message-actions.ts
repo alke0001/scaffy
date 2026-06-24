@@ -121,5 +121,5 @@ export function loadingLabel(mode: ChatMode): string {
 
 export function roleLabel(role: ChatMessageRole, mode: ChatMode = 'learn'): string {
 	if (role === 'user') return 'You';
-	return mode === 'ask' ? 'scaffy tutor' : 'Scaffy';
+	return mode === 'ask' ? 'Scaffy tutor' : 'Scaffy';
 }

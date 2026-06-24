@@ -1,7 +1,6 @@
 import { browser } from '$app/environment';
 import type { ChatMessage } from '$lib/types/chat-message.js';
 import type { Scaffold } from '$lib/types/scaffold';
-import { LESSON_SCAFFOLD_COUNT } from '$lib/types/scaffold';
 import { devLog } from '$lib/dev/log.js';
 
 /**
@@ -380,7 +379,7 @@ export function markSessionCompleted(sessionId?: string): void {
 
 	const session = sessions.find((entry) => entry.id === id);
 	if (!session) return;
-	if (session.status !== 'ready' || session.scaffolds.length < LESSON_SCAFFOLD_COUNT) return;
+	if (session.status !== 'ready' || session.scaffolds.length === 0 ) return;
 
 	sessions = sessions.map((session) =>
 		session.id === id

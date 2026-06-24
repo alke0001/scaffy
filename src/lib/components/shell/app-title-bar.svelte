@@ -55,11 +55,11 @@
 
 		<a
 			href={resolve('/')}
-			class={cn(navItemClass, 'lowercase', isHome ? navActiveClass : navLinkClass)}
+			class={cn(navItemClass, isHome ? navActiveClass : navLinkClass)}
 			aria-current={isHome ? 'page' : undefined}
 			onclick={goHome}
 		>
-			scaffy
+			Scaffy
 		</a>
 
 		<span class="h-5 shrink-0 border-l border-scaffy-divider" aria-hidden="true"></span>

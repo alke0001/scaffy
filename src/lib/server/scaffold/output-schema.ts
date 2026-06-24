@@ -46,7 +46,6 @@ export function validateStructuredOutput(parsed: unknown): StructuredOutputValid
 	if (scaffolds.length < 1) {
 		return { ok: false, message: '"scaffolds" must contain at least one step.' };
 	}
-	/** Wire responses may include extra steps; validate-lesson.ts trims to LESSON_SCAFFOLD_COUNT. */
 	const MAX_WIRE_SCAFFOLDS = 5;
 	if (scaffolds.length > MAX_WIRE_SCAFFOLDS) {
 		return {

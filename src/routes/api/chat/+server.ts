@@ -27,6 +27,7 @@ type ChatRequestBody = {
 	prompt?: unknown;
 	model?: unknown;
 	history?: unknown;
+	language?: unknown;
 };
 
 function encodeSse(payload: Record<string, unknown>): Uint8Array {
@@ -64,7 +65,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		throw error(400, 'Invalid JSON body.');
 	}
 
-	const { prompt, model, history } = (body ?? {}) as ChatRequestBody;
+	const { prompt, model, history, language } = (body ?? {}) as ChatRequestBody;
 
 	if (typeof prompt !== 'string' || prompt.trim().length < 10) {
 		throw error(400, 'Prompt must be at least 10 characters long.');
@@ -73,7 +74,16 @@ export const POST: RequestHandler = async ({ request }) => {
 	const trimmedPrompt = prompt.trim();
 	const modelStr = typeof model === 'string' ? model : undefined;
 	const { apiModelId } = resolveModel(modelStr);
-	const messages = buildMessages(trimmedPrompt, Array.isArray(history) ? history : undefined);
+
+	const messages = buildMessages(
+		trimmedPrompt,
+		Array.isArray(history) ? history : undefined
+	);
+
+	const systemPromptFinal = systemPrompt.replaceAll(
+		'{{COURSE_LANGUAGE}}',
+		typeof language === 'string' ? language : 'de'
+	);
 
 	const stream = new ReadableStream({
 		async start(controller) {
@@ -85,13 +95,16 @@ export const POST: RequestHandler = async ({ request }) => {
 					system: [
 						{
 							type: 'text',
-							text: systemPrompt.trim(),
-							cache_control: { type: 'ephemeral', ttl: CONFIG.systemPromptCacheTtl },
+							text: systemPromptFinal.trim(),
+							cache_control: {
+								type: 'ephemeral',
+								ttl: CONFIG.systemPromptCacheTtl
+							},
 						},
 					],
 					messages,
 				},
-				{ signal: request.signal },
+				{ signal: request.signal }
 			);
 
 			controller.enqueue(encodeSse({ type: 'ready' }));

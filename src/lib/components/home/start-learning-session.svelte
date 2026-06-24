@@ -73,7 +73,7 @@
 			<div class="flex items-center gap-3">
 				<ScaffyLogo width={52} height={52} class="shrink-0" />
 
-				<span class="text-3xl tracking-tight text-foreground lowercase"
+				<span class="text-3xl tracking-tight text-foreground"
 					>{$messages['app.title']}</span
 				>
 			</div>

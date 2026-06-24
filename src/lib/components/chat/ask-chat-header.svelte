@@ -7,7 +7,7 @@
 	<div class="flex items-start gap-3">
 		<ScaffyLogo width={28} height={28} class="mt-0.5 shrink-0" />
 		<div class="min-w-0">
-			<h2 class="font-mono text-sm font-bold tracking-tight text-foreground lowercase">
+			<h2 class="font-mono text-sm font-bold tracking-tight text-foreground">
 				{$messages['tutor.title']}
 			</h2>
 
