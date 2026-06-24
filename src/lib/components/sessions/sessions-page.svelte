@@ -96,7 +96,7 @@
 							</span>
 						{/if}
 
-						<span class="w-full text-sm break-words text-foreground">
+						<span class="w-full text-sm wrap-break-word text-foreground">
 							{session.prompt}
 						</span>
 

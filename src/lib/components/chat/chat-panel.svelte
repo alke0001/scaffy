@@ -289,7 +289,7 @@
 		<div class="relative {askPromptFieldShellClass}">
 			<textarea
 				id="chat-prompt"
-				class="{promptTextareaClass} block min-h-[5.5rem] w-full border-0 bg-transparent pr-11 pb-10 sm:min-h-24"
+				class="{promptTextareaClass} block min-h-22 w-full border-0 bg-transparent pr-11 pb-10 sm:min-h-24"
 				bind:value={prompt}
 				disabled={askComposerBusy}
 				placeholder={ASK_PLACEHOLDER}
@@ -354,7 +354,7 @@
 		<div class={learnPromptFieldShellClass}>
 			<textarea
 				id="chat-prompt"
-				class="{promptTextareaClass} min-h-[140px] w-full border-0 bg-transparent"
+				class="{promptTextareaClass} min-h-35 w-full border-0 bg-transparent"
 				bind:value={prompt}
 				disabled={askComposerBusy}
 				placeholder={LEARN_PLACEHOLDER}
