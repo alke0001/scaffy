@@ -75,7 +75,7 @@
 		</header>
 
 		<ul
-			class="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-3"
+			class="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-3"
 			role="list"
 		>
 			{#each sortedSessions as session, index (session.id)}

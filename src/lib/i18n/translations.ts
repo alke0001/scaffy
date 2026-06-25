@@ -69,7 +69,7 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 		'session.status.inProgress': 'In progress',
 		'session.startNewSession': 'Start new session',
 		'home.heroDescription':
-			'Learn to build code, not just have it built for you. Type what you want — Scaffy walks you through it, chunk by chunk.',
+			'Learn to build code, not just have it built for you.\nType what you want — Scaffy walks you through it, chunk by chunk.',
 		'home.newLearningSession': 'New learning session',
 		'home.describePrompt': 'Describe what you want to build in plain language.',
 		'home.starting': 'Starting…',
@@ -180,7 +180,7 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
 		'session.status.inProgress': 'In Arbeit',
 		'session.startNewSession': 'Neue Session starten',
 		'home.heroDescription':
-			'Lerne, Code zu bauen, statt ihn dir nur bauen zu lassen. Schreibe, was du möchtest – Scaffy führt dich Abschnitt für Abschnitt hindurch.',
+			'Lerne, Code zu bauen, statt ihn dir nur bauen zu lassen.\nSchreibe, was du möchtest – Scaffy führt dich Abschnitt für Abschnitt hindurch.',
 		'home.newLearningSession': 'Neue Lernsitzung',
 		'home.describePrompt': 'Beschreibe auf einfache Weise, was du bauen möchtest.',
 		'home.starting': 'Starte…',

@@ -76,7 +76,7 @@
 				<span class="text-3xl tracking-tight text-foreground">{$messages['app.title']}</span>
 			</div>
 
-			<p class="max-w-md text-sm leading-relaxed text-muted-foreground">
+			<p class="max-w-xl text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
 				{$messages['home.heroDescription']}
 			</p>
 		</header>
