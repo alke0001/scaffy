@@ -46,7 +46,7 @@ These three files must stay semantically identical in their shared project assum
 - Parallel **session intro** (SSE) streams a concept preview in Ask while scaffolds generate
 - Unlocked scaffold code via **`editor.setValue()`** (typewriter via `executeEdits` planned, ADR-011)
 - **Learning Card** in a Monaco **`viewZone`** after the last code line; gate before next scaffold
-- **Lesson start gate** — first scaffold after **Got it — start lesson** (ADR-020)
+- **Lesson start gate** — first scaffold after **Got it — start lesson** (ADR-021)
 
 ### Claude API — Architecture
 
