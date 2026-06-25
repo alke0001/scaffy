@@ -1,6 +1,11 @@
 <script lang="ts">
 	import AboutDialog from '$lib/components/about/about-dialog.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import {
+		ScaffyDropdown,
+		ScaffyDropdownItem,
+		toolbarActionButtonClass,
+	} from '$lib/components/ui/scaffy-dropdown/index.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -20,6 +25,10 @@
 	const isSessions = $derived(pathname === '/sessions');
 	const isSession = $derived(Boolean(sessionId && pathname.startsWith('/session/')));
 
+	const currentLanguage = $derived(
+		AVAILABLE_LANGUAGES.find((lang) => lang.code === $language) ?? AVAILABLE_LANGUAGES[0],
+	);
+
 	const sessionPromptLabel = $derived.by(() => {
 		if (!sessionId) return $messages['app.session'];
 		const session = getSessionById(sessionId);
@@ -37,13 +46,13 @@
 		goto(resolve('/'));
 	}
 
-	function setLanguage(code: LanguageCode) {
-		language.set(code);
-	}
-
 	function goSessions(event: MouseEvent) {
 		event.preventDefault();
 		goto(resolve('/sessions'));
+	}
+
+	function setLanguage(code: LanguageCode) {
+		language.set(code);
 	}
 </script>
 
@@ -90,27 +99,28 @@
 	</nav>
 
 	<div class="flex shrink-0 items-center gap-2">
-		{#each AVAILABLE_LANGUAGES as lang (lang.code)}
-			<Button
-				type="button"
-				variant="ghost"
-				size="icon-sm"
-				class={cn(
-					'text-xs font-semibold tracking-[0.16em] uppercase',
-					lang.code === $language ? 'text-foreground' : 'text-muted-foreground',
-				)}
-				onclick={() => setLanguage(lang.code)}
-				aria-label={`${$messages['app.languageLabel']} ${lang.name}`}
-			>
-				{lang.label}
-			</Button>
-		{/each}
+		<ScaffyDropdown label={currentLanguage.name} menuAriaLabel={$messages['app.languageLabel']}>
+			{#snippet menu({ close })}
+				{#each AVAILABLE_LANGUAGES as lang (lang.code)}
+					<ScaffyDropdownItem
+						selected={lang.code === $language}
+						onclick={() => {
+							setLanguage(lang.code);
+							close();
+						}}
+					>
+						{lang.name}
+					</ScaffyDropdownItem>
+				{/each}
+			{/snippet}
+		</ScaffyDropdown>
 
 		<Button
+			type="button"
 			variant="ghost"
-			size="icon-sm"
+			size="toolbar"
+			class={toolbarActionButtonClass}
 			aria-label={$messages['app.aboutAriaLabel']}
-			class="text-muted-foreground hover:text-foreground"
 			onclick={() => (aboutOpen = true)}
 		>
 			<CircleHelp />

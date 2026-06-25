@@ -38,6 +38,7 @@ ADR = Architecture Decision Record
 | [ADR-019](#adr-019-monaco-viewzone-aria-hidden-accepted)                             | Monaco viewZone aria-hidden — accepted trade-off         | Accepted                                              |
 | [ADR-020](#adr-020-client-side-i18n-english--german-via-flat-translation-dictionary) | Client-side i18n (EN/DE) via flat translation dictionary | Accepted                                              |
 | [ADR-021](#adr-021-session-intro-stream-and-lesson-start-gate)                       | Session intro stream + lesson start gate                 | Accepted                                              |
+| [ADR-022](#adr-022-shadcn-vs-custom-ui-controls)                                     | shadcn vs custom UI controls                             | Accepted                                              |
 
 ---
 
@@ -747,6 +748,62 @@ Scaffy ships an English UI but targets German-speaking learners (course language
 
 ---
 
+## ADR-022: shadcn vs custom UI controls
+
+**Status:** Accepted
+
+### Context
+
+ADR-017 sets **shadcn-first** for `ui/` primitives but does not record which controls we deliberately skipped. Without a short inventory, agents may either hand-roll complex widgets (focus traps, keyboard nav) or install full shadcn kits for two-option menus.
+
+### Decision rule
+
+| Prefer **shadcn-svelte** (+ bits-ui) when…                                    | Prefer **custom / compose** when…                                     |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Focus trap, portal, Escape, roving tabindex, or ARIA patterns are non-trivial | Behavior is a few lines (static list, click-outside, toggle open)     |
+| The control is reused across many surfaces                                    | One screen owns the markup (title bar, session tabs, Monaco viewZone) |
+| Styling matches registry defaults with token tweaks                           | Product chrome diverges from shadcn (modal header, variant borders)   |
+| No sensible composition from existing primitives                              | Trigger already is shadcn `Button`; only the menu panel is plain HTML |
+
+**Default:** `pnpm dlx shadcn-svelte@latest add <name>` before a new bare primitive. Document exceptions here or in a linked ADR.
+
+### Installed shadcn primitives (in use)
+
+| Primitive                    | Why shadcn                                                                          |
+| ---------------------------- | ----------------------------------------------------------------------------------- |
+| **Button**, **Card**         | Shared variants/sizes across Home, chat, sessions, title bar                        |
+| **ScrollArea**               | Flex height chain + hover-fade scrollbars (ADR-017); used in chat, sessions, modals |
+| **Tooltip**                  | Portal + positioning; composed in `ChipGrid`, chat actions                          |
+| **Accordion**                | Keyboard + expand/collapse in About FAQ                                             |
+| **Resizable**                | Pane drag/keyboard split in session workspace                                       |
+| **Dialog**                   | Registry baseline only; **not** used for product modals (see ScaffyModal)           |
+| **Toggle** / **ToggleGroup** | Installed for parity; no feature dependency yet                                     |
+
+### Custom or composed (not full shadcn kits)
+
+| Control                          | Location                      | Why not shadcn                                                                                                                                                           |
+| -------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **ScaffyModal**                  | `ui/scaffy-modal/`            | Product modal chrome (icon header, variants, backdrop rules) does not fit extending `Dialog` — ADR-018                                                                   |
+| **ChipGrid**                     | `ui/chip/`                    | Composes **Button** + **Tooltip**; no registry item                                                                                                                      |
+| **MarkdownContent**              | `ui/markdown/`                | Streaming Ask markdown + DOMPurify; no shadcn equivalent — ADR-012                                                                                                       |
+| **`native-scroll-x` on `<pre>`** | `scroll-area.css`             | Sanitized HTML cannot wrap code blocks in Svelte — ADR-017                                                                                                               |
+| **ScaffyDropdown**               | `ui/scaffy-dropdown/`         | Lightweight listbox menu; built-in toolbar **Button** trigger (label + chevron). **DropdownMenu** kit avoided for ≤3 static items — first use: language in `AppTitleBar` |
+| **AppTitleBar nav**              | `shell/app-title-bar.svelte`  | Custom segment nav + active underline; shadcn **Breadcrumb** was tried and removed — ADR-015                                                                             |
+| **SessionTabs**                  | `session/session-tabs.svelte` | Domain tab strip (truncate prompt, delete affordance)                                                                                                                    |
+| **Learning Card**                | `editor/learning-card.svelte` | Monaco viewZone + friction UX; not a generic primitive — ADR-011                                                                                                         |
+
+### Not installed (evaluate before adding)
+
+**DropdownMenu**, **Select**, **Popover**, **Breadcrumb** — add via CLI only when a surface needs full menu semantics (many items, submenus, typeahead, form-integrated select). A toolbar with ≤3 static choices stays on **Button** + minimal markup.
+
+### Consequences
+
+- Language switch documents the lightweight-dropdown pattern; future title-bar menus follow the same rule.
+- ADR-017 remains the install policy; this ADR is the **inventory + heuristic** for reviews and agents.
+- Revisit when a third locale or complex menu appears — then install **DropdownMenu** once and migrate **ScaffyDropdown** call sites that need submenus or typeahead.
+
+---
+
 ## Planned / nice-to-have (not ADRs yet)
 
 - Supabase adapter + Google Auth (see [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) Phase 2)
@@ -760,6 +817,7 @@ Scaffy ships an English UI but targets German-speaking learners (course language
 
 | Date       | Change                                                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-24 | ADR-022: shadcn vs custom UI inventory (ScaffyDropdown, ScaffyModal, ChipGrid, etc.) and when to install vs compose.                                                            |
 | 2026-06-25 | ADR-020: `MessageKey` compile-time checks; `check:i18n` for en/de parity (CI + lint-staged on `translations.ts`). Session intro renumbered to ADR-021 (duplicate id cleanup).   |
 | 2026-06-21 | ADR-020: client-side i18n (EN/DE) — `src/lib/i18n` store + flat `translations.ts`; Session/Sessions/About copy localized; About intro split into `about-content.md` / `.de.md`. |
 | 2026-06-21 | i18n follow-up (ADR-020): localized chat placeholders/tooltip, Monaco retry/fallback buttons, and Home example prompts (`example-prompts.ts` → `Record<LanguageCode, …>`).      |

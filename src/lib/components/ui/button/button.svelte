@@ -30,6 +30,10 @@
 				'icon-sm':
 					'size-8 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-md',
 				'icon-lg': 'size-10',
+				toolbar:
+					"size-8 min-w-8 rounded-[min(var(--radius-md),10px)] px-1.5 text-xs font-semibold tracking-[0.16em] uppercase in-data-[slot=button-group]:rounded-md [&_svg:not([class*='size-'])]:size-4 [&:has(>svg:only-child)]:px-0",
+				'toolbar-menu':
+					"h-8 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs font-medium in-data-[slot=button-group]:rounded-md [&_svg:not([class*='size-'])]:size-3.5",
 			},
 		},
 		defaultVariants: {
