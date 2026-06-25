@@ -1,25 +1,118 @@
 /* @theme scaffy */
-/* Optional Marp theme — wire in scaffy-course.md via: theme: ./theme/scaffy.css */
-/* Tokens aligned with src/routes/layout.css (dark-only UI). */
+/* Tokens from src/routes/layout.css — keep in sync when palette changes. */
 
 @import 'default';
 
+:root {
+	--scaffy-background: #0b0d0e;
+	--scaffy-card: #121517;
+	--scaffy-muted: #1a1e21;
+	--scaffy-foreground: #e6e8e6;
+	--scaffy-muted-foreground: #8a918e;
+	--scaffy-border: #6b7378;
+	--scaffy-primary: #4ade80;
+	--scaffy-ring: #6fc3df;
+	--scaffy-destructive: #ef4444;
+}
+
 section {
-	background-color: #0b0d0e;
-	color: #e6e8e6;
-	font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+	background-color: var(--scaffy-background);
+	color: var(--scaffy-foreground);
+	font-family: Inter, 'Inter Variable', system-ui, sans-serif;
+	font-size: 26px;
+	padding: 44px 52px;
+}
+
+header,
+footer {
+	color: var(--scaffy-muted-foreground);
+	font-size: 16px;
 }
 
 h1,
 h2,
 h3 {
-	color: #e6e8e6;
+	color: var(--scaffy-foreground);
+	font-weight: 600;
 }
 
-a {
-	color: #6fc3df;
+h2 {
+	color: var(--scaffy-ring);
+	border-bottom: 2px solid #3d5a66;
+	padding-bottom: 0.15em;
+	margin-bottom: 0.6em;
 }
 
 strong {
-	color: #4ade80;
+	color: var(--scaffy-primary);
+}
+
+a {
+	color: var(--scaffy-ring);
+}
+
+em {
+	color: var(--scaffy-muted-foreground);
+}
+
+code {
+	background-color: var(--scaffy-muted);
+	color: var(--scaffy-ring);
+	padding: 0.1em 0.35em;
+	border-radius: 0.25rem;
+	font-size: 0.88em;
+}
+
+table {
+	font-size: 20px;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+th {
+	background-color: var(--scaffy-muted);
+	color: var(--scaffy-foreground);
+	border: 1px solid var(--scaffy-border);
+	padding: 0.35em 0.5em;
+}
+
+td {
+	border: 1px solid var(--scaffy-border);
+	padding: 0.35em 0.5em;
+}
+
+tr:nth-child(even) td {
+	background-color: var(--scaffy-card);
+}
+
+blockquote {
+	border-left: 4px solid var(--scaffy-ring);
+	background: var(--scaffy-card);
+	color: var(--scaffy-muted-foreground);
+	padding: 0.5em 1em;
+	margin: 0.5em 0;
+}
+
+section.lead {
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+section.lead h1 {
+	color: var(--scaffy-primary);
+	font-size: 2.4em;
+}
+
+section.lead p {
+	color: var(--scaffy-muted-foreground);
+}
+
+section.compact {
+	font-size: 22px;
+}
+
+section.compact table {
+	font-size: 18px;
 }

@@ -7,5 +7,6 @@
 	"[svelte]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
-	"svelte.enable-ts-plugin": true
+	"svelte.enable-ts-plugin": true,
+	"markdown.marp.themes": ["./present/theme/scaffy.css"]
 }
