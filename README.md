@@ -145,15 +145,16 @@ cp .env.example .env.local   # then edit .env.local
 
 ### Development scripts
 
-| Script           | Command            | Purpose                                   |
-| ---------------- | ------------------ | ----------------------------------------- |
-| Dev server       | `pnpm run dev`     | Vite dev server                           |
-| Production build | `pnpm run build`   | Build for Vercel                          |
-| Preview build    | `pnpm run preview` | Serve production build locally            |
-| Format all       | `pnpm run format`  | Prettier write on the whole repo          |
-| Lint             | `pnpm run lint`    | Prettier check + ESLint                   |
-| Typecheck        | `pnpm run check`   | `svelte-check`                            |
-| CI install       | `pnpm run ci`      | Frozen lockfile install (same as Actions) |
+| Script           | Command               | Purpose                                   |
+| ---------------- | --------------------- | ----------------------------------------- |
+| Dev server       | `pnpm run dev`        | Vite dev server                           |
+| Production build | `pnpm run build`      | Build for Vercel                          |
+| Preview build    | `pnpm run preview`    | Serve production build locally            |
+| Format all       | `pnpm run format`     | Prettier write on the whole repo          |
+| Lint             | `pnpm run lint`       | Prettier check + ESLint                   |
+| Typecheck        | `pnpm run check`      | `svelte-check`                            |
+| i18n key parity  | `pnpm run check:i18n` | en/de keys in `translations.ts` match     |
+| CI install       | `pnpm run ci`         | Frozen lockfile install (same as Actions) |
 
 Preview the production build locally:
 
@@ -171,7 +172,7 @@ pnpm run preview
 Run the same checks CI uses before opening a PR:
 
 ```sh
-pnpm run ci && pnpm run lint && pnpm run check
+pnpm run ci && pnpm run lint && pnpm run check && pnpm run check:i18n
 ```
 
 Format specific files after editing:
@@ -191,6 +192,7 @@ Every push and pull request targeting `main` runs [`.github/workflows/ci.yml`](.
 pnpm run ci
 pnpm run lint
 pnpm run check
+pnpm run check:i18n
 ```
 
 `pnpm run ci` installs dependencies from `pnpm-lock.yaml` with a frozen lockfile (fails if the lockfile is out of sync with `package.json`). CI copies [`.env.test`](.env.test) to `.env` before install so `svelte-kit sync` can generate `$env/static/private` types (no real API key in Actions).

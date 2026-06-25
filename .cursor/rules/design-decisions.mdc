@@ -24,7 +24,7 @@ alwaysApply: true
 - **Session intro** streams a concept preview in Ask in parallel (`POST /api/session-intro`, SSE)
 - Unlocked scaffold code via **`setValue()`** (typewriter `executeEdits` planned, ADR-011)
 - **Learning Card** in Monaco **`viewZone`**; next scaffold after correct answer
-- **Lesson start gate** before first scaffold (`lessonStarted`, ADR-020)
+- **Lesson start gate** before first scaffold (`lessonStarted`, ADR-021)
 
 ## Claude API — Architecture Rules
 

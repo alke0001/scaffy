@@ -37,7 +37,7 @@ ADR = Architecture Decision Record
 | [ADR-018](#adr-018-scaffy-modal-product-dialogs)                                     | ScaffyModal — unified product dialogs                    | Accepted                                              |
 | [ADR-019](#adr-019-monaco-viewzone-aria-hidden-accepted)                             | Monaco viewZone aria-hidden — accepted trade-off         | Accepted                                              |
 | [ADR-020](#adr-020-client-side-i18n-english--german-via-flat-translation-dictionary) | Client-side i18n (EN/DE) via flat translation dictionary | Accepted                                              |
-| [ADR-020](#adr-020-session-intro-stream-and-lesson-start-gate)                       | Session intro stream + lesson start gate                 | Accepted                                              |
+| [ADR-021](#adr-021-session-intro-stream-and-lesson-start-gate)                       | Session intro stream + lesson start gate                 | Accepted                                              |
 
 ---
 
@@ -134,12 +134,12 @@ Learn, Ask, and session intro need different system prompts, output shapes, temp
 ### Alternatives considered
 
 - Single `/api/claude` with a `mode` flag — rejected; mixes unrelated config and is harder to test and tune.
-- Reuse `/api/chat` for session intro — rejected (ADR-020); Ask history and Socratic prompt do not fit a one-shot preview.
+- Reuse `/api/chat` for session intro — rejected (ADR-021); Ask history and Socratic prompt do not fit a one-shot preview.
 
 ### Consequences
 
 - Three handlers to maintain; each can evolve independently (caching TTL, token limits, prompts).
-- New sessions may run **scaffold REST + session intro (Server-Sent Events)** in parallel (ADR-020).
+- New sessions may run **scaffold REST + session intro (Server-Sent Events)** in parallel (ADR-021).
 
 ---
 
@@ -682,7 +682,7 @@ Lighthouse (and axe) report **`aria-hidden-focus`** on the session route: Monaco
 
 ---
 
-## ADR-020: Session intro stream + lesson start gate
+## ADR-021: Session intro stream + lesson start gate
 
 **Status:** Accepted
 
@@ -723,21 +723,25 @@ Scaffy ships an English UI but targets German-speaking learners (course language
 
 ### Decision
 
-- **One language file** — `src/lib/i18n/translations.ts` holds a flat `Record<LanguageCode, Record<string, string>>` keyed by dotted ids (`app.*`, `home.*`, `sessions.*`, `session.*`, `about.*`). All user-facing copy, including About FAQ (`about.faq.<id>.question|answer`), lives here.
+- **One language file** — `src/lib/i18n/translations.ts` holds English messages in `EN_MESSAGES` (`as const`) and German in `DE_MESSAGES`, keyed by dotted ids (`app.*`, `home.*`, `sessions.*`, `session.*`, `about.*`). All user-facing copy, including About FAQ (`about.faq.<id>.question|answer`), lives here.
+- **`MessageKey` type** — `export type MessageKey = keyof typeof EN_MESSAGES`. `t(key: MessageKey)` and the derived `messages` store (`Record<MessageKey, string>`) catch typos in components at compile time via `pnpm run check`.
 - **Store + `t()`** — `src/lib/i18n/index.ts` exposes a `language` writable (persisted to `localStorage` under `scaffy.language`), a derived `messages` store used in components as `$messages['key']`, and a `t(key, params)` helper for non-reactive lookups with `{param}` interpolation.
-- **Markdown stays in `.md` files** — the About intro is the documented exception (long-form markdown rendered via `MarkdownContent`); localized as `about-content.md` (en) + `about-content.de.md` (de), selected by `$language`. `about-faq.ts` keeps only the ordered ids; the copy moved into the translation file.
+- **EN/DE key parity** — `pnpm run check:i18n` (`scripts/check-i18n-keys.ts`) fails when a key exists only in `en` or only in `de`. Runs on every CI push/PR; Husky `lint-staged` runs it only when `translations.ts` is staged. Not part of `pnpm run lint`.
+- **Markdown stays in `.md` files** — the About intro is the documented exception (long-form markdown rendered via `MarkdownContent`); localized as `about-content.md` (en) + `about-content.de.md` (de), selected by `$language`. `about-faq.ts` keeps only the ordered ids; FAQ copy lives in the translation file. Dynamic FAQ keys in `about-dialog.svelte` (template literals) are intentionally untyped.
 - **Structured example data stays in typed modules** — the Home example prompts keep their `{ label, prompt }` shape in `example-prompts.ts` but become a `Record<LanguageCode, readonly ExamplePrompt[]>` selected by `$language`, rather than flattening multi-sentence prompt bodies into the dictionary.
 - **Default language** is English; unknown/missing keys fall back to the key string.
 
 ### Alternatives considered
 
 - **`svelte-i18n` / Paraglide / inlang** — rejected for now; the string surface is small and a dependency-free dictionary keeps the SPA bundle and tooling simple.
+- **`satisfies Record<MessageKey, string>` on `de`** — rejected; EN/DE parity is enforced by `check:i18n` instead of widening compile-time checks on the German block.
 - **Per-component copy constants** — rejected; scatters translations and prevents a single source of truth.
 - **Putting About markdown into the dictionary** — rejected; multi-paragraph markdown is unreadable as a TS string and loses `.md` tooling.
 
 ### Consequences
 
-- New user-facing strings must be added to **both** `en` and `de` in `translations.ts`; components reference `$messages` / `t()` rather than hardcoding copy.
+- New user-facing strings must be added to **both** `en` and `de` in `translations.ts`; `check:i18n` blocks merge when keys diverge.
+- Components reference `$messages` / `t()` with `MessageKey` literals — typos fail `svelte-check`, not at runtime.
 - Localized long-form content uses paired `*.md` / `*.de.md` files selected by `$language`; localized structured data (e.g. example prompts) uses a `Record<LanguageCode, …>` keyed by `$language`.
 - No SSR locale negotiation; the first paint uses the persisted or default language.
 
@@ -756,6 +760,7 @@ Scaffy ships an English UI but targets German-speaking learners (course language
 
 | Date       | Change                                                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-25 | ADR-020: `MessageKey` compile-time checks; `check:i18n` for en/de parity (CI + lint-staged on `translations.ts`). Session intro renumbered to ADR-021 (duplicate id cleanup).   |
 | 2026-06-21 | ADR-020: client-side i18n (EN/DE) — `src/lib/i18n` store + flat `translations.ts`; Session/Sessions/About copy localized; About intro split into `about-content.md` / `.de.md`. |
 | 2026-06-21 | i18n follow-up (ADR-020): localized chat placeholders/tooltip, Monaco retry/fallback buttons, and Home example prompts (`example-prompts.ts` → `Record<LanguageCode, …>`).      |
 | 2026-05-31 | Initial `docs/decisions.md` — documents decisions through ChatPanel, dual API, SSE Ask, session store, and proposed markdown rendering.                                         |
@@ -789,5 +794,5 @@ Scaffy ships an English UI but targets German-speaking learners (course language
 | 2026-06-17 | ADR-015: persistent top nav (scaffy + My Sessions + session title); removed shadcn `ui/breadcrumb`; `/sessions` empty state.                                                    |
 | 2026-06-19 | ADR-005: removed Learn prompt `<`/`{`/`;` heuristic — caused false 400s; min 10 characters remains.                                                                             |
 | 2026-06-19 | ADR-014: Ask chat per session in `session.svelte.ts` (`askMessages`) — SPA navigation only, not localStorage.                                                                   |
-| 2026-06-19 | ADR-020: `/api/session-intro` parallel SSE; intro gate via `lessonStarted`; regenerate on scaffold fallback.                                                                    |
+| 2026-06-19 | ADR-021: `/api/session-intro` parallel SSE; intro gate via `lessonStarted`; regenerate on scaffold fallback.                                                                    |
 | 2026-06-20 | Docs sync: ADR-004/005/011 — three API routes + prompts; Monaco loading = comments (`setValue`) + spinner viewZone; scaffold typewriter still planned.                          |
