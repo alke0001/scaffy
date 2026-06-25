@@ -44,7 +44,7 @@ These three files must stay semantically identical in their shared project assum
 - Parallel **session intro** streams a concept preview in Ask while scaffolds generate (`POST /api/session-intro`, SSE)
 - Each unlocked scaffold’s code is applied via **`editor.setValue()`** (full chunk; per-character typewriter via `executeEdits` is **planned**, ADR-011)
 - The **Learning Card** appears in a Monaco **`viewZone`** after the last code line; the next scaffold unlocks only after a correct answer
-- **Lesson start gate:** first scaffold waits until user clicks **Got it — start lesson** (`lessonStarted`, ADR-020)
+- **Lesson start gate:** first scaffold waits until user clicks **Got it — start lesson** (`lessonStarted`, ADR-021)
 
 ### Claude API — Architecture
 

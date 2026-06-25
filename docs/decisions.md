@@ -15,28 +15,30 @@ This document records **why** Scaffy is built the way it is. It complements [`CL
 
 ADR = Architecture Decision Record
 
-| ID                                                                        | Title                                                  | Status                                                |
-| ------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------- |
-| [ADR-001](#adr-001-product-vision-scaffolding--friction)                  | Product vision: scaffolding + friction                 | Accepted                                              |
-| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                  | SPA: SvelteKit 5, no SSR for app shell                 | Accepted                                              |
-| [ADR-003](#adr-003-claude-only-via-server-api-routes)                     | Claude only via server API routes                      | Accepted                                              |
-| [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask)              | Separate API endpoints (Learn, Ask, Session intro)     | Accepted                                              |
-| [ADR-005](#adr-005-learn-scaffold-rest--structured-json)                  | Learn: REST + structured JSON                          | Accepted                                              |
-| [ADR-006](#adr-006-ask-chat-sse-streaming)                                | Ask: chat Server-Sent Events (SSE) streaming           | Accepted                                              |
-| [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership)               | ChatPanel dual mode and state ownership                | Accepted                                              |
-| [ADR-008](#adr-008-chat-message-lifecycle-statuses)                       | Chat message lifecycle statuses                        | Accepted                                              |
-| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later)              | Session store for scaffolds (Monaco later)             | Accepted                                              |
-| [ADR-010](#adr-010-repository-layout-and-typescript)                      | Repository layout and TypeScript                       | Accepted                                              |
-| [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned)               | Monaco typewriter and viewZones (planned)              | Accepted (viewZone shipped)                           |
-| [ADR-012](#adr-012-ask-markdown-rendering-during-stream)                  | Ask markdown rendering during stream                   | Accepted                                              |
-| [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd)           | Documentation split: CLAUDE.md vs decisions.md         | Accepted                                              |
-| [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) | Learning session persistence port — localStorage first | Accepted (localStorage shipped inline; port deferred) |
-| [ADR-015](#adr-015-home-vs-session-route-split)                           | Home vs session route split                            | Accepted                                              |
-| [ADR-016](#adr-016-routes-feature-views-vs-ui-components)                 | Routes, feature views, vs ui/ components               | Accepted                                              |
-| [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                | ui/ primitives: shadcn-first; ScrollArea               | Accepted                                              |
-| [ADR-018](#adr-018-scaffy-modal-product-dialogs)                          | ScaffyModal — unified product dialogs                  | Accepted                                              |
-| [ADR-019](#adr-019-monaco-viewzone-aria-hidden-accepted)                  | Monaco viewZone aria-hidden — accepted trade-off       | Accepted                                              |
-| [ADR-020](#adr-020-session-intro-stream-and-lesson-start-gate)            | Session intro stream + lesson start gate               | Accepted                                              |
+| ID                                                                                   | Title                                                    | Status                                                |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------- | ----------------------------------------------------- |
+| [ADR-001](#adr-001-product-vision-scaffolding--friction)                             | Product vision: scaffolding + friction                   | Accepted                                              |
+| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                             | SPA: SvelteKit 5, no SSR for app shell                   | Accepted                                              |
+| [ADR-003](#adr-003-claude-only-via-server-api-routes)                                | Claude only via server API routes                        | Accepted                                              |
+| [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask)                         | Separate API endpoints (Learn, Ask, Session intro)       | Accepted                                              |
+| [ADR-005](#adr-005-learn-scaffold-rest--structured-json)                             | Learn: REST + structured JSON                            | Accepted                                              |
+| [ADR-006](#adr-006-ask-chat-sse-streaming)                                           | Ask: chat Server-Sent Events (SSE) streaming             | Accepted                                              |
+| [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership)                          | ChatPanel dual mode and state ownership                  | Accepted                                              |
+| [ADR-008](#adr-008-chat-message-lifecycle-statuses)                                  | Chat message lifecycle statuses                          | Accepted                                              |
+| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later)                         | Session store for scaffolds (Monaco later)               | Accepted                                              |
+| [ADR-010](#adr-010-repository-layout-and-typescript)                                 | Repository layout and TypeScript                         | Accepted                                              |
+| [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned)                          | Monaco typewriter and viewZones (planned)                | Accepted (viewZone shipped)                           |
+| [ADR-012](#adr-012-ask-markdown-rendering-during-stream)                             | Ask markdown rendering during stream                     | Accepted                                              |
+| [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd)                      | Documentation split: CLAUDE.md vs decisions.md           | Accepted                                              |
+| [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first)            | Learning session persistence port — localStorage first   | Accepted (localStorage shipped inline; port deferred) |
+| [ADR-015](#adr-015-home-vs-session-route-split)                                      | Home vs session route split                              | Accepted                                              |
+| [ADR-016](#adr-016-routes-feature-views-vs-ui-components)                            | Routes, feature views, vs ui/ components                 | Accepted                                              |
+| [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                           | ui/ primitives: shadcn-first; ScrollArea                 | Accepted                                              |
+| [ADR-018](#adr-018-scaffy-modal-product-dialogs)                                     | ScaffyModal — unified product dialogs                    | Accepted                                              |
+| [ADR-019](#adr-019-monaco-viewzone-aria-hidden-accepted)                             | Monaco viewZone aria-hidden — accepted trade-off         | Accepted                                              |
+| [ADR-020](#adr-020-client-side-i18n-english--german-via-flat-translation-dictionary) | Client-side i18n (EN/DE) via flat translation dictionary | Accepted                                              |
+| [ADR-021](#adr-021-session-intro-stream-and-lesson-start-gate)                       | Session intro stream + lesson start gate                 | Accepted                                              |
+| [ADR-022](#adr-022-shadcn-vs-custom-ui-controls)                                     | shadcn vs custom UI controls                             | Accepted                                              |
 
 ---
 
@@ -133,12 +135,12 @@ Learn, Ask, and session intro need different system prompts, output shapes, temp
 ### Alternatives considered
 
 - Single `/api/claude` with a `mode` flag — rejected; mixes unrelated config and is harder to test and tune.
-- Reuse `/api/chat` for session intro — rejected (ADR-020); Ask history and Socratic prompt do not fit a one-shot preview.
+- Reuse `/api/chat` for session intro — rejected (ADR-021); Ask history and Socratic prompt do not fit a one-shot preview.
 
 ### Consequences
 
 - Three handlers to maintain; each can evolve independently (caching TTL, token limits, prompts).
-- New sessions may run **scaffold REST + session intro (Server-Sent Events)** in parallel (ADR-020).
+- New sessions may run **scaffold REST + session intro (Server-Sent Events)** in parallel (ADR-021).
 
 ---
 
@@ -681,7 +683,7 @@ Lighthouse (and axe) report **`aria-hidden-focus`** on the session route: Monaco
 
 ---
 
-## ADR-020: Session intro stream + lesson start gate
+## ADR-021: Session intro stream + lesson start gate
 
 **Status:** Accepted
 
@@ -712,6 +714,96 @@ Starting a session from home left the Ask panel empty for 10–30s while Monaco 
 
 ---
 
+## ADR-020: Client-side i18n (English + German) via flat translation dictionary
+
+**Status:** Accepted
+
+### Context
+
+Scaffy ships an English UI but targets German-speaking learners (course language is German). We need a runtime language switch (EN/DE) for the app chrome across Home, Sessions, Session, and About. As a pure SPA (ADR-002) the choice must work without SSR and persist the user's selection.
+
+### Decision
+
+- **One language file** — `src/lib/i18n/translations.ts` holds English messages in `EN_MESSAGES` (`as const`) and German in `DE_MESSAGES`, keyed by dotted ids (`app.*`, `home.*`, `sessions.*`, `session.*`, `about.*`). All user-facing copy, including About FAQ (`about.faq.<id>.question|answer`), lives here.
+- **`MessageKey` type** — `export type MessageKey = keyof typeof EN_MESSAGES`. `t(key: MessageKey)` and the derived `messages` store (`Record<MessageKey, string>`) catch typos in components at compile time via `pnpm run check`.
+- **Store + `t()`** — `src/lib/i18n/index.ts` exposes a `language` writable (persisted to `localStorage` under `scaffy.language`), a derived `messages` store used in components as `$messages['key']`, and a `t(key, params)` helper for non-reactive lookups with `{param}` interpolation.
+- **EN/DE key parity** — `pnpm run check:i18n` (`scripts/check-i18n-keys.ts`) fails when a key exists only in `en` or only in `de`. Runs on every CI push/PR; Husky `lint-staged` runs it only when `translations.ts` is staged. Not part of `pnpm run lint`.
+- **Markdown stays in `.md` files** — the About intro is the documented exception (long-form markdown rendered via `MarkdownContent`); localized as `about-content.md` (en) + `about-content.de.md` (de), selected by `$language`. `about-faq.ts` keeps only the ordered ids; FAQ copy lives in the translation file. Dynamic FAQ keys in `about-dialog.svelte` (template literals) are intentionally untyped.
+- **Structured example data stays in typed modules** — the Home example prompts keep their `{ label, prompt }` shape in `example-prompts.ts` but become a `Record<LanguageCode, readonly ExamplePrompt[]>` selected by `$language`, rather than flattening multi-sentence prompt bodies into the dictionary.
+- **Default language** is English; unknown/missing keys fall back to the key string.
+
+### Alternatives considered
+
+- **`svelte-i18n` / Paraglide / inlang** — rejected for now; the string surface is small and a dependency-free dictionary keeps the SPA bundle and tooling simple.
+- **`satisfies Record<MessageKey, string>` on `de`** — rejected; EN/DE parity is enforced by `check:i18n` instead of widening compile-time checks on the German block.
+- **Per-component copy constants** — rejected; scatters translations and prevents a single source of truth.
+- **Putting About markdown into the dictionary** — rejected; multi-paragraph markdown is unreadable as a TS string and loses `.md` tooling.
+
+### Consequences
+
+- New user-facing strings must be added to **both** `en` and `de` in `translations.ts`; `check:i18n` blocks merge when keys diverge.
+- Components reference `$messages` / `t()` with `MessageKey` literals — typos fail `svelte-check`, not at runtime.
+- Localized long-form content uses paired `*.md` / `*.de.md` files selected by `$language`; localized structured data (e.g. example prompts) uses a `Record<LanguageCode, …>` keyed by `$language`.
+- No SSR locale negotiation; the first paint uses the persisted or default language.
+
+---
+
+## ADR-022: shadcn vs custom UI controls
+
+**Status:** Accepted
+
+### Context
+
+ADR-017 sets **shadcn-first** for `ui/` primitives but does not record which controls we deliberately skipped. Without a short inventory, agents may either hand-roll complex widgets (focus traps, keyboard nav) or install full shadcn kits for two-option menus.
+
+### Decision rule
+
+| Prefer **shadcn-svelte** (+ bits-ui) when…                                    | Prefer **custom / compose** when…                                     |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Focus trap, portal, Escape, roving tabindex, or ARIA patterns are non-trivial | Behavior is a few lines (static list, click-outside, toggle open)     |
+| The control is reused across many surfaces                                    | One screen owns the markup (title bar, session tabs, Monaco viewZone) |
+| Styling matches registry defaults with token tweaks                           | Product chrome diverges from shadcn (modal header, variant borders)   |
+| No sensible composition from existing primitives                              | Trigger already is shadcn `Button`; only the menu panel is plain HTML |
+
+**Default:** `pnpm dlx shadcn-svelte@latest add <name>` before a new bare primitive. Document exceptions here or in a linked ADR.
+
+### Installed shadcn primitives (in use)
+
+| Primitive                    | Why shadcn                                                                          |
+| ---------------------------- | ----------------------------------------------------------------------------------- |
+| **Button**, **Card**         | Shared variants/sizes across Home, chat, sessions, title bar                        |
+| **ScrollArea**               | Flex height chain + hover-fade scrollbars (ADR-017); used in chat, sessions, modals |
+| **Tooltip**                  | Portal + positioning; composed in `ChipGrid`, chat actions                          |
+| **Accordion**                | Keyboard + expand/collapse in About FAQ                                             |
+| **Resizable**                | Pane drag/keyboard split in session workspace                                       |
+| **Dialog**                   | Registry baseline only; **not** used for product modals (see ScaffyModal)           |
+| **Toggle** / **ToggleGroup** | Installed for parity; no feature dependency yet                                     |
+
+### Custom or composed (not full shadcn kits)
+
+| Control                          | Location                      | Why not shadcn                                                                                                                                                           |
+| -------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **ScaffyModal**                  | `ui/scaffy-modal/`            | Product modal chrome (icon header, variants, backdrop rules) does not fit extending `Dialog` — ADR-018                                                                   |
+| **ChipGrid**                     | `ui/chip/`                    | Composes **Button** + **Tooltip**; no registry item                                                                                                                      |
+| **MarkdownContent**              | `ui/markdown/`                | Streaming Ask markdown + DOMPurify; no shadcn equivalent — ADR-012                                                                                                       |
+| **`native-scroll-x` on `<pre>`** | `scroll-area.css`             | Sanitized HTML cannot wrap code blocks in Svelte — ADR-017                                                                                                               |
+| **ScaffyDropdown**               | `ui/scaffy-dropdown/`         | Lightweight listbox menu; built-in toolbar **Button** trigger (label + chevron). **DropdownMenu** kit avoided for ≤3 static items — first use: language in `AppTitleBar` |
+| **AppTitleBar nav**              | `shell/app-title-bar.svelte`  | Custom segment nav + active underline; shadcn **Breadcrumb** was tried and removed — ADR-015                                                                             |
+| **SessionTabs**                  | `session/session-tabs.svelte` | Domain tab strip (truncate prompt, delete affordance)                                                                                                                    |
+| **Learning Card**                | `editor/learning-card.svelte` | Monaco viewZone + friction UX; not a generic primitive — ADR-011                                                                                                         |
+
+### Not installed (evaluate before adding)
+
+**DropdownMenu**, **Select**, **Popover**, **Breadcrumb** — add via CLI only when a surface needs full menu semantics (many items, submenus, typeahead, form-integrated select). A toolbar with ≤3 static choices stays on **Button** + minimal markup.
+
+### Consequences
+
+- Language switch documents the lightweight-dropdown pattern; future title-bar menus follow the same rule.
+- ADR-017 remains the install policy; this ADR is the **inventory + heuristic** for reviews and agents.
+- Revisit when a third locale or complex menu appears — then install **DropdownMenu** once and migrate **ScaffyDropdown** call sites that need submenus or typeahead.
+
+---
+
 ## Planned / nice-to-have (not ADRs yet)
 
 - Supabase adapter + Google Auth (see [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) Phase 2)
@@ -723,38 +815,42 @@ Starting a session from home left the Ask panel empty for 10–30s while Monaco 
 
 ## Changelog
 
-| Date       | Change                                                                                                                                                 |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2026-05-31 | Initial `docs/decisions.md` — documents decisions through ChatPanel, dual API, SSE Ask, session store, and proposed markdown rendering.                |
-| 2026-05-31 | ADR-013: added `.cursor/rules/decisions-log.mdc` — mandatory `docs/decisions.md` updates after Agent-mode implementation.                              |
-| 2026-05-31 | ADR-012 Accepted: Ask assistant markdown via `marked` + DOMPurify, rAF-throttled in `ChatMarkdown.svelte`.                                             |
-| 2026-05-31 | ADR-014 Accepted: Learning session persistence port; localStorage adapter first, Supabase adapter later via same interface.                            |
-| 2026-05-31 | Nice-to-have: Lottie icons/animations noted in decisions.md and agent configs.                                                                         |
-| 2026-05-31 | ADR-006: Ask tutor — Socratic system prompt, temperature 0.5, history capped to 30 messages (~15 turns).                                               |
-| 2026-05-31 | ADR-006: tightened Socratic prompt — no full code on first "how do I" reply; snippets only after engagement or second ask.                             |
-| 2026-05-31 | ADR-006: scaffolded Socratic prompt — beginner-first teaching, max 2 question-only turns, generic (not single exercise storyline).                     |
-| 2026-06-08 | ADR-016 Accepted: routes vs feature views vs ui/ components; `component-layout.mdc` for agents.                                                        |
-| 2026-06-08 | ADR-012: `render-markdown.ts` co-located under `src/lib/components/chat/`.                                                                             |
-| 2026-06-08 | ADR-015: session tabs from main integrated into `SessionWorkspace`; route id wired to `startScaffoldRequest`.                                          |
-| 2026-06-16 | ADR-005: 3-scaffold single-shot lesson; two-phase experiment documented as rejected; in-editor Monaco loading; retry + fallback JSON.                  |
-| 2026-06-10 | ADR-017: shadcn ScrollArea replaces custom scroll wrapper; `native-scroll-x` CSS only for markdown `<pre>`.                                            |
-| 2026-06-10 | ADR-017: centralized `scroll-area.css` inset + default `type="always"`; content padding off ScrollArea root.                                           |
-| 2026-06-10 | ADR-012: shared `ui/markdown/` (`MarkdownContent`, `render-markdown.ts`); About intro in `about-content.md`, FAQ in `about-faq.ts`.                    |
-| 2026-06-10 | ADR-017: ScrollArea default `type="hover"`; slimmer inset thumb; symmetric gutter via track width = thumb width.                                       |
-| 2026-06-11 | Design tokens: `scaffy-logo.svelte` uses CSS vars; session incomplete dot `bg-scaffy-amber`; ADR-015/016 token docs synced.                            |
-| 2026-06-14 | ADR-011: knowledge check viewZone; Monaco read-only until session completed (copy allowed); typewriter still pending.                                  |
-| 2026-06-14 | ADR-011: Learning Card UI rename; portaled feedback + read-only hint; Learning Card copy prevention (no paste into Ask chat).                          |
-| 2026-06-14 | README + About copy synced to routes, Learning Cards, Husky/lint-staged; ADR-014 status (inline localStorage shipped).                                 |
-| 2026-06-12 | ADR-018: ScaffyModal unifies About, delete confirm, and Learning Card feedback dialogs.                                                                |
-| 2026-06-12 | ADR-018: scrollable modal body uses central ScrollArea + lg grid height constraint.                                                                    |
-| 2026-06-12 | ADR-017: unified hover-fade scrollbars (ScrollArea, Monaco, modals); `scrollbars.mdc` agent rule.                                                      |
-| 2026-06-12 | ADR-018: backdrop click dismisses all ScaffyModals by default (same as secondary / Verstanden).                                                        |
-| 2026-06-17 | Design tokens: WCAG AA contrast pass — `--destructive-subtle*`, stronger `--scaffy-divider`, modal/chat/error-surface fixes.                           |
-| 2026-06-17 | ADR-019: accept Monaco viewZone `aria-hidden-focus` on session; no overlay-widget refactor for Lighthouse. Sessions page `<main>` landmark.            |
-| 2026-06-17 | ADR-015/016: `/history` renamed to `/sessions` (308 redirect); `SessionsPage` copy — “My learning overview”.                                           |
-| 2026-06-17 | ADR-015: App shell breadcrumb (shadcn) replaces home/sessions nav; home saved-session count line under example chips.                                  |
-| 2026-06-17 | ADR-015: persistent top nav (scaffy + My Sessions + session title); removed shadcn `ui/breadcrumb`; `/sessions` empty state.                           |
-| 2026-06-19 | ADR-005: removed Learn prompt `<`/`{`/`;` heuristic — caused false 400s; min 10 characters remains.                                                    |
-| 2026-06-19 | ADR-014: Ask chat per session in `session.svelte.ts` (`askMessages`) — SPA navigation only, not localStorage.                                          |
-| 2026-06-19 | ADR-020: `/api/session-intro` parallel SSE; intro gate via `lessonStarted`; regenerate on scaffold fallback.                                           |
-| 2026-06-20 | Docs sync: ADR-004/005/011 — three API routes + prompts; Monaco loading = comments (`setValue`) + spinner viewZone; scaffold typewriter still planned. |
+| Date       | Change                                                                                                                                                                          |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-24 | ADR-022: shadcn vs custom UI inventory (ScaffyDropdown, ScaffyModal, ChipGrid, etc.) and when to install vs compose.                                                            |
+| 2026-06-25 | ADR-020: `MessageKey` compile-time checks; `check:i18n` for en/de parity (CI + lint-staged on `translations.ts`). Session intro renumbered to ADR-021 (duplicate id cleanup).   |
+| 2026-06-21 | ADR-020: client-side i18n (EN/DE) — `src/lib/i18n` store + flat `translations.ts`; Session/Sessions/About copy localized; About intro split into `about-content.md` / `.de.md`. |
+| 2026-06-21 | i18n follow-up (ADR-020): localized chat placeholders/tooltip, Monaco retry/fallback buttons, and Home example prompts (`example-prompts.ts` → `Record<LanguageCode, …>`).      |
+| 2026-05-31 | Initial `docs/decisions.md` — documents decisions through ChatPanel, dual API, SSE Ask, session store, and proposed markdown rendering.                                         |
+| 2026-05-31 | ADR-013: added `.cursor/rules/decisions-log.mdc` — mandatory `docs/decisions.md` updates after Agent-mode implementation.                                                       |
+| 2026-05-31 | ADR-012 Accepted: Ask assistant markdown via `marked` + DOMPurify, rAF-throttled in `ChatMarkdown.svelte`.                                                                      |
+| 2026-05-31 | ADR-014 Accepted: Learning session persistence port; localStorage adapter first, Supabase adapter later via same interface.                                                     |
+| 2026-05-31 | Nice-to-have: Lottie icons/animations noted in decisions.md and agent configs.                                                                                                  |
+| 2026-05-31 | ADR-006: Ask tutor — Socratic system prompt, temperature 0.5, history capped to 30 messages (~15 turns).                                                                        |
+| 2026-05-31 | ADR-006: tightened Socratic prompt — no full code on first "how do I" reply; snippets only after engagement or second ask.                                                      |
+| 2026-05-31 | ADR-006: scaffolded Socratic prompt — beginner-first teaching, max 2 question-only turns, generic (not single exercise storyline).                                              |
+| 2026-06-08 | ADR-016 Accepted: routes vs feature views vs ui/ components; `component-layout.mdc` for agents.                                                                                 |
+| 2026-06-08 | ADR-012: `render-markdown.ts` co-located under `src/lib/components/chat/`.                                                                                                      |
+| 2026-06-08 | ADR-015: session tabs from main integrated into `SessionWorkspace`; route id wired to `startScaffoldRequest`.                                                                   |
+| 2026-06-16 | ADR-005: 3-scaffold single-shot lesson; two-phase experiment documented as rejected; in-editor Monaco loading; retry + fallback JSON.                                           |
+| 2026-06-10 | ADR-017: shadcn ScrollArea replaces custom scroll wrapper; `native-scroll-x` CSS only for markdown `<pre>`.                                                                     |
+| 2026-06-10 | ADR-017: centralized `scroll-area.css` inset + default `type="always"`; content padding off ScrollArea root.                                                                    |
+| 2026-06-10 | ADR-012: shared `ui/markdown/` (`MarkdownContent`, `render-markdown.ts`); About intro in `about-content.md`, FAQ in `about-faq.ts`.                                             |
+| 2026-06-10 | ADR-017: ScrollArea default `type="hover"`; slimmer inset thumb; symmetric gutter via track width = thumb width.                                                                |
+| 2026-06-11 | Design tokens: `scaffy-logo.svelte` uses CSS vars; session incomplete dot `bg-scaffy-amber`; ADR-015/016 token docs synced.                                                     |
+| 2026-06-14 | ADR-011: knowledge check viewZone; Monaco read-only until session completed (copy allowed); typewriter still pending.                                                           |
+| 2026-06-14 | ADR-011: Learning Card UI rename; portaled feedback + read-only hint; Learning Card copy prevention (no paste into Ask chat).                                                   |
+| 2026-06-14 | README + About copy synced to routes, Learning Cards, Husky/lint-staged; ADR-014 status (inline localStorage shipped).                                                          |
+| 2026-06-12 | ADR-018: ScaffyModal unifies About, delete confirm, and Learning Card feedback dialogs.                                                                                         |
+| 2026-06-12 | ADR-018: scrollable modal body uses central ScrollArea + lg grid height constraint.                                                                                             |
+| 2026-06-12 | ADR-017: unified hover-fade scrollbars (ScrollArea, Monaco, modals); `scrollbars.mdc` agent rule.                                                                               |
+| 2026-06-12 | ADR-018: backdrop click dismisses all ScaffyModals by default (same as secondary / Verstanden).                                                                                 |
+| 2026-06-17 | Design tokens: WCAG AA contrast pass — `--destructive-subtle*`, stronger `--scaffy-divider`, modal/chat/error-surface fixes.                                                    |
+| 2026-06-17 | ADR-019: accept Monaco viewZone `aria-hidden-focus` on session; no overlay-widget refactor for Lighthouse. Sessions page `<main>` landmark.                                     |
+| 2026-06-17 | ADR-015/016: `/history` renamed to `/sessions` (308 redirect); `SessionsPage` copy — “My learning overview”.                                                                    |
+| 2026-06-17 | ADR-015: App shell breadcrumb (shadcn) replaces home/sessions nav; home saved-session count line under example chips.                                                           |
+| 2026-06-17 | ADR-015: persistent top nav (scaffy + My Sessions + session title); removed shadcn `ui/breadcrumb`; `/sessions` empty state.                                                    |
+| 2026-06-19 | ADR-005: removed Learn prompt `<`/`{`/`;` heuristic — caused false 400s; min 10 characters remains.                                                                             |
+| 2026-06-19 | ADR-014: Ask chat per session in `session.svelte.ts` (`askMessages`) — SPA navigation only, not localStorage.                                                                   |
+| 2026-06-19 | ADR-021: `/api/session-intro` parallel SSE; intro gate via `lessonStarted`; regenerate on scaffold fallback.                                                                    |
+| 2026-06-20 | Docs sync: ADR-004/005/011 — three API routes + prompts; Monaco loading = comments (`setValue`) + spinner viewZone; scaffold typewriter still planned.                          |

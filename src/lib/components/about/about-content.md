@@ -4,7 +4,7 @@ Scaffy is a learning tool for building real UI code step by step. You describe w
 
 Unlike tools that dump a full solution at once, Scaffy adds deliberate friction: before each new chunk appears, you answer a short concept question on a **Learning Card**. That pause is intentional — it turns passive copying into active understanding.
 
-Scaffy is built for people learning framework-based UI development, especially Svelte 5. Step content in a session is generated in German (course language); the app chrome stays in English.
+Scaffy is built for people learning framework-based UI development, especially Svelte 5. Step content in a session is generated in German (course language); the interface is available in English and German.
 
 ### How it works
 

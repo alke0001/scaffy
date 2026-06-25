@@ -4,6 +4,7 @@
 	import type { ChatMessage } from '$lib/types/chat-message.js';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import './ask-chat.css';
+	import { messages } from '$lib/i18n/index.js';
 
 	let {
 		message,
@@ -42,7 +43,7 @@
 					: 'ask-chat-message--assistant'}"
 		>
 			{#if !isUser && !isError}
-				<span class="ask-chat-message__label">scaffy tutor</span>
+				<span class="ask-chat-message__label">{$messages['tutor.title']}</span>
 			{/if}
 
 			{#if !isUser && showSpinner}

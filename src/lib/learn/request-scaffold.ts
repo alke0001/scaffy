@@ -10,22 +10,23 @@ import {
 	resetLessonStarted,
 } from '$lib/session.svelte.js';
 import { regenerateSessionIntro } from '$lib/learn/request-session-intro.js';
-import { validateCumulativeChain } from '$lib/scaffold/validate-cumulative.js';
-import { LESSON_SCAFFOLD_COUNT, type StructuredScaffoldOutput } from '$lib/types/scaffold.js';
+import { type StructuredScaffoldOutput } from '$lib/types/scaffold.js';
+import { get } from 'svelte/store';
+import { language } from '$lib/i18n';
 
 const inFlight = new Map<string, Promise<void>>();
 
 function isValidFallback(data: unknown): data is StructuredScaffoldOutput {
 	if (typeof data !== 'object' || data === null || !('scaffolds' in data)) return false;
 	const { scaffolds } = data as { scaffolds: unknown };
-	if (!Array.isArray(scaffolds) || scaffolds.length !== LESSON_SCAFFOLD_COUNT) return false;
+	if (!Array.isArray(scaffolds) || scaffolds.length === 0) return false;
 	for (const step of scaffolds) {
 		if (typeof step !== 'object' || step === null) return false;
 		const s = step as Record<string, unknown>;
 		if (typeof s.codeSnippet !== 'string') return false;
 		if (typeof s.knowledgeCheck !== 'object' || s.knowledgeCheck === null) return false;
 	}
-	return validateCumulativeChain(scaffolds as { codeSnippet: string }[]).ok;
+	return true;
 }
 
 export function isFallbackScaffoldAvailable(): boolean {
@@ -37,7 +38,10 @@ async function fetchScaffoldOnce(prompt: string, sessionId: string): Promise<voi
 	const data = await fetchJson<StructuredScaffoldOutput>('/api/scaffold', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ prompt }),
+		body: JSON.stringify({
+			prompt,
+			language: get(language),
+		}),
 	});
 	setScaffolds(data.scaffolds, sessionId);
 	devLog('scaffold', 'fetch ready', { sessionId, steps: data.scaffolds.length });

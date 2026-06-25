@@ -1,12 +1,15 @@
-export const SCAFFOLD_LOADING_VERBS = [
-	'Booping Scaffy...',
-	'Rubber-ducking the architecture...',
-	'Turning tutorials into real skills...',
-	'Caramelizing Onions...',
-	'Translating coffee into code...',
-	'Teaching variables their purpose...',
-	'Preparing TypeScript emotional support...',
-] as const;
+import { t } from '$lib/i18n/index.js';
+export function getLoadingVerbs(): string[] {
+	return [
+		t('editor.loadingVerb1'),
+		t('editor.loadingVerb2'),
+		t('editor.loadingVerb3'),
+		t('editor.loadingVerb4'),
+		t('editor.loadingVerb5'),
+		t('editor.loadingVerb6'),
+		t('editor.loadingVerb7'),
+	];
+}
 
 export const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'] as const;
 
@@ -16,22 +19,16 @@ export const TYPEWRITER_CHAR_MS = 32;
 export const VERB_HOLD_MS = 3_200;
 export const LOADING_CURSOR = '▋';
 
-export const LESSON_READY_LABEL = 'scaffy · lesson ready';
-export const LESSON_READY_HINT_LINES = [
-	'Read the concept preview in the scaffy tutor panel on the right. 👉',
-	'Click "Got it — start lesson" there when you are ready.',
-] as const;
+export function getLessonReadyLines(): string[] {
+	return [t('editor.lessonReadyTitle'), t('editor.lessonReadyHint1'), t('editor.lessonReadyHint2')];
+}
 
-export const LOADING_COMMENT_LINES = [
-	'scaffy · generating lesson',
-	'Read the concept preview in the scaffy tutor panel on the right. 👉',
-	'When the preview is ready, click "Got it — start lesson" in the tutor panel.',
-] as const;
-
-export const LESSON_READY_COMMENT_LINES = [LESSON_READY_LABEL, ...LESSON_READY_HINT_LINES] as const;
+export function getLoadingCommentLines(): string[] {
+	return [t('editor.loadingTitle'), t('editor.loadingHint1'), t('editor.loadingHint2')];
+}
 
 /** viewZone anchor — after comment block + blank spacer line (same slot as Learning Card uses `afterLineNumber`). */
-export const LOADING_SPINNER_AFTER_LINE = LOADING_COMMENT_LINES.length + 1;
+export const LOADING_SPINNER_AFTER_LINE = 4;
 
 /** Single-line spinner band height (Monaco default line height at 14px). */
 export const LOADING_SPINNER_ZONE_HEIGHT_PX = 19;
@@ -41,7 +38,7 @@ function toHtmlComment(text: string): string {
 }
 
 export function buildLoadingCommentBlock(): string {
-	return LOADING_COMMENT_LINES.map(toHtmlComment).join('\n') + '\n\n';
+	return getLoadingCommentLines().map(toHtmlComment).join('\n') + '\n\n';
 }
 
 /** Time-based typewriter — catches up after main-thread stalls instead of freezing. */
@@ -61,7 +58,7 @@ export class LoadingTypewriter {
 	}
 
 	getTypedText(): string {
-		return SCAFFOLD_LOADING_VERBS[this.verbIndex].slice(0, this.typedCharCount);
+		return getLoadingVerbs()[this.verbIndex].slice(0, this.typedCharCount);
 	}
 
 	advance(now: number, charMs = TYPEWRITER_CHAR_MS, holdMs = VERB_HOLD_MS): void {
@@ -72,7 +69,7 @@ export class LoadingTypewriter {
 
 		const dt = now - this.lastNow;
 		this.lastNow = now;
-		const verb = SCAFFOLD_LOADING_VERBS[this.verbIndex];
+		const verb = getLoadingVerbs()[this.verbIndex];
 
 		if (this.typedCharCount < verb.length) {
 			this.charAccumulator += dt;
@@ -89,7 +86,7 @@ export class LoadingTypewriter {
 		}
 
 		if (now >= this.holdUntil) {
-			this.verbIndex = (this.verbIndex + 1) % SCAFFOLD_LOADING_VERBS.length;
+			this.verbIndex = (this.verbIndex + 1) % getLoadingVerbs().length;
 			this.typedCharCount = 0;
 			this.holdUntil = 0;
 			this.charAccumulator = 0;
@@ -103,21 +100,21 @@ export class LoadingTypewriter {
 }
 
 export function verbIndexForElapsed(elapsedMs: number): number {
-	const interval = LOADING_CYCLE_MS / SCAFFOLD_LOADING_VERBS.length;
-	return Math.floor(elapsedMs / interval) % SCAFFOLD_LOADING_VERBS.length;
+	const interval = LOADING_CYCLE_MS / getLoadingVerbs().length;
+	return Math.floor(elapsedMs / interval) % getLoadingVerbs().length;
 }
 
 export function buildErrorContent(message: string): string {
 	const safe = message.replace(/\r?\n/g, ' ').trim().slice(0, 240);
 	return [
-		'<!-- scaffy · lesson failed -->',
+		`<!-- ${t('editor.errorScaffyLessonFailed')} -->`,
 		'',
 		`✖  ${safe}`,
 		'',
-		'<!-- Retry or load the dev fallback below. -->',
+		`<!-- ${t('editor.errorRetryHint')} -->`,
 	].join('\n');
 }
 
 export function buildLessonReadyWaitContent(): string {
-	return LESSON_READY_COMMENT_LINES.map(toHtmlComment).join('\n') + '\n';
+	return getLessonReadyLines().map(toHtmlComment).join('\n') + '\n';
 }

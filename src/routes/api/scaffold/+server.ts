@@ -25,6 +25,7 @@ const CONFIG = {
 type ScaffoldRequestBody = {
 	prompt?: unknown;
 	model?: unknown;
+	language?: string;
 };
 
 function buildRetryUserContent(prompt: string, validationMessage: string): string {
@@ -39,6 +40,7 @@ function buildRetryUserContent(prompt: string, validationMessage: string): strin
 async function callAnthropicScaffold(opts: {
 	apiModelId: string;
 	userContent: string;
+	systemPrompt: string;
 }): Promise<{ text: string }> {
 	const message = await client.messages.create({
 		model: opts.apiModelId,
@@ -47,7 +49,7 @@ async function callAnthropicScaffold(opts: {
 		system: [
 			{
 				type: 'text',
-				text: systemPrompt.trim(),
+				text: opts.systemPrompt.trim(),
 				cache_control: { type: 'ephemeral', ttl: CONFIG.systemPromptCacheTtl },
 			},
 		],
@@ -101,7 +103,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		throw error(400, 'Invalid JSON body.');
 	}
 
-	const { prompt, model } = (body ?? {}) as ScaffoldRequestBody;
+	const { prompt, model, language } = (body ?? {}) as ScaffoldRequestBody;
 
 	if (typeof prompt !== 'string' || prompt.trim().length < 10) {
 		throw error(400, 'Prompt must be at least 10 characters long.');
@@ -111,10 +113,17 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const modelStr = typeof model === 'string' ? model : undefined;
 	const { apiModelId } = resolveModel(modelStr);
+	const systemPromptFinal = systemPrompt.replaceAll('{{COURSE_LANGUAGE}}', language ?? 'de');
 
 	try {
 		let result = parseAndValidate(
-			(await callAnthropicScaffold({ apiModelId, userContent: trimmedPrompt })).text,
+			(
+				await callAnthropicScaffold({
+					apiModelId,
+					userContent: trimmedPrompt,
+					systemPrompt: systemPromptFinal,
+				})
+			).text,
 		);
 
 		if (!result.ok) {
@@ -122,6 +131,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				await callAnthropicScaffold({
 					apiModelId,
 					userContent: buildRetryUserContent(trimmedPrompt, result.message),
+					systemPrompt: systemPromptFinal,
 				})
 			).text;
 			result = parseAndValidate(retryText);
@@ -150,7 +160,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			if (typeof status === 'number' && status >= 500) {
 				throw error(502, 'Claude API is temporarily unavailable.');
 			}
-			if (typeof status === 'number' && status >= 400 && status < 500) {
+			if (typeof status === 'number' && status < 500) {
 				throw error(status, detail);
 			}
 			throw error(502, 'Claude API: no usable response.');

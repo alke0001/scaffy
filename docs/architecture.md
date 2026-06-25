@@ -155,7 +155,7 @@ One-shot concept preview in the Ask panel while scaffolds generate. Same Server-
 | Server | `src/routes/api/session-intro/+server.ts`       | SDK stream → Server-Sent Events response |
 | Prompt | `src/lib/server/session-intro/system-prompt.md` | Concept preview (no solution code)       |
 
-**Gate:** Monaco waits for **Got it — start lesson** (`lessonStarted`) before first scaffold — ADR-020.
+**Gate:** Monaco waits for **Got it — start lesson** (`lessonStarted`) before first scaffold — ADR-021.
 
 ### Ask — streaming (Server-Sent Events)
 
@@ -271,7 +271,7 @@ Single app-wide singleton. Source of truth for **Learn data**.
 
 **Per session:** `id`, `prompt`, `createdAt`, `scaffolds[]`, `status`, `errorMessage`, `completed`, `askMessages[]`, `introStatus`, `lessonStarted` (last two in-memory only).
 
-**Lifecycle:** `idle` → `loading` (`startScaffoldRequest` + parallel intro) → `ready` (`setScaffolds`) or `error` → retry → `loading`. **`lessonStarted`** gates first scaffold in Monaco (ADR-020). `completed` via `markSessionCompleted()` after all gates passed.
+**Lifecycle:** `idle` → `loading` (`startScaffoldRequest` + parallel intro) → `ready` (`setScaffolds`) or `error` → retry → `loading`. **`lessonStarted`** gates first scaffold in Monaco (ADR-021). `completed` via `markSessionCompleted()` after all gates passed.
 
 ### Ephemeral (not in store)
 

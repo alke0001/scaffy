@@ -28,19 +28,19 @@
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import Send from '@lucide/svelte/icons/send';
 	import AskChatHeader from '$lib/components/chat/ask-chat-header.svelte';
+	import { messages as i18nMessages } from '$lib/i18n/index.js';
+	import { language } from '$lib/i18n';
+	import { get } from 'svelte/store';
 
 	const MIN_PROMPT_LENGTH = 10;
-	const ASK_PLACEHOLDER = 'Ask scaffy a question about the code (min. 10 characters)';
-	const ASK_MIN_LENGTH_TOOLTIP =
-		'Enter at least 10 characters to ask Scaffy a question. We skip very short prompts to avoid unnecessary AI calls and reduce environmental impact.';
-	const LEARN_PLACEHOLDER =
-		'e.g. A login form with email validation and a forgot-password link\n(min. 10 characters)';
-	const SESSION_HINT = 'Ask questions here anytime while you work through the lesson.';
-	const INTRO_CTA_READY = 'Got it — start lesson';
-	const INTRO_CTA_WAIT_SCAFFOLD = 'Generating lesson…';
-	const INTRO_CTA_WAIT_INTRO = 'Reading concept preview…';
-	const INTRO_CTA_SCAFFOLD_TOOLTIP =
-		'Scaffy is still preparing your lesson on the left. When it is ready, the exercises appear there and you can start here.';
+	const ASK_PLACEHOLDER = $derived($i18nMessages['chat.askPlaceholder']);
+	const ASK_MIN_LENGTH_TOOLTIP = $derived($i18nMessages['chat.askMinLengthTooltip']);
+	const LEARN_PLACEHOLDER = $derived($i18nMessages['chat.learnPlaceholder']);
+	const SESSION_HINT = $derived($i18nMessages['chat.sessionHint']);
+	const INTRO_CTA_READY = $derived($i18nMessages['chat.introCtaReady']);
+	const INTRO_CTA_WAIT_SCAFFOLD = $derived($i18nMessages['chat.introCtaWaitScaffold']);
+	const INTRO_CTA_WAIT_INTRO = $derived($i18nMessages['chat.introCtaWaitIntro']);
+	const INTRO_CTA_SCAFFOLD_TOOLTIP = $derived($i18nMessages['chat.introCtaScaffoldTooltip']);
 
 	interface Props {
 		mode: ChatMode;
@@ -207,7 +207,11 @@
 
 		try {
 			await streamChatReply(
-				{ prompt: text, history },
+				{
+					prompt: text,
+					history,
+					language: get(language),
+				},
 				{
 					onReady: () => {
 						if (!isActive()) return;
@@ -291,7 +295,7 @@
 		<div class="relative {askPromptFieldShellClass}">
 			<textarea
 				id="chat-prompt"
-				class="{promptTextareaClass} block min-h-[5.5rem] w-full border-0 bg-transparent pr-11 pb-10 sm:min-h-24"
+				class="{promptTextareaClass} block min-h-22 w-full border-0 bg-transparent pr-11 pb-10 sm:min-h-24"
 				bind:value={prompt}
 				disabled={askComposerBusy}
 				placeholder={ASK_PLACEHOLDER}
@@ -356,7 +360,7 @@
 		<div class={learnPromptFieldShellClass}>
 			<textarea
 				id="chat-prompt"
-				class="{promptTextareaClass} min-h-[140px] w-full border-0 bg-transparent"
+				class="{promptTextareaClass} min-h-35 w-full border-0 bg-transparent"
 				bind:value={prompt}
 				disabled={askComposerBusy}
 				placeholder={LEARN_PLACEHOLDER}

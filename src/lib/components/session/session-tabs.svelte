@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { messages } from '$lib/i18n/index.js';
 	import DeleteConfirmationDialog from './delete-confirmation-dialog.svelte';
 
 	interface Props {
@@ -89,23 +90,25 @@
 							{:else}
 								<span
 									class="ml-2 inline-block h-2 w-2 rounded-full bg-scaffy-amber"
-									title="Incomplete session"
+									title={$messages['session.incompleteSession']}
 								></span>
 							{/if}
 
 							{#if session.status === 'loading'}
-								<span class="ml-2 text-muted-foreground">(Loading)</span>
+								<span class="ml-2 text-muted-foreground"
+									>({$messages['session.status.loading']})</span
+								>
 							{/if}
 
 							{#if session.status === 'error'}
-								<span class="ml-2 text-destructive">(Error)</span>
+								<span class="ml-2 text-destructive">({$messages['session.status.error']})</span>
 							{/if}
 						</button>
 
 						<button
 							type="button"
 							class="session-close rounded-full px-2 text-sm opacity-70 transition hover:bg-foreground/10 hover:opacity-100"
-							aria-label="Close session"
+							aria-label={$messages['session.closeSession']}
 							onclick={(event) => handleDelete(event, session.id)}
 						>
 							×
@@ -116,14 +119,14 @@
 				<div
 					class="rounded-2xl border border-dashed border-border bg-background/70 px-3 py-2 text-muted-foreground"
 				>
-					No sessions yet. Start one from home.
+					{$messages['session.noSessions']}
 				</div>
 			{/if}
 			<button
 				class="ml-2 flex h-10 w-10 flex-none shrink-0 items-center justify-center"
 				onclick={goHome}
 				disabled={isHome}
-				aria-label="New session"
+				aria-label={$messages['session.newSession']}
 			>
 				+
 			</button>

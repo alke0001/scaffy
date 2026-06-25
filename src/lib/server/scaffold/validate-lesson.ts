@@ -3,7 +3,6 @@ import {
 	type Scaffold,
 	type StructuredScaffoldOutput,
 } from '$lib/types/scaffold.js';
-import { validateCumulativeChain } from '$lib/scaffold/validate-cumulative.js';
 import {
 	validateStructuredOutput,
 	type StructuredOutputValidation,
@@ -16,20 +15,20 @@ export type LessonValidation =
 export function normalizeScaffoldCount(
 	scaffolds: Scaffold[],
 ): { ok: true; scaffolds: Scaffold[]; trimmed: boolean } | { ok: false; message: string } {
-	if (scaffolds.length < LESSON_SCAFFOLD_COUNT) {
+	if (scaffolds.length === 0) {
 		return {
 			ok: false,
-			message: `Lesson must contain exactly ${LESSON_SCAFFOLD_COUNT} scaffolds (got ${scaffolds.length}).`,
+			message: `Lesson must contain at least one scaffold (got ${scaffolds.length}).`,
 		};
 	}
-	if (scaffolds.length > LESSON_SCAFFOLD_COUNT) {
-		return {
-			ok: true,
-			scaffolds: scaffolds.slice(0, LESSON_SCAFFOLD_COUNT),
-			trimmed: true,
-		};
+	if (scaffolds.length <= LESSON_SCAFFOLD_COUNT) {
+		return { ok: true, scaffolds, trimmed: false };
 	}
-	return { ok: true, scaffolds, trimmed: false };
+	return {
+		ok: true,
+		scaffolds: [scaffolds[0], scaffolds[1], scaffolds[scaffolds.length - 1]],
+		trimmed: true,
+	};
 }
 
 export function validateLessonOutput(parsed: unknown): LessonValidation {
@@ -38,11 +37,6 @@ export function validateLessonOutput(parsed: unknown): LessonValidation {
 
 	const normalized = normalizeScaffoldCount(shape.value.scaffolds);
 	if (!normalized.ok) return normalized;
-
-	const chain = validateCumulativeChain(normalized.scaffolds);
-	if (!chain.ok) {
-		return { ok: false, message: chain.message };
-	}
 
 	return {
 		ok: true,

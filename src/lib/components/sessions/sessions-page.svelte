@@ -7,6 +7,7 @@
 	import DeleteConfirmationDialog from '$lib/components/session/delete-confirmation-dialog.svelte';
 	import { cn } from '$lib/utils.js';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import { messages } from '$lib/i18n/index.js';
 
 	const sessionCard =
 		'rounded-lg border border-border bg-card transition-[colors,transform,box-shadow] duration-150 hover:border-primary/50 active:translate-y-px active:bg-muted/40 active:shadow-[inset_0_2px_6px_rgba(0,0,0,0.18)] focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2';
@@ -30,10 +31,10 @@
 	}
 
 	function statusLabel(session: SessionRecord) {
-		if (session.completed) return 'Completed';
-		if (session.status === 'loading') return 'Loading';
-		if (session.status === 'error') return 'Error';
-		return 'In progress';
+		if (session.completed) return $messages['session.status.completed'];
+		if (session.status === 'loading') return $messages['session.status.loading'];
+		if (session.status === 'error') return $messages['session.status.error'];
+		return $messages['session.status.inProgress'];
 	}
 
 	function openSession(id: string) {
@@ -69,12 +70,12 @@
 <ScrollArea orientation="vertical" class="h-full bg-background text-foreground">
 	<main class="mx-auto w-full max-w-6xl px-4 py-8">
 		<header>
-			<h1 class="text-lg font-medium">Learning overview</h1>
-			<p class="mt-1 text-sm text-muted-foreground">Pick up where you left off anytime.</p>
+			<h1 class="text-lg font-medium">{$messages['sessions.title']}</h1>
+			<p class="mt-1 text-sm text-muted-foreground">{$messages['sessions.subtitle']}</p>
 		</header>
 
 		<ul
-			class="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-3"
+			class="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-3"
 			role="list"
 		>
 			{#each sortedSessions as session, index (session.id)}
@@ -91,11 +92,11 @@
 					>
 						{#if isLatest}
 							<span class="text-xs font-medium text-ring">
-								continue with latest learning session
+								{$messages['sessions.latestSession']}
 							</span>
 						{/if}
 
-						<span class="w-full text-sm break-words text-foreground">
+						<span class="w-full text-sm wrap-break-word text-foreground">
 							{session.prompt}
 						</span>
 
@@ -119,7 +120,7 @@
 					<button
 						type="button"
 						class="absolute top-2 right-2 z-10 rounded-full p-1.5 opacity-70 transition hover:bg-foreground/10 hover:opacity-100 active:translate-y-px active:opacity-100"
-						aria-label="Delete session"
+						aria-label={$messages['session.deleteSession']}
 						onclick={(event) => handleDelete(event, session.id)}
 					>
 						<Trash2 class="size-4" aria-hidden="true" />
@@ -133,7 +134,7 @@
 					class="scaffy-dashed-ring-surface scaffy-dashed-ring-surface--hover flex h-full w-full items-center justify-center p-4 text-sm font-medium text-ring"
 					onclick={goHome}
 				>
-					Start new session
+					{$messages['session.startNewSession']}
 				</button>
 			</li>
 		</ul>

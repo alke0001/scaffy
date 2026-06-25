@@ -23,7 +23,11 @@
 
 	import { getSessions } from '$lib/session.svelte.js';
 
+	import { language, messages } from '$lib/i18n/index.js';
+
 	const MIN_PROMPT_LENGTH = 10;
+
+	const examplePrompts = $derived(HOME_EXAMPLE_PROMPTS[$language]);
 
 	let prompt = $state('');
 
@@ -69,12 +73,11 @@
 			<div class="flex items-center gap-3">
 				<ScaffyLogo width={52} height={52} class="shrink-0" />
 
-				<span class="text-3xl tracking-tight text-foreground lowercase">scaffy</span>
+				<span class="text-3xl tracking-tight text-foreground">{$messages['app.title']}</span>
 			</div>
 
-			<p class="max-w-md text-sm leading-relaxed text-muted-foreground">
-				Learn to build code, not just have it built for you. Type what you want — Scaffy walks you
-				through it, chunk by chunk.
+			<p class="max-w-xl text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
+				{$messages['home.heroDescription']}
 			</p>
 		</header>
 
@@ -83,10 +86,10 @@
 				<Card.Content class="p-4 sm:p-5">
 					<div class="mb-4 flex flex-col gap-1">
 						<p class="text-[0.6875rem] font-medium tracking-widest text-muted-foreground uppercase">
-							New learning session
+							{$messages['home.newLearningSession']}
 						</p>
 						<p class="text-base leading-snug text-foreground">
-							Describe what you want to build in plain language.
+							{$messages['home.describePrompt']}
 						</p>
 					</div>
 
@@ -102,7 +105,7 @@
 					class="rounded-full border-primary text-primary hover:bg-primary/10 hover:text-primary disabled:border-border disabled:text-muted-foreground disabled:opacity-100"
 					onclick={startSession}
 				>
-					{isStarting ? 'Starting…' : 'start session'}
+					{isStarting ? $messages['home.starting'] : $messages['home.startSession']}
 
 					<CornerDownLeft class="size-4" aria-hidden="true" />
 				</Button>
@@ -110,19 +113,22 @@
 
 			<p class="mt-3 text-center font-mono text-sm" aria-disabled={!hasSessions}>
 				<span class="font-semibold text-scaffy-magenta"
-					>{sessionCount} saved session{sessionCount === 1 ? '' : 's'}</span
+					>{sessionCount}
+					{sessionCount === 1
+						? $messages['home.savedSession']
+						: $messages['home.savedSessions']}</span
 				>
-				<span class="text-muted-foreground"> – continue in </span>
+				<span class="text-muted-foreground"> – {$messages['home.continueIn']} </span>
 				{#if hasSessions}
 					<button
 						type="button"
 						class="font-semibold text-foreground underline decoration-dotted underline-offset-4 hover:text-ring"
 						onclick={goToSessions}
 					>
-						My learning sessions →
+						{$messages['home.myLearningSessions']}
 					</button>
 				{:else}
-					<span class="text-muted-foreground">My learning sessions →</span>
+					<span class="text-muted-foreground">{$messages['home.myLearningSessions']}</span>
 				{/if}
 			</p>
 		</div>
@@ -132,10 +138,10 @@
 				id="example-prompts-heading"
 				class="mb-3 text-center text-xs font-medium tracking-widest text-muted-foreground uppercase"
 			>
-				Try one of these
+				{$messages['home.tryOneOfThese']}
 			</h2>
 
-			<ChipGrid items={HOME_EXAMPLE_PROMPTS} onSelect={fillPrompt} />
+			<ChipGrid items={examplePrompts} onSelect={fillPrompt} />
 		</section>
 	</main>
 </ScrollArea>

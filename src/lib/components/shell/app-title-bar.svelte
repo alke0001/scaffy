@@ -1,6 +1,11 @@
 <script lang="ts">
 	import AboutDialog from '$lib/components/about/about-dialog.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import {
+		ScaffyDropdown,
+		ScaffyDropdownItem,
+		toolbarActionButtonClass,
+	} from '$lib/components/ui/scaffy-dropdown/index.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -9,6 +14,7 @@
 	import ScaffyLogo from '$lib/assets/scaffy-logo.svelte';
 	import { getSessionById } from '$lib/session.svelte.js';
 	import { cn } from '$lib/utils.js';
+	import { language, AVAILABLE_LANGUAGES, messages, type LanguageCode } from '$lib/i18n/index.js';
 
 	let aboutOpen = $state(false);
 
@@ -19,10 +25,14 @@
 	const isSessions = $derived(pathname === '/sessions');
 	const isSession = $derived(Boolean(sessionId && pathname.startsWith('/session/')));
 
+	const currentLanguage = $derived(
+		AVAILABLE_LANGUAGES.find((lang) => lang.code === $language) ?? AVAILABLE_LANGUAGES[0],
+	);
+
 	const sessionPromptLabel = $derived.by(() => {
-		if (!sessionId) return 'Session';
+		if (!sessionId) return $messages['app.session'];
 		const session = getSessionById(sessionId);
-		if (!session) return 'Session';
+		if (!session) return $messages['app.session'];
 		return session.prompt;
 	});
 
@@ -40,6 +50,10 @@
 		event.preventDefault();
 		goto(resolve('/sessions'));
 	}
+
+	function setLanguage(code: LanguageCode) {
+		language.set(code);
+	}
 </script>
 
 <header
@@ -50,20 +64,22 @@
 
 		<a
 			href={resolve('/')}
-			class={cn(navItemClass, 'lowercase', isHome ? navActiveClass : navLinkClass)}
+			class={cn(navItemClass, isHome ? navActiveClass : navLinkClass)}
 			aria-current={isHome ? 'page' : undefined}
 			onclick={goHome}
 		>
-			scaffy
+			Scaffy
 		</a>
 
 		<span class="h-5 shrink-0 border-l border-scaffy-divider" aria-hidden="true"></span>
 
 		{#if isSessions}
-			<span class={cn(navItemClass, navActiveClass)} aria-current="page">My Sessions</span>
+			<span class={cn(navItemClass, navActiveClass)} aria-current="page"
+				>{$messages['app.mySessions']}</span
+			>
 		{:else}
 			<a href={resolve('/sessions')} class={cn(navItemClass, navLinkClass)} onclick={goSessions}>
-				My Sessions
+				{$messages['app.mySessions']}
 			</a>
 		{/if}
 
@@ -83,11 +99,28 @@
 	</nav>
 
 	<div class="flex shrink-0 items-center gap-2">
+		<ScaffyDropdown label={currentLanguage.name} menuAriaLabel={$messages['app.languageLabel']}>
+			{#snippet menu({ close })}
+				{#each AVAILABLE_LANGUAGES as lang (lang.code)}
+					<ScaffyDropdownItem
+						selected={lang.code === $language}
+						onclick={() => {
+							setLanguage(lang.code);
+							close();
+						}}
+					>
+						{lang.name}
+					</ScaffyDropdownItem>
+				{/each}
+			{/snippet}
+		</ScaffyDropdown>
+
 		<Button
+			type="button"
 			variant="ghost"
-			size="icon-sm"
-			aria-label="About Scaffy"
-			class="text-muted-foreground hover:text-foreground"
+			size="toolbar"
+			class={toolbarActionButtonClass}
+			aria-label={$messages['app.aboutAriaLabel']}
 			onclick={() => (aboutOpen = true)}
 		>
 			<CircleHelp />
