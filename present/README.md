@@ -44,14 +44,33 @@ To adjust look: edit `present/theme/scaffy.css` (Marp preview reloads on save). 
 
 Per-slide layout: HTML comments in the deck, e.g. `<!-- _class: lead -->` for title slides (styled in `scaffy.css`).
 
+## Mermaid diagrams (not native in Marp)
+
+**Marp does not render ` ```mermaid ` fences** — they appear as code blocks in preview and export.
+
+Diagrams are **pre-rendered SVGs**:
+
+| Path                    | Role                                              |
+| ----------------------- | ------------------------------------------------- |
+| `diagrams/*.mmd`        | Source (keep in sync with `docs/architecture.md`) |
+| `assets/diagrams/*.svg` | Rendered images used in `scaffy-course.md`        |
+
+After editing `.mmd` files:
+
+```bash
+pnpm run present:diagrams
+```
+
+Requires devDependency `@mermaid-js/mermaid-cli` (uses headless Chrome). During the talk you can still open `docs/architecture.md` for live Mermaid in VS Code’s Markdown preview.
+
 ## Layout
 
-| Path               | Purpose                           |
-| ------------------ | --------------------------------- |
-| `scaffy-course.md` | Main slide deck                   |
-| `theme/scaffy.css` | Marp theme (Scaffy design tokens) |
-
-Add `assets/` only when you have screenshots or figures to embed.
+| Path               | Purpose                                |
+| ------------------ | -------------------------------------- |
+| `scaffy-course.md` | Main slide deck                        |
+| `theme/scaffy.css` | Marp theme (Scaffy design tokens)      |
+| `diagrams/`        | Mermaid source for architecture slides |
+| `assets/diagrams/` | Generated SVGs for the deck            |
 
 ## Docs to link from slides
 

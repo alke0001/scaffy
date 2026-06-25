@@ -1,0 +1,21 @@
+%% sync: docs/architecture.md §2
+flowchart TB
+  User([User])
+
+  subgraph Browser["Browser — SPA"]
+    UI["SvelteKit client<br/>Monaco · chat · routes"]
+    LS["session store · localStorage"]
+  end
+
+  subgraph Vercel["Vercel — serverless"]
+    API["/api/scaffold · /api/chat · /api/session-intro"]
+    AC["anthropic-client"]
+  end
+
+  Claude["Anthropic Claude API"]
+
+  User --> UI
+  UI --- LS
+  UI -->|"same-origin POST"| API
+  API --> AC
+  AC --> Claude

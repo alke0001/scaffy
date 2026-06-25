@@ -1,0 +1,8 @@
+%% sync: docs/architecture.md §6
+flowchart LR
+  URL["URL<br/>/session/:id"]
+  Global["session.svelte.ts<br/>+ localStorage"]
+  Local["Component $state<br/>ephemeral"]
+
+  URL --> Global
+  Global --> Local

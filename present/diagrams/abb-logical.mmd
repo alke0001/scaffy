@@ -1,0 +1,17 @@
+%% sync: docs/architecture.md §1
+flowchart TB
+  User([User])
+
+  Learn["Learn — gated scaffolds"]
+  Intro["Session intro — concept preview"]
+  Ask["Ask — Socratic tutor"]
+  Persist["Persist session progress"]
+  Proxy["Secure AI proxy"]
+
+  User --> Learn
+  User --> Intro
+  User --> Ask
+  User --> Persist
+  Learn --> Proxy
+  Intro --> Proxy
+  Ask --> Proxy

@@ -1,0 +1,11 @@
+%% sync: docs/architecture.md §4 Learn
+sequenceDiagram
+  participant B as Browser
+  participant S as /api/scaffold
+  participant C as Claude API
+
+  B->>S: POST { prompt }
+  S->>C: json_schema constraint
+  C-->>S: { scaffolds[] }
+  S-->>B: validate + 200
+  Note over B: Monaco setValue per unlocked step

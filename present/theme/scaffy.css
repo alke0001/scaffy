@@ -116,3 +116,11 @@ section.compact {
 section.compact table {
 	font-size: 18px;
 }
+
+section img {
+	display: block;
+	max-width: 100%;
+	max-height: 400px;
+	margin: 0.25em auto 0;
+	object-fit: contain;
+}
