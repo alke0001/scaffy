@@ -1,0 +1,25 @@
+/* @theme scaffy */
+/* Optional Marp theme — wire in scaffy-course.md via: theme: ./theme/scaffy.css */
+/* Tokens aligned with src/routes/layout.css (dark-only UI). */
+
+@import 'default';
+
+section {
+	background-color: #0b0d0e;
+	color: #e6e8e6;
+	font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+	color: #e6e8e6;
+}
+
+a {
+	color: #6fc3df;
+}
+
+strong {
+	color: #4ade80;
+}
