@@ -15,8 +15,6 @@ Scaffy generates code step by step and uses targeted questions to block the next
 2. **Session** — code appears in Monaco step by step; a **Learning Card** blocks each next step until you answer correctly. **Ask** chat on the right explains concepts without replacing the gate.
 3. **My Sessions** — resume or delete saved sessions (`localStorage`).
 
-**Architecture:** logical building blocks (ABB) and their concrete implementation (SSB) — see [`docs/architecture.md`](docs/architecture.md).
-
 ---
 
 ## For developers
@@ -102,8 +100,10 @@ src/
 │   ├── server/
 │   │   ├── scaffold/      # Structured JSON schema + system prompt (Learn)
 │   │   ├── chat/          # Ask-mode tutor system prompt
+│   │   ├── session-intro/ # Concept preview system prompt (SSE)
 │   │   └── anthropic-client.ts
-│   ├── learn/             # Client scaffold request helper
+│   ├── i18n/              # EN/DE copy, MessageKey, language store
+│   ├── learn/             # Client scaffold + session-intro helpers
 │   ├── session.svelte.ts  # Session list, active session, localStorage
 │   ├── types/             # Shared types (scaffold, chat-message)
 │   ├── actions/           # Svelte actions (e.g. portal for overlays)
@@ -122,7 +122,20 @@ src/
 - **API routes** are thin proxies: parse request → call Anthropic → return response.
 - **Server-only** logic lives in `src/lib/server/` (never imported from the client).
 
-**Architecture & stack:** [`docs/architecture.md`](docs/architecture.md) · **ADRs:** [`docs/decisions.md`](docs/decisions.md) · **Agent config:** [`CLAUDE.md`](CLAUDE.md)
+### Architecture & stack
+
+| Area        | Choice                                         |
+| ----------- | ---------------------------------------------- |
+| Framework   | SvelteKit 5 — **SPA** (`ssr = false`)          |
+| Editor      | Monaco (viewZones for Learning Cards)          |
+| UI          | shadcn-svelte, Tailwind CSS 4                  |
+| AI          | Claude via server-only `/api/*` proxies        |
+| State       | Svelte 5 runes + `session.svelte.ts` singleton |
+| Persistence | `localStorage` (sessions, scaffolds, metadata) |
+| i18n        | EN (default) + DE — `src/lib/i18n/`            |
+| Deploy      | Vercel + GitHub Actions CI                     |
+
+Logical and physical building blocks (ABB/SSB), API flows, and state: [`docs/architecture.md`](docs/architecture.md) · [`docs/decisions.md`](docs/decisions.md)
 
 ---
 
@@ -167,7 +180,7 @@ pnpm run preview
 
 ### Code quality and Git hooks
 
-**Pre-commit (Husky + lint-staged):** On `git commit`, staged files are auto-formatted with Prettier and ESLint-fixed (see `lint-staged` in `package.json`). Hooks are installed when you run `pnpm install` (`prepare` script).
+**Pre-commit (Husky + lint-staged):** On `git commit`, staged files are auto-formatted with Prettier and ESLint-fixed (see `lint-staged` in `package.json`). Staging `src/lib/i18n/translations.ts` also runs `pnpm run check:i18n`. Hooks are installed when you run `pnpm install` (`prepare` script).
 
 Run the same checks CI uses before opening a PR:
 
@@ -240,3 +253,14 @@ This project is configured for AI-assisted development with three tools. All age
 | [GitHub Copilot](https://github.com/features/copilot) | `.github/copilot-instructions.md`    |
 
 When making changes to project configuration or design decisions, update all three config files in the same edit batch to keep them in sync.
+
+---
+
+## Further Documentation
+
+| Document                                                     | Description                                                                 |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| [`docs/architecture.md`](docs/architecture.md)               | Logical and physical architecture (ABB/SSB), API flows, state               |
+| [`docs/decisions.md`](docs/decisions.md)                     | Architecture decision log                                                   |
+| [`Projektsteckbrief_Scaffy.md`](Projektsteckbrief_Scaffy.md) | Course project brief (German) — _Frameworkbasierte UI-Entwicklung_, SS 2026 |
+| [`CLAUDE.md`](CLAUDE.md)                                     | Short agent invariants (Claude Code, Cursor, Copilot)                       |
