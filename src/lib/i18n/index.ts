@@ -5,6 +5,7 @@ import {
 	DEFAULT_LANGUAGE,
 	TRANSLATIONS,
 	type LanguageCode,
+	type MessageKey,
 } from './translations.js';
 
 const STORAGE_KEY = 'scaffy.language';
@@ -21,7 +22,8 @@ const initialLanguage = (() => {
 export const language = writable<LanguageCode>(initialLanguage);
 export const messages = derived(
 	language,
-	($language) => TRANSLATIONS[$language] ?? TRANSLATIONS[DEFAULT_LANGUAGE],
+	($language): Record<MessageKey, string> =>
+		TRANSLATIONS[$language] ?? TRANSLATIONS[DEFAULT_LANGUAGE],
 );
 
 language.subscribe((value) => {
@@ -29,11 +31,11 @@ language.subscribe((value) => {
 	localStorage.setItem(STORAGE_KEY, value);
 });
 
-export function t(key: string, params?: Record<string, string | number>): string {
+export function t(key: MessageKey, params?: Record<string, string | number>): string {
 	const dictionary = get(messages);
 	const value = dictionary[key] ?? key;
 	if (!params) return value;
 	return value.replace(/\{(\w+)\}/g, (_, name) => String(params[name] ?? `{${name}}`));
 }
 
-export { AVAILABLE_LANGUAGES, type LanguageCode };
+export { AVAILABLE_LANGUAGES, type LanguageCode, type MessageKey };
