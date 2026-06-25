@@ -15,7 +15,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
-		"present:diagrams": "node scripts/render-present-diagrams.mjs"
+		"course-presentation:diagrams": "node course-presentation/scripts/render-diagrams.mjs"
 	},
 	"lint-staged": {
 		"*.{js,ts,mjs,cjs,svelte,css,md,json,yml,yaml}": "prettier --write",

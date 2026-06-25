@@ -18,7 +18,7 @@ Fachhochschule · Frontend-UI · SoSe 2026
 
 ## Agenda
 
-1. Problem & Hypothese
+1. Der Scaffy Use Case
 2. **Live-Demo**
 3. Architektur (ABB / SSB) — [`docs/architecture.md`](../docs/architecture.md)
 4. API, Monaco, Chat
@@ -29,17 +29,7 @@ Fachhochschule · Frontend-UI · SoSe 2026
 
 ---
 
-## Was tut Scaffy?
-
-Der User gibt einen Prompt ein → Claude liefert **geordnete Scaffolds** (Code + Knowledge Check pro Schritt).
-
-- Code erscheint in einem **Code Editor**
-- **Learning Cards** unterbrechen bewusst eine komplette Codegenerierung in einem Schritt durch KI.
-- **Scaffy Tutor** KI Chatbot erklärt nebenan und kann bei der Beantwortung der Learning Card helfen — ersetzt die Lernfrage nicht
-
----
-
-## Hypothese: Desired Friction _während_ Code-Generierung
+## Hypothese: Desirable Friction _verringert_ Cognitive Debt beim Coding
 
 > Erklärung _nach_ dem fertigen Code wird übersprungen —
 > wie das bekannte HCI-Beispiel der vergessenen Bankkarte im Automaten, _wenn_ Geld zuerst ausgegeben würde.
@@ -50,11 +40,21 @@ Details: [`Projektsteckbrief_Scaffy.md`](../Projektsteckbrief_Scaffy.md)
 
 ---
 
+## Was tut Scaffy?
+
+Der User gibt einen Prompt ein → KI liefert **geordnete Scaffolds** (Code + Knowledge Check pro Schritt).
+
+- Code erscheint in einem **Code Editor**
+- **Learning Cards** unterbrechen bewusst eine komplette Codegenerierung in einem Schritt im Editor.
+- **Scaffy Tutor** KI Chatbot erklärt nebenan und kann bei der Beantwortung der Learning Card helfen — ersetzt die Lernfrage nicht
+
+---
+
 <!-- _class: live-demo -->
 
 ## Live Demo
 
-**Jetzt Starten 👉**
+**Jetzt Starten 👇🚀**
 
 [scaffy.vercel.app](https://scaffy.vercel.app/)
 
@@ -62,17 +62,19 @@ Details: [`Projektsteckbrief_Scaffy.md`](../Projektsteckbrief_Scaffy.md)
 
 ## Logische Architektur (ABB)
 
-<!-- sync: present/diagrams/abb-logical.mmd · docs/architecture.md §1 -->
+<!-- sync: course-presentation/diagrams/abb-logical.mmd · docs/architecture.md §1 -->
 
 ![Logical architecture (ABB)](assets/diagrams/abb-logical.svg)
+Details: [`docs/architecture.md`](docs/architecture.md)
 
 ---
 
 ## Physische Architektur (SSB)
 
-<!-- sync: present/diagrams/ssb-physical.mmd · docs/architecture.md §2 -->
+<!-- sync: course-presentation/diagrams/ssb-physical.mmd · docs/architecture.md §2 -->
 
 ![Physical architecture (SSB)](assets/diagrams/ssb-physical.svg)
+Details: [`docs/architecture.md`](docs/architecture.md)
 
 ---
 
@@ -91,7 +93,7 @@ Browser  →  /api/*  (SvelteKit)  →  api.anthropic.com
 
 ## Learn — Structured JSON
 
-<!-- sync: present/diagrams/learn-sequence.mmd · docs/architecture.md §4 Learn -->
+<!-- sync: course-presentation/diagrams/learn-sequence.mmd · docs/architecture.md §4 Learn -->
 
 ![Learn scaffold sequence](assets/diagrams/learn-sequence.svg)
 
@@ -113,7 +115,7 @@ Browser  →  /api/*  (SvelteKit)  →  api.anthropic.com
 
 ## State — drei Ebenen
 
-<!-- sync: present/diagrams/state-flow.mmd · docs/architecture.md §6 -->
+<!-- sync: course-presentation/diagrams/state-flow.mmd · docs/architecture.md §6 -->
 
 ![State layers](assets/diagrams/state-flow.svg)
 
@@ -169,7 +171,7 @@ Vollständiger Log: [`docs/decisions.md`](../docs/decisions.md)
 
 ---
 
-## Ausblick
+## Lessons Learned
 
 - **A/B-Studie** (geplant): Scaffolding + Friction vs. klassisches Agentic Coding
 - **Persistierung Phase 2:** Schritt-Index, ggf. Supabase ([ADR-014](../docs/decisions.md#adr-014-learning-session-persistence-port--localstorage-first))
@@ -181,6 +183,6 @@ Vollständiger Log: [`docs/decisions.md`](../docs/decisions.md)
 
 # Fragen?
 
-Slides: `present/scaffy-course.md`
+Slides: `course-presentation/scaffy-course.md`
 
 Doku: `docs/` · Checkliste: `Projektsteckbrief_Scaffy.md`

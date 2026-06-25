@@ -8,5 +8,5 @@
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
 	"svelte.enable-ts-plugin": true,
-	"markdown.marp.themes": ["./present/theme/scaffy.css"]
+	"markdown.marp.themes": ["./course-presentation/theme/scaffy.css"]
 }

@@ -21,6 +21,16 @@ section {
 	font-family: Inter, 'Inter Variable', system-ui, sans-serif;
 	font-size: 26px;
 	padding: 44px 52px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: stretch;
+	text-align: left;
+}
+
+section > h2:first-child {
+	flex-shrink: 0;
+	margin-top: 0;
 }
 
 header,
@@ -109,6 +119,31 @@ section.lead p {
 	color: var(--scaffy-muted-foreground);
 }
 
+section.live-demo > p {
+	margin: 0;
+	font-size: 2.25em;
+	line-height: 1.35;
+	text-align: center;
+	align-self: center;
+}
+
+section.live-demo > h2 + p {
+	margin-top: auto;
+}
+
+section.live-demo > p:last-of-type {
+	margin-bottom: auto;
+}
+
+section.live-demo > p strong {
+	white-space: nowrap;
+}
+
+section.live-demo > p a {
+	font-size: inherit;
+	font-weight: 600;
+}
+
 section.compact {
 	font-size: 22px;
 }
@@ -117,10 +152,20 @@ section.compact table {
 	font-size: 18px;
 }
 
-section img {
+section img:not(.emoji) {
 	display: block;
 	max-width: 100%;
 	max-height: 400px;
 	margin: 0.25em auto 0;
+	object-fit: contain;
+}
+
+/* Marp replaces Unicode emoji with Twemoji <img class="emoji"> — keep inline with text */
+section img.emoji {
+	display: inline;
+	height: 1em;
+	width: 1em;
+	margin: 0;
+	vertical-align: -0.1em;
 	object-fit: contain;
 }

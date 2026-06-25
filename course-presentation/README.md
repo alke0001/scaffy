@@ -1,8 +1,8 @@
-# Scaffy — FUI SoSe 2026 presentation
+# Scaffy — FUI SoSe 2026 course presentation
 
 **Branch:** `fui-sose26-course/scaffy-presentation` — do **not** merge into `main`.
 
-Marp slide deck for the course talk. Canonical architecture and decisions stay in `docs/`; slides are teasers with deep links.
+Everything for the Marp slide deck lives in this folder. Canonical architecture and decisions stay in `docs/`; slides are teasers with deep links.
 
 ## Quick start (VS Code / Cursor)
 
@@ -14,7 +14,7 @@ Marp slide deck for the course talk. Canonical architecture and decisions stay i
 
 ### 2. Open the deck
 
-Open **`present/scaffy-course.md`**. The file must start with `marp: true` in the YAML front matter (already set).
+Open **`course-presentation/scaffy-course.md`**. The file must start with `marp: true` in the YAML front matter (already set).
 
 Open the **`scaffy`** folder as the workspace root so `.vscode/settings.json` loads (required for the custom theme).
 
@@ -38,9 +38,9 @@ Use the **Marp** preview, not **Markdown: Open Preview** — the built-in Markdo
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `theme/scaffy.css`              | Marp theme **`scaffy`** — colors from `src/routes/layout.css` (`#0b0d0e` background, `#4ade80` primary, `#6fc3df` ring, …) |
 | `scaffy-course.md` front matter | `theme: scaffy` selects that theme                                                                                         |
-| `.vscode/settings.json`         | `markdown.marp.themes` registers `./present/theme/scaffy.css` for the workspace                                            |
+| `.vscode/settings.json`         | `markdown.marp.themes` registers `./course-presentation/theme/scaffy.css` for the workspace                                |
 
-To adjust look: edit `present/theme/scaffy.css` (Marp preview reloads on save). Keep token hex values aligned with `src/routes/layout.css` when the app palette changes.
+To adjust look: edit `course-presentation/theme/scaffy.css` (Marp preview reloads on save). Keep token hex values aligned with `src/routes/layout.css` when the app palette changes.
 
 Per-slide layout: HTML comments in the deck, e.g. `<!-- _class: lead -->` for title slides (styled in `scaffy.css`).
 
@@ -55,22 +55,23 @@ Diagrams are **pre-rendered SVGs**:
 | `diagrams/*.mmd`        | Source (keep in sync with `docs/architecture.md`) |
 | `assets/diagrams/*.svg` | Rendered images used in `scaffy-course.md`        |
 
-After editing `.mmd` files:
+After editing `.mmd` files (from repo root):
 
 ```bash
-pnpm run present:diagrams
+pnpm run course-presentation:diagrams
 ```
 
 Requires devDependency `@mermaid-js/mermaid-cli` (uses headless Chrome). During the talk you can still open `docs/architecture.md` for live Mermaid in VS Code’s Markdown preview.
 
 ## Layout
 
-| Path               | Purpose                                |
-| ------------------ | -------------------------------------- |
-| `scaffy-course.md` | Main slide deck                        |
-| `theme/scaffy.css` | Marp theme (Scaffy design tokens)      |
-| `diagrams/`        | Mermaid source for architecture slides |
-| `assets/diagrams/` | Generated SVGs for the deck            |
+| Path                          | Purpose                                |
+| ----------------------------- | -------------------------------------- |
+| `scaffy-course.md`            | Main slide deck                        |
+| `theme/scaffy.css`            | Marp theme (Scaffy design tokens)      |
+| `diagrams/`                   | Mermaid source for architecture slides |
+| `assets/diagrams/`            | Generated SVGs for the deck            |
+| `scripts/render-diagrams.mjs` | Renders `.mmd` → `.svg`                |
 
 ## Docs to link from slides
 
