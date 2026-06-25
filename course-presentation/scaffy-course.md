@@ -21,12 +21,12 @@ Fachhochschule · Frontend-UI · SoSe 2026
 
 1. Der Scaffy Use Case
 2. **Live-Demo**
-3. Architektur (ABB / SSB) — [`docs/architecture.md`](../docs/architecture.md)
-4. API, Monaco, Chat
-5. State & Persistierung
-6. Entscheidungen (ADRs) — [`docs/decisions.md`](../docs/decisions.md)
-7. Pflicht-Checkliste — [`Projektsteckbrief_Scaffy.md`](../Projektsteckbrief_Scaffy.md)
-8. Lessons Learned
+3. Architektur (ABB / SSB)
+4. Key Decisions
+5. Herausforderungen
+6. Qualität
+7. Reflexion
+8. Pflichtaspekte nachweisen
 
 ---
 
@@ -55,9 +55,19 @@ Der User gibt einen Prompt ein → KI liefert **geordnete Scaffolds** (Code + Kn
 
 ## Live Demo
 
-**Jetzt Starten 👇🚀**
+<div class="live-demo-body">
 
-[scaffy.vercel.app](https://scaffy.vercel.app/)
+<div class="live-demo-cta">
+<p><strong>Jetzt Starten 👇🚀</strong></p>
+<p><a href="https://scaffy.vercel.app/">scaffy.vercel.app</a></p>
+</div>
+
+<div class="live-demo-meta">
+Quellcode: <a href="https://github.com/alke0001/scaffy">github.com/alke0001/scaffy</a><br>
+Kanban-Board: <a href="https://github.com/users/alke0001/projects/1">GitHub Projects</a>
+</div>
+
+</div>
 
 ---
 
@@ -81,7 +91,7 @@ Details: [`docs/architecture.md §2`](../docs/architecture.md#2-physical-archite
 
 ---
 
-## Frameworkwahl — SvelteKit
+## Key Decision 1: Frameworkwahl — SvelteKit
 
 - SvelteKit 5 **SPA** — interaktive Session-UI, kein SSR für App-Shell
 - Svelte 5 Runes, TypeScript, Vite
@@ -92,7 +102,7 @@ Details: [`docs/architecture.md §2`](../docs/architecture.md#2-physical-archite
 
 ---
 
-## Komponentenarchitektur
+## Key Decision 2: Komponentenarchitektur
 
 - **Routes** dünn (`+page.svelte`) → Feature-Views unter `src/lib/components/<area>/`
 - **ui/** — shadcn-svelte zuerst; Custom wenn komponiert (ScaffyModal, ScrollArea) **oder** shadcn-Overhead zu groß für einfachen Einzelfall (z. B. `ScaffyDropdown` nur für Sprache)
@@ -102,7 +112,7 @@ Details: [`docs/architecture.md §2`](../docs/architecture.md#2-physical-archite
 
 ---
 
-## State — drei Ebenen
+## Key Decision 3: State — drei Ebenen
 
 <!-- sync: course-presentation/diagrams/state-flow.mmd · docs/architecture.md §6 -->
 
@@ -115,7 +125,7 @@ Details: [`docs/architecture.md §2`](../docs/architecture.md#2-physical-archite
 
 ---
 
-## Sicherer API-Zugriff
+## Key Decision 4: Sicherer API-Zugriff
 
 ```
 Browser  →  /api/*  (SvelteKit)  →  api.anthropic.com
@@ -128,7 +138,7 @@ Browser  →  /api/*  (SvelteKit)  →  api.anthropic.com
 
 ---
 
-## Monaco viewZones + A11y
+## Key Decision 5: Monaco viewZones + A11y
 
 - **`changeViewZones`** — Learning Card scrollt mit Code (Svelte-Mount in Zone-DOM)
 - Editor **read-only** bis Lektion fertig · Card nicht kopierbar (Friction)
