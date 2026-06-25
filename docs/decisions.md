@@ -15,30 +15,63 @@ This document records **why** Scaffy is built the way it is. It complements [`CL
 
 ADR = Architecture Decision Record
 
-| ID                                                                                   | Title                                                    | Status                                                |
-| ------------------------------------------------------------------------------------ | -------------------------------------------------------- | ----------------------------------------------------- |
-| [ADR-001](#adr-001-product-vision-scaffolding--friction)                             | Product vision: scaffolding + friction                   | Accepted                                              |
-| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                             | SPA: SvelteKit 5, no SSR for app shell                   | Accepted                                              |
-| [ADR-003](#adr-003-claude-only-via-server-api-routes)                                | Claude only via server API routes                        | Accepted                                              |
-| [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask)                         | Separate API endpoints (Learn, Ask, Session intro)       | Accepted                                              |
-| [ADR-005](#adr-005-learn-scaffold-rest--structured-json)                             | Learn: REST + structured JSON                            | Accepted                                              |
-| [ADR-006](#adr-006-ask-chat-sse-streaming)                                           | Ask: chat Server-Sent Events (SSE) streaming             | Accepted                                              |
-| [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership)                          | ChatPanel dual mode and state ownership                  | Accepted                                              |
-| [ADR-008](#adr-008-chat-message-lifecycle-statuses)                                  | Chat message lifecycle statuses                          | Accepted                                              |
-| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later)                         | Session store for scaffolds (Monaco later)               | Accepted                                              |
-| [ADR-010](#adr-010-repository-layout-and-typescript)                                 | Repository layout and TypeScript                         | Accepted                                              |
-| [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned)                          | Monaco typewriter and viewZones (planned)                | Accepted (viewZone shipped)                           |
-| [ADR-012](#adr-012-ask-markdown-rendering-during-stream)                             | Ask markdown rendering during stream                     | Accepted                                              |
-| [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd)                      | Documentation split: CLAUDE.md vs decisions.md           | Accepted                                              |
-| [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first)            | Learning session persistence port — localStorage first   | Accepted (localStorage shipped inline; port deferred) |
-| [ADR-015](#adr-015-home-vs-session-route-split)                                      | Home vs session route split                              | Accepted                                              |
-| [ADR-016](#adr-016-routes-feature-views-vs-ui-components)                            | Routes, feature views, vs ui/ components                 | Accepted                                              |
-| [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                           | ui/ primitives: shadcn-first; ScrollArea                 | Accepted                                              |
-| [ADR-018](#adr-018-scaffy-modal-product-dialogs)                                     | ScaffyModal — unified product dialogs                    | Accepted                                              |
-| [ADR-019](#adr-019-monaco-viewzone-aria-hidden-accepted)                             | Monaco viewZone aria-hidden — accepted trade-off         | Accepted                                              |
-| [ADR-020](#adr-020-client-side-i18n-english--german-via-flat-translation-dictionary) | Client-side i18n (EN/DE) via flat translation dictionary | Accepted                                              |
-| [ADR-021](#adr-021-session-intro-stream-and-lesson-start-gate)                       | Session intro stream + lesson start gate                 | Accepted                                              |
-| [ADR-022](#adr-022-shadcn-vs-custom-ui-controls)                                     | shadcn vs custom UI controls                             | Accepted                                              |
+| ID                                                                                   | Title                                                    | Status                                                                                   |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| [ADR-001](#adr-001-product-vision-scaffolding--friction)                             | Product vision: scaffolding + friction                   | Accepted                                                                                 |
+| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                             | SPA: SvelteKit 5, no SSR for app shell                   | Accepted                                                                                 |
+| [ADR-003](#adr-003-claude-only-via-server-api-routes)                                | Claude only via server API routes                        | Accepted                                                                                 |
+| [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask)                         | Separate API endpoints (Learn, Ask, Session intro)       | Accepted                                                                                 |
+| [ADR-005](#adr-005-learn-scaffold-rest--structured-json)                             | Learn: REST + structured JSON                            | Accepted                                                                                 |
+| [ADR-006](#adr-006-ask-chat-sse-streaming)                                           | Ask: chat Server-Sent Events (SSE) streaming             | Accepted                                                                                 |
+| [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership)                          | ChatPanel dual mode and state ownership                  | Accepted                                                                                 |
+| [ADR-008](#adr-008-chat-message-lifecycle-statuses)                                  | Chat message lifecycle statuses                          | Accepted                                                                                 |
+| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later)                         | Session store for scaffolds (Monaco later)               | Accepted                                                                                 |
+| [ADR-010](#adr-010-repository-layout-and-typescript)                                 | Repository layout and TypeScript                         | Accepted                                                                                 |
+| [ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off)           | Monaco viewZones, editor integration, and a11y trade-off | Accepted (viewZone shipped; typewriter planned)                                          |
+| [ADR-012](#adr-012-ask-markdown-rendering-during-stream)                             | Ask markdown rendering during stream                     | Accepted                                                                                 |
+| [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd)                      | Documentation split: CLAUDE.md vs decisions.md           | Accepted                                                                                 |
+| [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first)            | Learning session persistence port — localStorage first   | Accepted (localStorage shipped inline; port deferred)                                    |
+| [ADR-015](#adr-015-home-vs-session-route-split)                                      | Home vs session route split                              | Accepted                                                                                 |
+| [ADR-016](#adr-016-routes-feature-views-vs-ui-components)                            | Routes, feature views, vs ui/ components                 | Accepted                                                                                 |
+| [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                           | ui/ primitives: shadcn-first; ScrollArea                 | Accepted                                                                                 |
+| [ADR-018](#adr-018-scaffy-modal-product-dialogs)                                     | ScaffyModal — unified product dialogs                    | Accepted                                                                                 |
+| [ADR-019](#adr-019-monaco-viewzone-aria-hidden-accepted)                             | Monaco viewZone aria-hidden — accepted trade-off         | Superseded by [ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off) |
+| [ADR-020](#adr-020-client-side-i18n-english--german-via-flat-translation-dictionary) | Client-side i18n (EN/DE) via flat translation dictionary | Accepted                                                                                 |
+| [ADR-021](#adr-021-session-intro-stream-and-lesson-start-gate)                       | Session intro stream + lesson start gate                 | Accepted                                                                                 |
+| [ADR-022](#adr-022-shadcn-vs-custom-ui-controls)                                     | shadcn vs custom UI controls                             | Accepted                                                                                 |
+
+---
+
+## Key decisions
+
+Architecturally central ADRs — grouped by topic. Full context in each linked entry below.
+
+| ADR                                                                                                                                                                                                                          | Topic                   | Related documentation                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                                                                                                                                                                     | Framework: SvelteKit    | [architecture.md §5](architecture.md#5-technologies-meta) · [svelte-health-check.md](svelte-health-check.md) |
+| [ADR-010](#adr-010-repository-layout-and-typescript) · [ADR-016](#adr-016-routes-feature-views-vs-ui-components) · [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                                                | Component architecture  | [README § Repository structure](../README.md#repository-structure)                                           |
+| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later) · [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership) · [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first)                       | State handling          | [architecture.md §6](architecture.md#6-state-management)                                                     |
+| [ADR-003](#adr-003-claude-only-via-server-api-routes) · [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask) · [ADR-005](#adr-005-learn-scaffold-rest--structured-json) · [ADR-006](#adr-006-ask-chat-sse-streaming) | Secure API access       | [architecture.md §4](architecture.md#4-http-api-flows)                                                       |
+| [ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off)                                                                                                                                                   | Monaco viewZones + a11y | [architecture.md §5 Monaco APIs](architecture.md#monaco-apis)                                                |
+
+---
+
+## Further decisions
+
+Additional ADRs — full context in each linked entry below.
+
+| ADR                                                                                  | Title                                            | Status                                                                                   |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| [ADR-001](#adr-001-product-vision-scaffolding--friction)                             | Product vision: scaffolding + friction           | Accepted                                                                                 |
+| [ADR-008](#adr-008-chat-message-lifecycle-statuses)                                  | Chat message lifecycle statuses                  | Accepted                                                                                 |
+| [ADR-012](#adr-012-ask-markdown-rendering-during-stream)                             | Ask markdown rendering during stream             | Accepted                                                                                 |
+| [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd)                      | Documentation split: CLAUDE.md vs decisions.md   | Accepted                                                                                 |
+| [ADR-015](#adr-015-home-vs-session-route-split)                                      | Home vs session route split                      | Accepted                                                                                 |
+| [ADR-018](#adr-018-scaffy-modal-product-dialogs)                                     | ScaffyModal — unified product dialogs            | Accepted                                                                                 |
+| [ADR-019](#adr-019-monaco-viewzone-aria-hidden-accepted)                             | Monaco viewZone aria-hidden — accepted trade-off | Superseded by [ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off) |
+| [ADR-020](#adr-020-client-side-i18n-english--german-via-flat-translation-dictionary) | Client-side i18n (EN/DE)                         | Accepted                                                                                 |
+| [ADR-021](#adr-021-session-intro-stream-and-lesson-start-gate)                       | Session intro stream + lesson start gate         | Accepted                                                                                 |
+| [ADR-022](#adr-022-shadcn-vs-custom-ui-controls)                                     | shadcn vs custom UI controls                     | Accepted                                                                                 |
 
 ---
 
@@ -310,13 +343,13 @@ Code uses logical IDs `claude-sonnet-4-5` | `claude-sonnet-4-6` mapped in `anthr
 
 ---
 
-## ADR-011: Monaco typewriter and viewZones
+## ADR-011: Monaco viewZones, editor integration, and a11y trade-off
 
 **Status:** Accepted — **viewZone shipped**; typewriter **not implemented**
 
 ### Context
 
-Learn mode should feel like live typing without API streaming of JSON.
+Learn mode should feel like live typing without API streaming of JSON. The Learning Card must scroll with code (viewZone), not as a detached overlay. Lighthouse reports **`aria-hidden-focus`** because Monaco marks `.view-zones` as `aria-hidden="true"` while interactive quiz controls live inside the zone.
 
 ### Decision
 
@@ -328,10 +361,20 @@ Learn mode should feel like live typing without API streaming of JSON.
 - **Editor read-only** until `session.completed` — selection/copy allowed on **code**; typing blocked (`readOnly: true`, not `domReadOnly`).
 - **Learning Card copy prevention** — question and answer options are not selectable/copyable (`user-select: none`, `copy` blocked on the card root). **Intentional friction:** stops learners from pasting the gated quiz into the Ask chat pane beside the editor to shortcut the knowledge check. Monaco code remains copyable; the wrong-answer feedback modal (portaled) is separate and may still expose the explanation after a failed attempt.
 
+### Accessibility trade-off
+
+- **Keep Learning Card in a Monaco viewZone** — scroll-with-code is core pedagogy.
+- **Do not** move interactive knowledge checks to **overlay widgets**, portaled panels, or other DOM outside the viewZone solely to satisfy `aria-hidden-focus`.
+- **Accept** the resulting automated a11y finding; session Lighthouse accessibility is ~96 — we do not target 100 on `/session/*`.
+- **Ignore** `aria-hidden-focus` in Lighthouse/PageSpeed triage unless product requirements change.
+- Wrong-answer feedback and read-only hint remain portaled; only the inline gated quiz stays in the viewZone.
+
 ### Alternatives considered
 
 - Allow copy and rely on honor system — rejected; Ask mode is one click away and would undermine the gate.
 - Block copy on the entire editor — rejected; copying scaffold code for notes is a valid learning action.
+- **Monaco overlay widget** for the Learning Card — rejected; decouples the card from line-aligned scroll position.
+- **Portal Learning Card to `document.body`** — rejected for the quiz; used only for read-only hint and wrong-answer modal.
 
 ### Current state
 
@@ -339,6 +382,7 @@ Learn mode should feel like live typing without API streaming of JSON.
 - Code still applied via `editor.setValue()` (full chunk at once).
 - Wrong-answer feedback: portaled to `document.body` (`z-index` above app chrome); structured layout (correct option row + explanation).
 - Read-only edit hint: custom portaled tooltip (`read-only-hint.svelte`), not Monaco `readOnlyMessage`.
+- Session route may retain `aria-hidden-focus` in audits; no agent or refactor should “fix” it without an explicit product decision to reverse this ADR.
 
 ---
 
@@ -658,28 +702,9 @@ Delete confirmation, Learning Card wrong-answer feedback, and About each used se
 
 ## ADR-019: Monaco viewZone aria-hidden — accepted trade-off
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off)
 
-### Context
-
-Lighthouse (and axe) report **`aria-hidden-focus`** on the session route: Monaco marks its `.view-zones` container `aria-hidden="true"`, while the interactive **Learning Card** (radio options) lives inside a viewZone so the card scrolls with code. Session Lighthouse accessibility is ~96 — still strong; fixing the audit would mean moving the card out of the viewZone.
-
-### Decision
-
-- **Keep Learning Card in a Monaco viewZone** — scroll-with-code is core pedagogy (ADR-011).
-- **Do not** move interactive knowledge checks to **overlay widgets**, portaled panels, or other DOM outside the viewZone solely to satisfy `aria-hidden-focus`.
-- **Accept** the resulting automated a11y finding; we do not target Lighthouse accessibility 100 on session.
-- **Ignore** `aria-hidden-focus` in Lighthouse/PageSpeed triage for `/session/*` unless product requirements change.
-
-### Alternatives considered
-
-- **Monaco overlay widget** for the Learning Card — rejected; decouples the card from line-aligned scroll position and adds layout/sync complexity.
-- **Portal Learning Card to `document.body`** — rejected for the same reason; used only for read-only hint and wrong-answer modal where scroll coupling is not required.
-
-### Consequences
-
-- Session route may retain `aria-hidden-focus` in audits; no agent or refactor should “fix” it without an explicit product decision to reverse this ADR.
-- Wrong-answer feedback and read-only hint remain portaled (ADR-011); only the inline gated quiz stays in the viewZone.
+The aria-hidden / Lighthouse trade-off for Learning Cards in Monaco viewZones is documented under **ADR-011** (Accessibility trade-off). This entry is kept for index continuity only.
 
 ---
 
@@ -807,7 +832,6 @@ ADR-017 sets **shadcn-first** for `ui/` primitives but does not record which con
 ## Planned / nice-to-have (not ADRs yet)
 
 - Supabase adapter + Google Auth (see [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) Phase 2)
-- A/B test: scaffolding + friction vs classic agentic coding
 - Analytics (e.g. Tinybird)
 - **Lottie** animations/icons (e.g. loading, empty states, success feedback in chat or session UI)
 
@@ -817,6 +841,7 @@ ADR-017 sets **shadcn-first** for `ui/` primitives but does not record which con
 
 | Date       | Change                                                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-24 | Key decisions + Further decisions tables; ADR-011 merged with ADR-019 (a11y trade-off); ADR-019 superseded. Projektsteckbrief checklist aligned.                                |
 | 2026-06-24 | ADR-022: shadcn vs custom UI inventory (ScaffyDropdown, ScaffyModal, ChipGrid, etc.) and when to install vs compose.                                                            |
 | 2026-06-25 | ADR-020: `MessageKey` compile-time checks; `check:i18n` for en/de parity (CI + lint-staged on `translations.ts`). Session intro renumbered to ADR-021 (duplicate id cleanup).   |
 | 2026-06-21 | ADR-020: client-side i18n (EN/DE) — `src/lib/i18n` store + flat `translations.ts`; Session/Sessions/About copy localized; About intro split into `about-content.md` / `.de.md`. |

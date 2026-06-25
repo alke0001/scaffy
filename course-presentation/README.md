@@ -16,7 +16,7 @@ Everything for the Marp slide deck lives in this folder. Canonical architecture 
 
 Open **`course-presentation/scaffy-course.md`**. The file must start with `marp: true` in the YAML front matter (already set).
 
-Open the **`scaffy`** folder as the workspace root so `.vscode/settings.json` loads (required for the custom theme).
+Open the **`scaffy`** folder as the workspace root so `.vscode/settings.json` loads (required for the custom theme and link behavior below).
 
 ### 3. Start slide preview
 
@@ -28,7 +28,25 @@ Use the **Marp** preview, not **Markdown: Open Preview** — the built-in Markdo
 
 **Presenter tip:** click a slide in the preview to sync with the editor cursor; use `---` in the Markdown file to separate slides.
 
-### 4. Export (optional)
+### 4. Links from slides → docs in the editor
+
+Workspace settings (`.vscode/settings.json`) are tuned for presenting:
+
+| Setting                              | Value      | Effect                                                                                              |
+| ------------------------------------ | ---------- | --------------------------------------------------------------------------------------------------- |
+| `markdown.preview.openMarkdownLinks` | `inEditor` | Click a repo link in **Marp preview** → opens the file in the editor (not inside the slide preview) |
+| `markdown.links.openLocation`        | `beside`   | Opens beside the current editor column (slides stay visible)                                        |
+| `workbench.editor.enablePreview`     | `false`    | Opened docs stay as real tabs (not ephemeral preview tabs)                                          |
+
+**Tips during the talk:**
+
+- **Normal click** on `architecture.md`, `decisions.md`, etc. in Marp preview → doc opens in the editor beside the deck.
+- **Ctrl+Click** (Windows) / **Cmd+Click** (macOS) or **middle-click** → force a new editor column (VS Code built-in).
+- **https://** links (e.g. scaffy.vercel.app) still open in the browser.
+
+Reload the window once after cloning if links behave like a browser (`Ctrl+Shift+P` → **Developer: Reload Window**).
+
+### 5. Export (optional)
 
 `Ctrl+Shift+P` → **`Marp: Export slide deck...`** → PDF / HTML / PPTX (PDF/PPTX need Chrome, Edge, or Firefox installed).
 

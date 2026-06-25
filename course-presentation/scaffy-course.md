@@ -1,6 +1,7 @@
 ---
 marp: true
 theme: scaffy
+html: true
 paginate: true
 header: 'Scaffy · FUI SoSe 2026'
 footer: 'Alexander Keller | Dennis Kallmayer'
@@ -65,7 +66,8 @@ Der User gibt einen Prompt ein → KI liefert **geordnete Scaffolds** (Code + Kn
 <!-- sync: course-presentation/diagrams/abb-logical.mmd · docs/architecture.md §1 -->
 
 ![Logical architecture (ABB)](assets/diagrams/abb-logical.svg)
-Details: [`docs/architecture.md`](docs/architecture.md)
+
+Details: [`docs/architecture.md §1`](../docs/architecture.md#1-logical-architecture-abb)
 
 ---
 
@@ -74,42 +76,29 @@ Details: [`docs/architecture.md`](docs/architecture.md)
 <!-- sync: course-presentation/diagrams/ssb-physical.mmd · docs/architecture.md §2 -->
 
 ![Physical architecture (SSB)](assets/diagrams/ssb-physical.svg)
-Details: [`docs/architecture.md`](docs/architecture.md)
+
+Details: [`docs/architecture.md §2`](../docs/architecture.md#2-physical-architecture-ssb)
 
 ---
 
-## Sicherheit: kein API-Key im Browser
+## Frameworkwahl — SvelteKit
 
-[`ADR-003`](../docs/decisions.md#adr-003-claude-only-via-server-api-routes)
+- SvelteKit 5 **SPA** — interaktive Session-UI, kein SSR für App-Shell
+- Svelte 5 Runes, TypeScript, Vite
+- Framework-Health-Check: Release-Kadenz, npm-Trends, Ökosystem
+- Vollständiger Stack: [`§5 Technologies (meta)`](../docs/architecture.md#5-technologies-meta) in `architecture.md`
 
-```
-Browser  →  /api/*  (SvelteKit)  →  api.anthropic.com
-```
-
-- `ANTHROPIC_API_KEY` nur serverseitig (`$env/static/private`)
-- Learn: **REST** + JSON-Schema · Ask & Intro: **SSE**
+[`architecture.md §5`](../docs/architecture.md#5-technologies-meta) · [`svelte-health-check.md`](../docs/svelte-health-check.md) · [ADR-002](../docs/decisions.md#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)
 
 ---
 
-## Learn — Structured JSON
+## Komponentenarchitektur
 
-<!-- sync: course-presentation/diagrams/learn-sequence.mmd · docs/architecture.md §4 Learn -->
+- **Routes** dünn (`+page.svelte`) → Feature-Views unter `src/lib/components/<area>/`
+- **ui/** — shadcn-svelte zuerst; Custom wenn komponiert (ScaffyModal, ScrollArea) **oder** shadcn-Overhead zu groß für einfachen Einzelfall (z. B. `ScaffyDropdown` nur für Sprache)
+- Server-only Code in `src/lib/server/` — nie im Client-Bundle
 
-![Learn scaffold sequence](assets/diagrams/learn-sequence.svg)
-
-`src/routes/api/scaffold/+server.ts` · `src/lib/server/scaffold/`
-
----
-
-## Monaco + Learning Card
-
-[`ADR-011`](../docs/decisions.md#adr-011-monaco-typewriter-and-viewzones-planned)
-
-- **`changeViewZones`** — Card scrollt mit dem Code
-- Editor **read-only** bis Lektion fertig
-- Copy auf Code erlaubt · Card-Inhalt nicht kopierbar (Friction)
-
-`src/lib/components/editor/learning-card.svelte`
+[`README § Repository structure`](../README.md#repository-structure) · [ADR-010](../docs/decisions.md#adr-010-repository-layout-and-typescript) · [ADR-016](../docs/decisions.md#adr-016-routes-feature-views-vs-ui-components) · [ADR-017](../docs/decisions.md#adr-017-ui-primitives-shadcn-first-scroll-area)
 
 ---
 
@@ -119,70 +108,88 @@ Browser  →  /api/*  (SvelteKit)  →  api.anthropic.com
 
 ![State layers](assets/diagrams/state-flow.svg)
 
-Ask-Verlauf: Navigation ✅ · Full Reload ❌ (bewusst, ADR-014)
+- **URL** — `/session/:id` · **Global** — `session.svelte.ts` + `localStorage` · **Lokal** — `$state` in Monaco/Chat
+- Ask-Verlauf: Navigation ✅ · Full Reload ❌ (ADR-014)
+
+[`architecture.md §6`](../docs/architecture.md#6-state-management) · [ADR-009](../docs/decisions.md#adr-009-session-store-for-scaffolds-monaco-later) · [ADR-007](../docs/decisions.md#adr-007-chatpanel-dual-mode-and-state-ownership) · [ADR-014](../docs/decisions.md#adr-014-learning-session-persistence-port--localstorage-first)
 
 ---
 
-## Tech-Stack (Kurz)
+## Sicherer API-Zugriff
 
-| Bereich   | Wahl                         |
-| --------- | ---------------------------- |
-| Framework | SvelteKit 5 · SPA            |
-| UI        | shadcn-svelte · Tailwind 4   |
-| Editor    | Monaco (viewZones)           |
-| KI        | Claude · `@anthropic-ai/sdk` |
-| Deploy    | Vercel · GitHub Actions      |
+```
+Browser  →  /api/*  (SvelteKit)  →  api.anthropic.com
+```
 
-Vollständig: [`docs/architecture.md` §5](../docs/architecture.md#5-technologies-meta)
+- `ANTHROPIC_API_KEY` nur serverseitig (`$env/static/private`)
+- **3 Endpoints:** scaffold (REST + JSON-Schema) · chat (SSE) · session-intro (SSE)
+
+[`architecture.md §4`](../docs/architecture.md#4-http-api-flows) · [ADR-003](../docs/decisions.md#adr-003-claude-only-via-server-api-routes) · [ADR-004](../docs/decisions.md#adr-004-separate-api-endpoints-for-learn-and-ask) · [ADR-005](../docs/decisions.md#adr-005-learn-scaffold-rest--structured-json) · [ADR-006](../docs/decisions.md#adr-006-ask-chat-sse-streaming)
+
+---
+
+## Monaco viewZones + A11y
+
+- **`changeViewZones`** — Learning Card scrollt mit Code (Svelte-Mount in Zone-DOM)
+- Editor **read-only** bis Lektion fertig · Card nicht kopierbar (Friction)
+- **Trade-off:** Lighthouse `aria-hidden-focus` ~96 A11y — bewusst akzeptiert
+
+[`architecture.md §5 Monaco APIs`](../docs/architecture.md#monaco-apis) · [ADR-011](../docs/decisions.md#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off)
+
+---
+
+## Herausforderungen
+
+1. **Structured JSON / Validierung** — Lesson-JSON von Claude; `validate-lesson.ts` + Schema-Retry · Trade-off: Latenz vs. Zuverlässigkeit
+2. **Performance Scaffold-API** — ein REST-Call für volle Lektion (10–30 s); paralleler Intro-SSE · Trade-off: kein Learn-Streaming (JSON-Integrität)
 
 ---
 
 <!-- _class: compact -->
 
-## Pflicht-Checkliste (Auszug)
+## Qualität
 
-Quelle: [`Projektsteckbrief_Scaffy.md`](../Projektsteckbrief_Scaffy.md)
+**Tooling:** ESLint · Prettier · [Husky + lint-staged](../README.md#code-quality-and-git-hooks) · CI (`pnpm run ci`, lint, check, i18n)
 
-| Status | Anforderung                                 |
-| ------ | ------------------------------------------- |
-| ✅     | ≥5 Komponenten, ≥2 mehrfach genutzt         |
-| ✅     | Globaler State von ≥2 Routen                |
-| ✅     | 3 Routen (`/`, `/session/:id`, `/sessions`) |
-| ✅     | Externe API mit User-Input                  |
-| ✅     | Formular mit ≥2 Validierungsregeln          |
-| ✅     | Loading + Error States                      |
-| ⚠️     | Reactivity ohne dedizierte ProgressBar      |
-| ⚠️     | `currentIndex` nicht in localStorage        |
+**Workflow:** Feature Branch → PR → CI green → Merge ([README](../README.md#continuous-integration))
 
----
+**Deploy:** [scaffy.vercel.app](https://scaffy.vercel.app/) — Vercel Serverless ([README CD](../README.md#continuous-deployment))
 
-## Key ADRs
+| Route                         | Performance                    |
+| ----------------------------- | ------------------------------ |
+| `/`                           | 100                            |
+| `/sessions`                   | 100                            |
+| `/session/[id]` (Generierung) | ~83 (Monaco + parallele Loads) |
 
-Vollständiger Log: [`docs/decisions.md`](../docs/decisions.md)
-
-| ADR                                                                                                  | Thema                                   |
-| ---------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| [002](../docs/decisions.md#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                             | SPA, kein SSR für App-Shell             |
-| [004](../docs/decisions.md#adr-004-separate-api-endpoints-for-learn-and-ask)                         | Getrennte Endpoints Learn / Ask / Intro |
-| [018](../docs/decisions.md#adr-018-scaffy-modal-product-dialogs)                                     | ScaffyModal statt Dialog-Chaos          |
-| [020](../docs/decisions.md#adr-020-client-side-i18n-english--german-via-flat-translation-dictionary) | i18n EN/DE                              |
-| [021](../docs/decisions.md#adr-021-session-intro-stream-and-lesson-start-gate)                       | Intro-Stream + Lesson-Start-Gate        |
-| [022](../docs/decisions.md#adr-022-shadcn-vs-custom-ui-controls)                                     | shadcn vs. leichtes Custom-UI           |
+Session (generierend): FCP 0,5 s · LCP 0,7 s · TBT 350 ms · CLS 0 · A11y ~96
 
 ---
 
-## Lessons Learned
+## Reflexion
 
-- **A/B-Studie** (geplant): Scaffolding + Friction vs. klassisches Agentic Coding
-- **Persistierung Phase 2:** Schritt-Index, ggf. Supabase ([ADR-014](../docs/decisions.md#adr-014-learning-session-persistence-port--localstorage-first))
-- **Typewriter** pro Scaffold ([ADR-011](../docs/decisions.md#adr-011-monaco-typewriter-and-viewzones-planned))
+- **Semester-Konzepte:** Fast alle Vorlesungsthemen relevant — Routing, State, Komponenten, API, UX, QS
+- **Was anders?** Mehr **Konzeption** bei Agent-Coding; näher am **V-Modell** — z. B. `/history` → `/sessions` + `/session/[id]` wurde später erst durch refactoring sauber umgesetzt.
+- **KI im Team:** Parallel in Branches schwerer — mehr Dateien, höheres Merge-Konflikt-Risiko
+- **KI-Disziplin:** KI soll **refactoren**, nicht nur stapeln — Designprinzipien wie **KISS, DRY, YAGNI** in Reviews sehr relevant!
 
 ---
 
-<!-- _class: lead -->
+## Pflichtaspekte nachweisen
+
+Vollständige Checkliste inkl. Add-ons und Scaffy-Stärken:
+
+[`Projektsteckbrief_Scaffy.md § Pflicht-Checkliste`](../Projektsteckbrief_Scaffy.md#pflicht-checkliste)
+
+---
+
+<!-- _class: lead lead-close -->
 
 # Fragen?
 
-Slides: `course-presentation/scaffy-course.md`
+<div class="lead-links">
 
-Doku: `docs/` · Checkliste: `Projektsteckbrief_Scaffy.md`
+Slides: <a href="scaffy-course.md">course-presentation/scaffy-course.md</a><br>
+Doku: <a href="../docs/">docs/</a><br>
+Checkliste + Steckbrief: <a href="../Projektsteckbrief_Scaffy.md">Projektsteckbrief_Scaffy.md</a>
+
+</div>

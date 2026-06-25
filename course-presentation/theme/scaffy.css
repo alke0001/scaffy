@@ -77,6 +77,7 @@ table {
 	font-size: 20px;
 	border-collapse: collapse;
 	width: 100%;
+	background-color: var(--scaffy-background);
 }
 
 th {
@@ -87,12 +88,34 @@ th {
 }
 
 td {
+	background-color: var(--scaffy-background);
 	border: 1px solid var(--scaffy-border);
 	padding: 0.35em 0.5em;
+	color: var(--scaffy-foreground);
 }
 
 tr:nth-child(even) td {
 	background-color: var(--scaffy-card);
+}
+
+section.compact table {
+	font-size: 18px;
+	background-color: var(--scaffy-background);
+}
+
+section.compact th,
+section.compact td {
+	background-color: var(--scaffy-background) !important;
+	color: var(--scaffy-foreground) !important;
+	border: 1px solid var(--scaffy-border);
+}
+
+section.compact tr:nth-child(even) td {
+	background-color: var(--scaffy-background) !important;
+}
+
+section.compact th {
+	font-weight: 600;
 }
 
 blockquote {
@@ -117,6 +140,21 @@ section.lead h1 {
 
 section.lead p {
 	color: var(--scaffy-muted-foreground);
+	margin: 0.35em 0;
+	text-align: center;
+}
+
+section.lead-close .lead-links {
+	align-self: center;
+	margin-top: 0.5em;
+	text-align: left;
+	color: var(--scaffy-muted-foreground);
+	font-size: 0.85em;
+	line-height: 1.65;
+}
+
+section.lead-close .lead-links a {
+	color: var(--scaffy-ring);
 }
 
 section.live-demo > p {
@@ -146,10 +184,6 @@ section.live-demo > p a {
 
 section.compact {
 	font-size: 22px;
-}
-
-section.compact table {
-	font-size: 18px;
 }
 
 section img:not(.emoji) {
