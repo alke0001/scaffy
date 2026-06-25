@@ -72,7 +72,10 @@
 		onclick={toggle}
 	>
 		{label}
-		<ChevronDown class={cn('transition-transform', open && 'rotate-180')} aria-hidden="true" />
+		<ChevronDown
+			class={cn('size-3.5 transition-transform duration-200', open && 'rotate-180')}
+			aria-hidden="true"
+		/>
 	</Button>
 
 	{#if open}
