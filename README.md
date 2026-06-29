@@ -206,15 +206,44 @@ pnpm run ci
 pnpm run lint
 pnpm run check
 pnpm run check:i18n
+pnpm run test:run
 ```
 
 `pnpm run ci` installs dependencies from `pnpm-lock.yaml` with a frozen lockfile (fails if the lockfile is out of sync with `package.json`). CI copies [`.env.test`](.env.test) to `.env` before install so `svelte-kit sync` can generate `$env/static/private` types (no real API key in Actions).
+
+Unit tests are executed with **Vitest** and are part of the CI pipeline. A push or pull request only passes CI if all linting, type checks, i18n checks, and unit tests succeed.
 
 **Branch protection (repo admin):** After CI has run at least once on `main`, open **GitHub → Settings → Branches → Add branch protection rule** for `main`, enable **Require status checks to pass before merging**, and select the **`ci`** check.
 
 No extra GitHub configuration is required for Husky — hooks run locally only; CI remains the safety net if someone commits with `--no-verify`.
 
 ---
+
+### Running tests locally
+
+Run Vitest in watch mode during development:
+
+```sh
+pnpm run test
+```
+
+Run the complete test suite once (recommended before opening a pull request):
+
+```sh
+pnpm run test:run
+```
+
+### Before opening a Pull Request
+
+Before opening a pull request, ensure the following commands complete successfully:
+
+```sh
+pnpm run lint
+pnpm run check
+pnpm run check:i18n
+pnpm run test:run
+```
+
 
 ### Continuous deployment
 

@@ -213,10 +213,25 @@ Cross-cutting choices that cut across physical components. Listed here, not in t
 | **Markdown**        | `marked` + `dompurify`                                     | Ask replies and About dialog                                                                                         |
 | **State**           | Singleton `.svelte.ts` stores, URL routing, `localStorage` | See [§6 State management](#6-state-management)                                                                       |
 | **Deploy**          | `@sveltejs/adapter-vercel`, Vercel serverless              | Production hosting, API routes                                                                                       |
-| **Quality**         | Prettier, ESLint, Husky, lint-staged, GitHub Actions       | Format, lint, pre-commit, CI                                                                                         |
+| **Quality**         | Prettier, ESLint, Husky, lint-staged, **Vitest**, GitHub Actions | Format, lint, unit testing, pre-commit, CI
 | **Package manager** | [pnpm](https://pnpm.io) (not npm)                          | Install, scripts, CI (`pnpm run ci` with frozen lockfile); faster deduped `node_modules`, stricter dependency layout |
 
 CI and local dev assume **`pnpm-lock.yaml`** — use `pnpm install`, not `npm install`.
+
+### Testing
+
+The project uses **Vitest** for unit testing.
+
+The following components are covered by unit tests:
+
+- `src/routes/api/chat/+server.ts`
+- `src/routes/api/scaffold/+server.ts`
+- `src/routes/api/session-intro/+server.ts`
+- `src/routes/api/chat/utils.ts`
+
+The API route tests verify request validation, response handling, and interactions with the Anthropic client. The utility tests verify the helper functions independently.
+
+External Anthropic API calls are mocked during testing. This allows the tests to run deterministically without requiring network access or consuming API credits.
 
 ### Monaco APIs
 
