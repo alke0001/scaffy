@@ -23,12 +23,10 @@ Fachhochschule · Frontend-UI · SoSe 2026
 2. **Live-Demo**
 3. Architektur (ABB / SSB)
 4. Key Decisions
-5. Herausforderungen
+5. Besondere Projekt-Challenges
 6. Qualität
 7. Reflexion
-8. Reflexion — Was hat uns gebremst?
-9. Reflexion — Agentic Coding
-10. Pflichtaspekte nachweisen
+8. Checkliste für Prüfungsleistung
 
 ---
 
@@ -140,17 +138,17 @@ Browser  →  /api/*  (SvelteKit)  →  api.anthropic.com
 
 ---
 
-## Key Decision 5: Monaco viewZones + A11y
+## Key Decision 5: Monaco (viewZones API)
 
-- **`changeViewZones`** — Learning Card scrollt mit Code (Svelte-Mount in Zone-DOM)
-- Editor **read-only** bis Lektion fertig · Card nicht kopierbar (Friction)
+- **`changeViewZones`** — `learning-card.svelte` scrollt mit Code (Svelte-Mount in Zone-DOM)
+- Editor **read-only** bis Lektion fertig · Card Inhalt nicht kopierbar (Friction)
 - **Trade-off:** Lighthouse `aria-hidden-focus` ~96 A11y — bewusst akzeptiert
 
 [`architecture.md §5 Monaco APIs`](../docs/architecture.md#monaco-apis) · [ADR-011](../docs/decisions.md#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off)
 
 ---
 
-## Herausforderungen
+## Besondere Projekt-Challenges
 
 1. **Structured JSON / Validierung** — Lesson-JSON von Claude; `validate-lesson.ts` + Schema-Retry · Trade-off: Latenz vs. Zuverlässigkeit
 2. **Performance Scaffold-API** — ein REST-Call für volle Lektion (10–30 s); paralleler Intro-SSE · Trade-off: kein Learn-Streaming (JSON-Integrität)
@@ -162,12 +160,11 @@ Browser  →  /api/*  (SvelteKit)  →  api.anthropic.com
 ## Qualität
 
 - **Tooling:** ESLint · Prettier · [Husky + lint-staged](../README.md#code-quality-and-git-hooks) · CI (`pnpm run ci`, lint, check, i18n)
-- **Workflow:** Feature Branch → PR → CI green → Merge ([README § CI](../README.md#continuous-integration))
+- **Workflow:** Feature Branch → PR (Approval notwendig) → CI green → Merge ([README § CI](../README.md#continuous-integration))
 - **Deploy:** [scaffy.vercel.app](https://scaffy.vercel.app/) — Vercel Serverless ([README § CD](../README.md#continuous-deployment))
 - **Dokumentation:**
   - [README](../README.md)
   - [architecture.md](../docs/architecture.md) · [decisions.md](../docs/decisions.md) · [svelte-health-check.md](../docs/svelte-health-check.md)
-  - [FUI-Abschlusspräsentation](../course-presentation/README.md)
 
 **Lighthouse:**
 
