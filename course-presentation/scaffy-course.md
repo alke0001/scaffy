@@ -26,7 +26,9 @@ Fachhochschule · Frontend-UI · SoSe 2026
 5. Herausforderungen
 6. Qualität
 7. Reflexion
-8. Pflichtaspekte nachweisen
+8. Reflexion — Was hat uns gebremst?
+9. Reflexion — Agentic Coding
+10. Pflichtaspekte nachweisen
 
 ---
 
@@ -58,7 +60,7 @@ Der User gibt einen Prompt ein → KI liefert **geordnete Scaffolds** (Code + Kn
 <div class="live-demo-body">
 
 <div class="live-demo-cta">
-<p><strong>Jetzt Starten 👇🚀</strong></p>
+<p><strong>Jetzt Starten 👇</strong></p>
 <p><a href="https://scaffy.vercel.app/">scaffy.vercel.app</a></p>
 </div>
 
@@ -159,11 +161,15 @@ Browser  →  /api/*  (SvelteKit)  →  api.anthropic.com
 
 ## Qualität
 
-**Tooling:** ESLint · Prettier · [Husky + lint-staged](../README.md#code-quality-and-git-hooks) · CI (`pnpm run ci`, lint, check, i18n)
+- **Tooling:** ESLint · Prettier · [Husky + lint-staged](../README.md#code-quality-and-git-hooks) · CI (`pnpm run ci`, lint, check, i18n)
+- **Workflow:** Feature Branch → PR → CI green → Merge ([README § CI](../README.md#continuous-integration))
+- **Deploy:** [scaffy.vercel.app](https://scaffy.vercel.app/) — Vercel Serverless ([README § CD](../README.md#continuous-deployment))
+- **Dokumentation:**
+  - [README](../README.md)
+  - [architecture.md](../docs/architecture.md) · [decisions.md](../docs/decisions.md) · [svelte-health-check.md](../docs/svelte-health-check.md)
+  - [FUI-Abschlusspräsentation](../course-presentation/README.md)
 
-**Workflow:** Feature Branch → PR → CI green → Merge ([README](../README.md#continuous-integration))
-
-**Deploy:** [scaffy.vercel.app](https://scaffy.vercel.app/) — Vercel Serverless ([README CD](../README.md#continuous-deployment))
+**Lighthouse:**
 
 | Route                         | Performance                    |
 | ----------------------------- | ------------------------------ |
@@ -171,24 +177,46 @@ Browser  →  /api/*  (SvelteKit)  →  api.anthropic.com
 | `/sessions`                   | 100                            |
 | `/session/[id]` (Generierung) | ~83 (Monaco + parallele Loads) |
 
-Session (generierend): FCP 0,5 s · LCP 0,7 s · TBT 350 ms · CLS 0 · A11y ~96
-
 ---
 
 ## Reflexion
 
-- **Semester-Konzepte:** Fast alle Vorlesungsthemen relevant — Routing, State, Komponenten, API, UX, QS
-- **Was anders?** Mehr **Konzeption** bei Agent-Coding; näher am **V-Modell** — z. B. `/history` → `/sessions` + `/session/[id]` wurde später erst durch refactoring sauber umgesetzt.
-- **KI im Team:** Parallel in Branches schwerer — mehr Dateien, höheres Merge-Konflikt-Risiko
-- **KI-Disziplin:** KI soll **refactoren**, nicht nur stapeln — Designprinzipien wie **KISS, DRY, YAGNI** in Reviews sehr relevant!
+**Was war unser Antrieb:**
+
+- **Moderner Stack:**
+  - **Svelte 5 & SvelteKit** — Web Development im state-of-the-art Stack hat richtig Spaß gemacht; fühlt sich sehr produktiv an
+- **Sicherer API-Zugriff:** Server-seitige Claude-Anbindung über SvelteKit **API-Routes** — mit `$env/static/private` schnell und sauber umsetzbar
+- **Anthropic API + SSE:** gut dokumentiert — **Learn** (REST/JSON) und **Tutor-Chat** (Stream) für zwei Use Cases zügig realisiert
+- **Web-Technologien:** enorm mächtig — Markdown-Renderer im Chat, **Monaco** als Editor-Basis; vieles schon da, wenig neu erfinden
+- **Dev Experience:** Zeit in Tooling, Hooks und Konventionen **zu Beginn** — am Ende effizienter im Team
+  - **CI/CD:** GitHub Actions + Vercel — wichtig für uns als Team
 
 ---
 
-## Pflichtaspekte nachweisen
+## Reflexion — Was hat uns gebremst?
+
+- **Technische Konzepte:** Vor parallel entwickeln **gemeinsam festlegen** — Routing, State, API-Grenzen; sonst späteres Nachziehen
+- **Visual Design:** Beide keine Designer — viel Zeit für akzeptables Look & Feel (Farben, Fonts, Tokens); **kein fertiges Design System** out of the box für unser IDE Design gefunden.
+- **Custom Components:** Eigenbau statt Katalog — z. B. **Learning Cards in Monaco**
+
+---
+
+## Reflexion — Agentic Coding
+
+- Parallel in **Branches** schwerer — mehr Dateien, höheres **Merge-Konflikt**-Risiko
+- KI generiert schnell, **Refactoring** hinkt hinterher — Technical Debt stapeln sich; dagegen hilft gezieltes Arbeiten mit **Rules & Skills** (Lernkurve — ein paar Gehversuche bei uns, weiter ausbaufähig)
+- KI-Output nicht **blind mergen**! In Reviews Themen wie **KISS, DRY, YAGNI** einfordern.
+- KI gezielt zum **Refactoren** nutzen — nicht nur Code stapeln lassen
+
+**Fazit:** Zeitnah ein **Modul an der HS-KL** — nicht nur Tooling, sondern die Brücke zu **Software Engineering** (Designprinzipien, Patterns, Architektur). Das ist die Aufgabe für Absolvent:innen im SWE-Bereich; kein Unternehmen wird ohne diese Tools arbeiten. Unsere Erfahrung: es klappt gut, wenn man lernt sie richtig zu bedienen — weniger Syntax-Details, mehr **Senior-Level-Aufgaben** im Einsatz.
+
+---
+
+## Checkliste für Prüfungsleistung
 
 Vollständige Checkliste inkl. Add-ons und Scaffy-Stärken:
 
-[`Projektsteckbrief_Scaffy.md § Pflicht-Checkliste`](../Projektsteckbrief_Scaffy.md#pflicht-checkliste)
+[`Projektsteckbrief_Scaffy.md § Checkliste`](../Projektsteckbrief_Scaffy.md#pflicht-checkliste)
 
 ---
 
@@ -196,10 +224,13 @@ Vollständige Checkliste inkl. Add-ons und Scaffy-Stärken:
 
 # Fragen?
 
-<div class="lead-links">
-
-Slides: <a href="scaffy-course.md">course-presentation/scaffy-course.md</a><br>
-Doku: <a href="../docs/">docs/</a><br>
-Checkliste + Steckbrief: <a href="../Projektsteckbrief_Scaffy.md">Projektsteckbrief_Scaffy.md</a>
-
+<div class="lead-close-grid">
+	<span class="lead-close-label">Slides:</span>
+	<span class="lead-close-value"><a href="scaffy-course.md">course-presentation/scaffy-course.md</a></span>
+	<span class="lead-close-label">Doku:</span>
+	<span class="lead-close-value"><a href="../docs/">docs/</a></span>
+	<span class="lead-close-label">Checkliste + Steckbrief:</span>
+	<span class="lead-close-value"><a href="../Projektsteckbrief_Scaffy.md">Projektsteckbrief_Scaffy.md</a></span>
+	<span class="lead-close-label">Live Deploy:</span>
+	<span class="lead-close-value"><a href="https://scaffy.vercel.app/">scaffy.vercel.app</a></span>
 </div>

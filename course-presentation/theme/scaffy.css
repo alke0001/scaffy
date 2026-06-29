@@ -144,16 +144,30 @@ section.lead p {
 	text-align: center;
 }
 
-section.lead-close .lead-links {
+section.lead-close .lead-close-grid {
+	display: grid;
+	grid-template-columns: auto auto;
+	column-gap: 0.75em;
+	row-gap: 0.2em;
+	margin: 0.5em auto 0;
 	align-self: center;
-	margin-top: 0.5em;
-	text-align: left;
-	color: var(--scaffy-muted-foreground);
 	font-size: 0.85em;
 	line-height: 1.65;
+	width: auto;
 }
 
-section.lead-close .lead-links a {
+section.lead-close .lead-close-label {
+	text-align: right;
+	color: var(--scaffy-muted-foreground);
+	white-space: nowrap;
+}
+
+section.lead-close .lead-close-value {
+	text-align: left;
+	color: var(--scaffy-muted-foreground);
+}
+
+section.lead-close .lead-close-value a {
 	color: var(--scaffy-ring);
 }
 

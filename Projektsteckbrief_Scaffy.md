@@ -60,7 +60,7 @@ localStorage + Svelte State Management + Routing/URL (Details: `docs/architectur
 
 | Add-on                                                 | Status       | Umsetzung                                                                                                                                                                                                                                                            |
 | ------------------------------------------------------ | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Komponenten-/E2E-Tests**                             | ❌           | Nicht umgesetzt                                                                                                                                                                                                                                                      |
+| **Komponenten-/E2E-Tests**                             | ⚠️ WIP       | Server-Unit-Tests (Vitest) auf Branch `feature/38-unit-tests-for-serverts` — Infra (CI, README, Architektur-Doku, ADR) bis **03.07.**; siehe „Ausblick (Abgabe)“                                                                                                     |
 | **Lighthouse** Accessibility + Performance             | ✅ umgesetzt | [scaffy.vercel.app](https://scaffy.vercel.app/): `/` und `/sessions` Performance **100**; `/session/[id]` während Generierung **~83** (Monaco + parallele Loads — FCP 0,5 s, LCP 0,7 s, TBT 350 ms, CLS 0, SI 1,4 s). A11y Session ~96 (viewZone-Trade-off, ADR-011) |
 | **Lazy Loading** mind. einer Route                     | ✅ umgesetzt | `/sessions`: leerer Zustand eager in `+page.svelte`; Listen-UI per `import()` nur wenn Sessions in `localStorage` existieren                                                                                                                                         |
 | **Live-Deploy**                                        | ✅ umgesetzt | [scaffy.vercel.app](https://scaffy.vercel.app/) — Vercel Serverless für `/api/*`, GitHub Actions CI                                                                                                                                                                  |
@@ -120,3 +120,9 @@ Die Claude API wird nicht wie eine einfache Film- oder Wetter-REST-API konsumier
 Das Feature-Flag-Design (Friction vs. Agentic Mode) ist **geplant, nicht implementiert** — legt aber die Grundlage für eine mögliche HCAI-Studie:
 
 > A/B — Scaffolding mit Friction vs. klassisches Agentic Coding — zur empirischen Auswertung der Lerneffektivität (_Friction & Scaffolding als UX-Patterns in KI-gestützter Lernsoftware_).
+
+---
+
+## Ausblick (Abgabe)
+
+**Server-Unit-Tests (WIP):** Branch `feature/38-unit-tests-for-serverts` — Vitest-Tests für die drei API-Routen (`/api/scaffold`, `/api/chat`, `/api/session-intro`) plus Chat-Utils. Die Tests selbst sind angelegt; die **Infrastruktur drumherum** (CI-Pipeline `pnpm run test:run`, README-Testkapitel, Dokumentation in `docs/architecture.md`, ADR in `docs/decisions.md`) kommt dort noch nach — **Ziel: bis 03.07.**, dann Teil der Abgabe.
