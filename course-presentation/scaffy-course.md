@@ -205,8 +205,6 @@ Browser  →  /api/*  (SvelteKit)  →  api.anthropic.com
 - KI-Output nicht **blind mergen**! In Reviews Themen wie **KISS, DRY, YAGNI** einfordern.
 - KI gezielt zum **Refactoren** nutzen — nicht nur Code stapeln lassen
 
-**Fazit:** Zeitnah ein **Modul an der HS-KL** — nicht nur Tooling, sondern die Brücke zu **Software Engineering** (Designprinzipien, Patterns, Architektur). Das ist die Aufgabe für Absolvent:innen im SWE-Bereich; kein Unternehmen wird ohne diese Tools arbeiten. Unsere Erfahrung: es klappt gut, wenn man lernt sie richtig zu bedienen — weniger Syntax-Details, mehr **Senior-Level-Aufgaben** im Einsatz.
-
 ---
 
 ## Checkliste für Prüfungsleistung
