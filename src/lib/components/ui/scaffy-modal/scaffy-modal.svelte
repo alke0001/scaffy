@@ -40,19 +40,17 @@
 	});
 </script>
 
-<div
-	use:portal
-	class="scaffy-modal-overlay"
-	role="dialog"
-	aria-modal="true"
-	aria-labelledby={ariaLabelledby}
-	onclick={handleOverlayClick}
->
+<!-- Backdrop dismiss is mouse-only; Escape and dialog action buttons handle keyboard. -->
+<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+<div use:portal class="scaffy-modal-overlay" onclick={handleOverlayClick}>
 	<div
 		class="scaffy-modal-card"
 		class:scaffy-modal-card--error={variant === 'error'}
 		class:scaffy-modal-card--lg={size === 'lg'}
-		role="document"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby={ariaLabelledby}
+		tabindex="-1"
 	>
 		{@render children()}
 	</div>
