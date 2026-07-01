@@ -36,4 +36,4 @@ ProfileCard Komponente bauen: Props sind name, image, description. Bonus: Slot/C
 - Comparable teaching arc: props → markup → styling / slots as appropriate.
 - Last scaffold still carries any remaining code per system prompt (max five scaffolds).
 
-Optional mock reference: [`src/lib/mocks/scaffolds-profile-card.json`](../src/lib/mocks/scaffolds-profile-card.json).
+Reference mock (same file as editor **Load fallback**): [`src/lib/scaffold/scaffold-fallback.mock.json`](../src/lib/scaffold/scaffold-fallback.mock.json). Paste a good `/api/scaffold` response there to update it.

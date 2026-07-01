@@ -99,15 +99,22 @@ src/
 │   │   └── ui/            # shadcn-svelte primitives (Button, Dialog, …)
 │   ├── server/
 │   │   ├── scaffold/      # Structured JSON schema + system prompt (Learn)
-│   │   ├── chat/          # Ask-mode tutor system prompt
-│   │   ├── session-intro/ # Concept preview system prompt (SSE)
+│   │   ├── chat/          # Ask + session-intro system prompts
+│   │   │   ├── ask-system-prompt.md
+│   │   │   └── session-intro-system-prompt.md
 │   │   └── anthropic-client.ts
-│   ├── i18n/              # EN/DE copy, MessageKey, language store
-│   ├── learn/             # Client scaffold + session-intro helpers
-│   ├── session.svelte.ts  # Session list, active session, localStorage
+│   ├── global-state/      # Runes singletons (see file headers for localStorage)
+│   │   └── session.svelte.ts  # Learn sessions, scaffolds, API status
+│   ├── i18n/              # EN/DE copy, MessageKey, language store (Svelte stores)
+│   ├── chat/              # Ask message helpers + session-intro stream client
+│   │   ├── message-actions.ts
+│   │   └── request-session-intro.ts
+│   ├── scaffold/          # Client scaffold fetch + mock fixtures
+│   │   ├── request-scaffold.ts
+│   │   └── scaffold-fallback.mock.json  # Dev fallback + optional golden sample (paste from API)
 │   ├── types/             # Shared types (scaffold, chat-message)
 │   ├── actions/           # Svelte actions (e.g. portal for overlays)
-│   └── mocks/             # Fixture scaffolds for UI development
+│   └── dev/               # Dev-only helpers (logging.ts)
 └── routes/
     ├── +page.svelte       # Home (thin → start-learning-session)
     ├── sessions/          # Sessions overview (lazy-loaded view)
@@ -115,7 +122,7 @@ src/
     └── api/
         ├── scaffold/      # POST /api/scaffold — REST structured JSON (Learn)
         ├── chat/          # POST /api/chat — SSE tutor (Ask)
-        └── session-intro/ # POST /api/session-intro — SSE concept preview
+        └── chat-session-intro/ # POST /api/chat-session-intro — SSE concept preview
 ```
 
 - **Routes** stay thin; feature views live under `src/lib/components/<area>/`. `/sessions` shows an **eager** empty state when there are no sessions; the list UI is **lazy-loaded** only when `localStorage` has sessions (conditional code split).
@@ -124,16 +131,16 @@ src/
 
 ### Architecture & stack
 
-| Area        | Choice                                         |
-| ----------- | ---------------------------------------------- |
-| Framework   | SvelteKit 5 — **SPA** (`ssr = false`)          |
-| Editor      | Monaco (viewZones for Learning Cards)          |
-| UI          | shadcn-svelte, Tailwind CSS 4                  |
-| AI          | Claude via server-only `/api/*` proxies        |
-| State       | Svelte 5 runes + `session.svelte.ts` singleton |
-| Persistence | `localStorage` (sessions, scaffolds, metadata) |
-| i18n        | EN (default) + DE — `src/lib/i18n/`            |
-| Deploy      | Vercel + GitHub Actions CI                     |
+| Area        | Choice                                                    |
+| ----------- | --------------------------------------------------------- |
+| Framework   | SvelteKit 5 — **SPA** (`ssr = false`)                     |
+| Editor      | Monaco (viewZones for Learning Cards)                     |
+| UI          | shadcn-svelte, Tailwind CSS 4                             |
+| AI          | Claude via server-only `/api/*` proxies                   |
+| State       | Svelte 5 runes — `src/lib/global-state/session.svelte.ts` |
+| Persistence | `localStorage` (sessions, scaffolds, metadata)            |
+| i18n        | EN (default) + DE — `src/lib/i18n/`                       |
+| Deploy      | Vercel + GitHub Actions CI                                |
 
 Logical and physical building blocks (ABB/SSB), API flows, and state: [`docs/architecture.md`](docs/architecture.md) · [`docs/decisions.md`](docs/decisions.md)
 

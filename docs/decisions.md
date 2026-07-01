@@ -126,11 +126,11 @@ Learn, Ask, and session intro need different system prompts, output shapes, temp
 
 ### Decision
 
-| Surface           | Route                     | Transport                | Output                                 | System prompt                                   |
-| ----------------- | ------------------------- | ------------------------ | -------------------------------------- | ----------------------------------------------- |
-| **Learn Code**    | `POST /api/scaffold`      | REST                     | Structured JSON `{ scaffolds: [...] }` | `src/lib/server/scaffold/system-prompt.md`      |
-| **Ask**           | `POST /api/chat`          | Server-Sent Events (SSE) | Plain text stream                      | `src/lib/server/chat/system-prompt.md`          |
-| **Session intro** | `POST /api/session-intro` | Server-Sent Events (SSE) | Plain text concept preview             | `src/lib/server/session-intro/system-prompt.md` |
+| Surface           | Route                          | Transport                | Output                                 | System prompt                                        |
+| ----------------- | ------------------------------ | ------------------------ | -------------------------------------- | ---------------------------------------------------- |
+| **Learn Code**    | `POST /api/scaffold`           | REST                     | Structured JSON `{ scaffolds: [...] }` | `src/lib/server/scaffold/system-prompt.md`           |
+| **Ask**           | `POST /api/chat`               | Server-Sent Events (SSE) | Plain text stream                      | `src/lib/server/chat/ask-system-prompt.md`           |
+| **Session intro** | `POST /api/chat-session-intro` | Server-Sent Events (SSE) | Plain text concept preview             | `src/lib/server/chat/session-intro-system-prompt.md` |
 
 - Server assets: one subfolder per endpoint under `src/lib/server/<endpoint>/`.
 - Shared: `src/lib/server/anthropic-client.ts` (`@anthropic-ai/sdk`).
@@ -165,7 +165,7 @@ That fragility is **rooted in LLM non-determinism + structured-output constraint
 - **Temperature ~0.3**, `max_tokens` 6144 — tuned in `src/routes/api/scaffold/+server.ts`.
 - Post-parse: `validateStructuredOutput()` → `validate-lesson.ts` (trim to 3 scaffolds if the model over-generates; **strict cumulative** `codeSnippet` chain; one **server retry** on validation failure).
 - **In-editor loading** while waiting (~45s): static `<!-- HTML comment -->` lines via `setValue()`; Braille spinner + rotating verbs in a Monaco **viewZone** (DOM updates only — no per-frame model edits).
-- **Resilience:** client auto-retry once; error state with retry + static `scaffold-fallback.json` (dev paste from localStorage).
+- **Resilience:** client auto-retry once; error state with retry + static `scaffold-fallback.mock.json` (dev paste from localStorage).
 - **Prompt rules:** min 10 characters (Learn and Ask).
 
 ### Alternatives considered
@@ -196,7 +196,7 @@ Ask is free-form Q&A; users expect token-by-token replies like other chat produc
 - Proxy emits **Server-Sent Events (SSE)** — `Content-Type: text/event-stream`; one open HTTP response with many `data: …` lines. Event types: `ready`, `text` (delta), `done`, `error`.
 - **Temperature 0.55**, **`max_tokens` 2048** (teaching replies; ladder: UI concept → Runes → syntax).
 - **History cap:** last **30 messages** (~15 user/assistant turns) in `buildMessages()` — cost and context control; focused use per open question, not long threads.
-- **No** structured output schema; **scaffolded Socratic** tutor prompt in `src/lib/server/chat/system-prompt.md` (teach mental model first, then questions + small steps; not interrogation-only; topic-agnostic for any scaffold lesson; no MC spoilers).
+- **No** structured output schema; **scaffolded Socratic** tutor prompt in `src/lib/server/chat/ask-system-prompt.md` (teach mental model first, then questions + small steps; not interrogation-only; topic-agnostic for any scaffold lesson; no MC spoilers).
 - **Prompt rules:** min 10 characters (same as Learn).
 - **Lesson context** (current scaffold/knowledge check) — planned later; not in API body yet.
 - Client: `src/lib/api/chat-stream.ts` appends deltas; `request.signal` / `AbortController` for cancel.
@@ -277,7 +277,7 @@ Learn responses are not chat content; Monaco and question UI need a shared scaff
 
 ### Decision
 
-- `src/lib/session.svelte.ts`: `status` (`idle` | `loading` | `ready` | `error`), `scaffolds`, `errorMessage`.
+- `src/lib/global-state/session.svelte.ts`: `status` (`idle` | `loading` | `ready` | `error`), `scaffolds`, `errorMessage`.
 - `startScaffoldRequest()` clears scaffolds and sets `loading`.
 - Client-safe types in `src/lib/types/scaffold.ts`; server `output-schema.ts` imports them.
 
@@ -441,17 +441,17 @@ Agent config files must stay small and synced across three tools; detailed ratio
 
 ## ADR-014: Learning session persistence port — localStorage first
 
-**Status:** Accepted — **localStorage shipped inline** in [`session.svelte.ts`](../src/lib/session.svelte.ts); **persistence port / adapter pattern deferred**
+**Status:** Accepted — **localStorage shipped inline** in [`session.svelte.ts`](../src/lib/global-state/session.svelte.ts); **persistence port / adapter pattern deferred**
 
 ### Context
 
 Learning progress must survive reloads and back navigation ([`projektsteckbrief-scaffy.md`](projektsteckbrief-scaffy.md): `/session/:id`, `/sessions`, step index, answered knowledge checks). We considered persisting directly in **Supabase** with **Google Auth** and **RLS** (cross-device, per-user rows). That path needs dashboard setup, OAuth redirects, env secrets on Vercel, and sync/error UX before the core learn loop is proven in the UI.
 
-[`session.svelte.ts`](../src/lib/session.svelte.ts) already holds **runtime** scaffold data for Learn; persistence is a separate concern from ChatPanel and Claude API routes.
+[`session.svelte.ts`](../src/lib/global-state/session.svelte.ts) already holds **runtime** scaffold data for Learn; persistence is a separate concern from ChatPanel and Claude API routes.
 
 ### Current state (shipped)
 
-- [`session.svelte.ts`](../src/lib/session.svelte.ts) persists `SessionRecord[]` and the active session id to `localStorage` on change; restores on load.
+- [`session.svelte.ts`](../src/lib/global-state/session.svelte.ts) persists `SessionRecord[]` and the active session id to `localStorage` on change; restores on load.
 - Sessions overview page and session tabs read from the same store; no separate `LocalStorageSessionStore` adapter or `LearningSessionStore` port yet.
 - Step-level progress (current scaffold index, answered Learning Cards) is **not** fully persisted across reload — only session list, scaffolds payload, and `completed` flag.
 - **Ask chat** per session: `askMessages` on `SessionRecord` in the singleton — survives SPA navigation; **stripped** from `localStorage` JSON (lost on full reload).
@@ -715,7 +715,7 @@ Starting a session from home left the Ask panel empty for 10–30s while Monaco 
 
 ### Decision
 
-- **`POST /api/session-intro`** — SSE stream with a dedicated system prompt (`src/lib/server/session-intro/system-prompt.md`); ephemeral system-prompt cache (`5m`) like `/api/chat` and `/api/scaffold`.
+- **`POST /api/chat-session-intro`** — SSE stream with a dedicated system prompt (`src/lib/server/chat/session-intro-system-prompt.md`); ephemeral system-prompt cache (`5m`) like `/api/chat` and `/api/scaffold`.
 - **Parallel to scaffold fetch** — `ensureSessionIntro(sessionId)` runs alongside `ensureScaffold` when `session.status === 'loading'`.
 - **Intro slot in Ask thread** — fixed message IDs (`intro-user`, `intro-assistant`); user bubble = session prompt; assistant streams concept preview (SFC, Runes, props — no solution code).
 - **Lesson start gate** — Monaco does not call `loadNextScaffold()` until `lessonStarted` is true; user clicks **Got it — start lesson** (existing shadcn `Button` in `ChatPanel`).
@@ -838,7 +838,7 @@ The official Svelte 5 guidance distinguishes when runes replace stores and when 
 
 ### Decision
 
-- **Domain / cross-pane Learn state** — singleton module `src/lib/session.svelte.ts` with module-level **`$state`** (`sessions`, `activeSessionId`, mirrored `status` / `errorMessage`). Mutations via exported functions (`setScaffolds`, `startScaffoldRequest`, …); **`persistSessions()`** writes `scaffy.sessions` and `scaffy.activeSessionId` on every change.
+- **Domain / cross-pane Learn state** — singleton module `src/lib/global-state/session.svelte.ts` with module-level **`$state`** (`sessions`, `activeSessionId`, mirrored `status` / `errorMessage`). Mutations via exported functions (`setScaffolds`, `startScaffoldRequest`, …); **`persistSessions()`** writes `scaffy.sessions` and `scaffy.activeSessionId` on every change.
 - **Consumers** — Svelte components bind with **`$derived(getSessionById(…))`** or call getters from effects; no `writable`/`readable` wrapper around session data.
 - **Ephemeral UI state** — component **`$state`** (`monaco-editor.svelte`: step index, Learning Card visibility) or a per-instance class with runes (`KnowledgeZoneBridge` in `knowledge-zone-bridge.svelte.ts`). Not promoted to global stores unless multiple distant surfaces need the same mutable field.
 - **Deliberate store-module exception: i18n** — `src/lib/i18n/index.ts` uses **`writable`** for `language` and **`derived`** for `messages`, with **`language.subscribe()`** persisting `scaffy.language`. This matches the Svelte docs case for a simple global value with many subscribers and no lesson-domain coupling (ADR-020). **Do not** migrate i18n to runes for symmetry alone.
@@ -853,7 +853,8 @@ The official Svelte 5 guidance distinguishes when runes replace stores and when 
 
 - New **lesson/session** fields belong in `session.svelte.ts` (or component-local runes if truly ephemeral). New **UI locale** strings belong in `translations.ts` + the i18n store.
 - Agents should read [architecture.md §6](architecture.md#6-state-management) for the three-layer map (URL / global / local).
-- `CLAUDE.md` already states “singleton `.svelte.ts` stores”; no agent-config batch required for this ADR alone.
+- Cross-component **rune singletons** live under **`src/lib/global-state/`**; `localStorage` behavior is documented in each module’s file header. **i18n** remains at **`src/lib/i18n/`** (store module).
+- Agent configs reference `src/lib/global-state/` for Learn globals.
 
 ---
 
@@ -869,6 +870,7 @@ The official Svelte 5 guidance distinguishes when runes replace stores and when 
 
 | Date       | Change                                                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-01 | Move rune singleton `session.svelte.ts` to `src/lib/global-state/`; i18n stays at `src/lib/i18n/`.                                                                              |
 | 2026-07-01 | ADR-023: document singleton `$state` in `session.svelte.ts` vs store-module i18n; Svelte 5 “When to use stores” link; ADR-009 scope note updated.                               |
 | 2026-06-29 | Removed redundant full ADR index table; navigation via Key decisions + Further decisions only.                                                                                  |
 | 2026-06-29 | ADR-010: Vitest API unit tests, `pnpm run verify`, CI Option B (separate steps), lint-staged Vitest on staged API/server files only.                                            |
@@ -908,5 +910,5 @@ The official Svelte 5 guidance distinguishes when runes replace stores and when 
 | 2026-06-17 | ADR-015: persistent top nav (scaffy + My Sessions + session title); removed shadcn `ui/breadcrumb`; `/sessions` empty state.                                                    |
 | 2026-06-19 | ADR-005: removed Learn prompt `<`/`{`/`;` heuristic — caused false 400s; min 10 characters remains.                                                                             |
 | 2026-06-19 | ADR-014: Ask chat per session in `session.svelte.ts` (`askMessages`) — SPA navigation only, not localStorage.                                                                   |
-| 2026-06-19 | ADR-021: `/api/session-intro` parallel SSE; intro gate via `lessonStarted`; regenerate on scaffold fallback.                                                                    |
+| 2026-07-01 | API layout: `/api/session-intro` → `/api/chat-session-intro`; server prompts under `src/lib/server/chat/`; client intro under `src/lib/chat/`.                                  |
 | 2026-06-20 | Docs sync: ADR-004/005/011 — three API routes + prompts; Monaco loading = comments (`setValue`) + spinner viewZone; scaffold typewriter still planned.                          |

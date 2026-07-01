@@ -42,7 +42,7 @@ These three files must stay semantically identical in their shared project assum
 
 - User submits a prompt (e.g. _"Generate a Svelte 5 login dialog component with password validation"_)
 - Claude returns the full response as **structured JSON** — ordered **scaffolds** (`codeSnippet` + `knowledgeCheck` per step) in one shot (no streaming)
-- Parallel **session intro** streams a concept preview in Ask while scaffolds generate (`POST /api/session-intro`, SSE)
+- Parallel **session intro** streams a concept preview in Ask while scaffolds generate (`POST /api/chat-session-intro`, SSE)
 - Each unlocked scaffold’s code is applied via **`editor.setValue()`** (full chunk; per-character typewriter via `executeEdits` is **planned**, ADR-011)
 - The **Learning Card** appears in a Monaco **`viewZone`** after the last code line; the next scaffold unlocks only after a correct answer
 - **Lesson start gate:** first scaffold waits until user clicks **Got it — start lesson** (`lessonStarted`, ADR-021)
@@ -52,7 +52,7 @@ These three files must stay semantically identical in their shared project assum
 #### No direct browser API calls
 
 - The API key is **never in the client bundle** — it would be visible in the browser network tab
-- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** proxies: `scaffold` (REST), `chat` (SSE), `session-intro` (SSE)
+- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** proxies: `scaffold` (REST), `chat` (SSE), `chat-session-intro` (SSE)
 - Key is stored as an environment variable in Vercel (`ANTHROPIC_API_KEY`)
 - Client calls only same-origin **`/api/...`** — never `api.anthropic.com` directly
 
@@ -63,7 +63,7 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 #### Streaming vs REST
 
 - **`/api/scaffold` (Learn):** REST only — structured JSON (`json_schema`); one `fetch`, full `{ scaffolds }` before Monaco updates
-- **`/api/session-intro`:** SSE — concept preview while lesson loads; dedicated `system-prompt.md`; parallel to scaffold fetch
+- **`/api/chat-session-intro`:** SSE — concept preview while lesson loads; `session-intro-system-prompt.md`; parallel to scaffold fetch
 - **`/api/chat` (Ask):** SSE streaming; Socratic tutor; temperature 0.55; max_tokens 2048; history cap 30 messages server-side
 
 #### Environment variables
@@ -78,7 +78,7 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 
 ### State & Architecture
 
-- Global state as singletons in `src/lib/*.svelte.ts` (split by concern: editor / session / questions)
+- Global **rune singletons** in `src/lib/global-state/` (`.svelte.ts`). New Learn/session globals belong here; see file headers for `localStorage` persistence.
 - State is handled at three levels: **URL** (routing), **global/component state** (SPA), **localStorage**
 - Learning progress persisted in localStorage
 
@@ -86,14 +86,15 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 
 These conventions keep the codebase navigable as we add endpoints (for example **`/api/chat`**) and more UI. Prefer them for new files; refactor opportunistically when touching old paths.
 
+- **Global rune singletons:** `src/lib/global-state/` — e.g. `session.svelte.ts`. **i18n** stays at `src/lib/i18n/` (store module, not a rune singleton).
 - **Svelte UI components:** `src/lib/components/<area>/` — one subdirectory per product area (`chat`, `editor`, future `questions`, …). Do not add new loose `*.svelte` files at `src/lib/` root unless they are tiny one-offs. When an area grows large (many components plus `*.svelte.ts` and helpers), consider promoting it to `src/lib/features/<name>/` instead of deepening `components/` indefinitely.
 - **Routes vs views vs ui/ (ADR-016, ADR-017):** `src/routes/**/+page.svelte` stays thin (import view only). Screen copy, example data, and wiring live in `components/<area>/`. Domain-agnostic primitives in `components/ui/` built on **shadcn-svelte** — install via `shadcn-svelte add` before hand-rolling (ScrollArea, Dialog, …); custom `ui/` only when composing shadcn or documented in `docs/decisions.md`. Static logos/images in `src/lib/assets/`. If placement is unclear when adding a component, ask before creating files.
 - **Scrollbars (ADR-017):** hover-fade everywhere — default `ScrollArea` `type="hover"` (incl. `ScaffyModalBody scroll`); tokens in `scroll-area.css` + `monaco-editor.css`. No `type="always"` in product UI. See `.cursor/rules/scrollbars.mdc`.
-- **HTTP API (SvelteKit routes):** `src/routes/api/<endpoint>/+server.ts` — one folder per surface: `scaffold` (REST), `chat` (SSE), `session-intro` (SSE)
+- **HTTP API (SvelteKit routes):** `src/routes/api/<endpoint>/+server.ts` — one folder per surface: `scaffold` (REST), `chat` (SSE), `chat-session-intro` (SSE)
 - **Server-only library code:** `src/lib/server/` — never imported from client components. Subfolders per endpoint:
   - **`src/lib/server/scaffold/`** — JSON schema, validation, `system-prompt.md`
   - **`src/lib/server/chat/`** — Ask tutor `system-prompt.md`
-  - **`src/lib/server/session-intro/`** — concept preview `system-prompt.md`
+  - **`src/lib/server/chat/`** — `ask-system-prompt.md` (Ask tutor), `session-intro-system-prompt.md` (concept preview)
   - **Shared:** `anthropic-client.ts` at `server/` root
 - **Routes vs `lib`:** `src/routes/` defines URLs, layouts, and thin `+server.ts` handlers. Reusable UI and domain logic live under `src/lib/`.
 
