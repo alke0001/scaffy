@@ -15,13 +15,13 @@ This document records **why** Scaffy is built the way it is. It complements [`CL
 
 Architecturally central ADRs — grouped by topic. Full context in each linked entry below.
 
-| ADR                                                                                                                                                                                                                                                                               | Topic                   | Related documentation                                                                                        |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------ |
-| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                                                                                                                                                                                                                          | Framework: SvelteKit    | [architecture.md §5](architecture.md#5-technologies-meta) · [svelte-health-check.md](svelte-health-check.md) |
-| [ADR-010](#adr-010-repository-layout-typescript-and-quality-gates) · [ADR-016](#adr-016-routes-feature-views-vs-ui-components) · [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                                                                                       | Component architecture  | [README § Repository structure](../README.md#repository-structure)                                           |
-| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later) · [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership) · [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) · [ADR-023](#adr-023-singleton-svelte-runes-vs-store-module-for-app-state) | State handling          | [architecture.md §6](architecture.md#6-state-management)                                                     |
-| [ADR-003](#adr-003-claude-only-via-server-api-routes) · [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask) · [ADR-005](#adr-005-learn-scaffold-rest--structured-json) · [ADR-006](#adr-006-ask-chat-sse-streaming)                                                      | Secure API access       | [architecture.md §4](architecture.md#4-http-api-flows)                                                       |
-| [ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off)                                                                                                                                                                                                        | Monaco viewZones + a11y | [architecture.md §5 Monaco APIs](architecture.md#monaco-apis)                                                |
+| ADR                                                                                                                                                                                                                                                                               | Topic                  | Related documentation                                                                                        |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                                                                                                                                                                                                                          | Framework: SvelteKit   | [architecture.md §5](architecture.md#5-technologies-meta) · [svelte-health-check.md](svelte-health-check.md) |
+| [ADR-010](#adr-010-repository-layout-typescript-and-quality-gates) · [ADR-016](#adr-016-routes-feature-views-vs-ui-components) · [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                                                                                       | Component architecture | [README § Repository structure](../README.md#repository-structure)                                           |
+| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later) · [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership) · [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) · [ADR-023](#adr-023-singleton-svelte-runes-vs-store-module-for-app-state) | State handling         | [architecture.md §6](architecture.md#6-state-management)                                                     |
+| [ADR-003](#adr-003-claude-only-via-server-api-routes) · [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask) · [ADR-005](#adr-005-learn-scaffold-rest--structured-json) · [ADR-006](#adr-006-ask-chat-sse-streaming)                                                      | Secure API access      | [architecture.md §4](architecture.md#4-http-api-flows)                                                       |
+| [ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off) · [ADR-025](#adr-025-why-monaco-editor-not-codemirror-ace-or-textarea)                                                                                                                                 | Monaco editor choice   | [architecture.md §5 Monaco APIs](architecture.md#monaco-apis)                                                |
 
 ---
 
@@ -43,6 +43,7 @@ All other ADRs (not grouped in Key decisions above). Full context in each linked
 | [ADR-022](#adr-022-shadcn-vs-custom-ui-controls)                                     | shadcn vs custom UI controls                     | Accepted                                                                                 |
 | [ADR-023](#adr-023-singleton-svelte-runes-vs-store-module-for-app-state)             | Singleton runes vs store module for app state    | Accepted                                                                                 |
 | [ADR-024](#adr-024-monaco-mit-license-sbom-and-ci-check)                             | Monaco MIT — SBOM + CI license check             | Accepted                                                                                 |
+| [ADR-025](#adr-025-why-monaco-editor-not-codemirror-ace-or-textarea)                 | Why Monaco (not CodeMirror / Ace / textarea)     | Accepted                                                                                 |
 
 ---
 
@@ -891,6 +892,43 @@ Presentation feedback and academic submission require **transparent third-party 
 
 ---
 
+## ADR-025: Why Monaco Editor (not CodeMirror / Ace / textarea)
+
+**Status:** Accepted
+
+### Context
+
+Scaffy’s Learn pane is not a generic code playground: the editor must show **cumulative scaffold code**, a **loading state** while Claude generates, and an **interactive Learning Card** (knowledge check) that **scrolls with the code** — not as a floating panel beside the editor. Presentation feedback and architecture reviews asked explicitly **why Monaco** and not a lighter editor.
+
+The hard requirement is **custom DOM embedded in the editor’s vertical document flow** after specific lines, with height that tracks content (`ResizeObserver`). That pattern is shipped today via Monaco **`viewZones`** ([ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off)): `KnowledgeViewZoneController` (Learning Card) and `LoadingSpinnerViewZone` in [`monaco-scaffold-loading.ts`](../src/lib/components/editor/monaco-scaffold-loading.ts).
+
+### Decision
+
+- **Use Monaco Editor** (`monaco-editor` + `@monaco-editor/loader`) as the Learn code surface.
+- **Primary reason — `changeViewZones`:** Mount Svelte Learning Cards and loading spinners **inline after line N**; zones participate in editor scroll layout. This is the product differentiator; overlay-only UIs were rejected in ADR-011.
+- **Secondary reasons:**
+  - **VS Code familiarity** — learners already know Monaco from Cursor/VS Code; syntax highlighting and read-only behaviour match expectations.
+  - **Proven in repo** — viewZone integration, read-only gate, scaffold `setValue`, loading comments + spinner, and a11y trade-off are documented and shipped (ADR-011), not theoretical.
+  - **License** — MIT, audited in CI/SBOM ([ADR-024](#adr-024-monaco-mit-license-sbom-and-ci-check)).
+
+### Alternatives considered
+
+| Alternative                        | Why not for Scaffy                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CodeMirror 6**                   | Strong editor, but Scaffy’s pedagogy depends on Monaco-style **view zones** tied to document lines. CM6 uses **widgets / decorations / panels** with a different layout model; replicating scroll-locked, resizable inline Svelte mounts after the last code line would be a custom integration, not a drop-in replacement for what ADR-011 already ships. |
+| **Ace**                            | Mature, but no first-class equivalent to Monaco **viewZones** for arbitrary DOM blocks in the document flow; Learning Card + loading row would likely become detached overlays — rejected for the same reason as overlay widgets in ADR-011.                                                                                                               |
+| **`<textarea>` / contenteditable** | No line model, no viewZones, no VS Code-grade highlighting or read-only semantics; unacceptable for a “code lesson” product surface.                                                                                                                                                                                                                       |
+| **Read-only highlighter only**     | Cannot host interactive gates inside the code scroll area.                                                                                                                                                                                                                                                                                                 |
+
+### Consequences
+
+- **Bundle cost** — Monaco is the largest client dependency; accepted for viewZone capability and familiarity.
+- **Do not swap the editor** without re-proving inline Learning Card + loading viewZone behaviour and revisiting ADR-011 a11y trade-offs.
+- Implementation references: [`monaco-knowledge-view-zone.ts`](../src/lib/components/editor/monaco-knowledge-view-zone.ts), [`monaco-scaffold-loading.ts`](../src/lib/components/editor/monaco-scaffold-loading.ts), [`architecture.md` §5 Monaco APIs](architecture.md#monaco-apis).
+- License compliance stays with ADR-024; editor choice stays documented here — no `CLAUDE.md` sync required unless agents need a new invariant.
+
+---
+
 ## Planned / nice-to-have (not ADRs yet)
 
 - Supabase adapter + Google Auth (see [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) Phase 2)
@@ -903,6 +941,7 @@ Presentation feedback and academic submission require **transparent third-party 
 
 | Date       | Change                                                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-01 | ADR-025: why Monaco (viewZones hard requirement) vs CodeMirror/Ace/textarea; Key decisions Monaco row extended.                                                                 |
 | 2026-07-01 | ADR-024: CI generates sbom.json then allowlist-check; SBOM uploaded as GitHub artifact (`licenses:ci`).                                                                         |
 | 2026-07-01 | Move rune singleton `session.svelte.ts` to `src/lib/global-state/`; i18n stays at `src/lib/i18n/`.                                                                              |
 | 2026-07-01 | ADR-023: document singleton `$state` in `session.svelte.ts` vs store-module i18n; Svelte 5 “When to use stores” link; ADR-009 scope note updated.                               |
