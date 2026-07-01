@@ -15,13 +15,13 @@ This document records **why** Scaffy is built the way it is. It complements [`CL
 
 Architecturally central ADRs — grouped by topic. Full context in each linked entry below.
 
-| ADR                                                                                                                                                                                                                          | Topic                   | Related documentation                                                                                        |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------ |
-| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                                                                                                                                                                     | Framework: SvelteKit    | [architecture.md §5](architecture.md#5-technologies-meta) · [svelte-health-check.md](svelte-health-check.md) |
-| [ADR-010](#adr-010-repository-layout-typescript-and-quality-gates) · [ADR-016](#adr-016-routes-feature-views-vs-ui-components) · [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                                  | Component architecture  | [README § Repository structure](../README.md#repository-structure)                                           |
-| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later) · [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership) · [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first)                       | State handling          | [architecture.md §6](architecture.md#6-state-management)                                                     |
-| [ADR-003](#adr-003-claude-only-via-server-api-routes) · [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask) · [ADR-005](#adr-005-learn-scaffold-rest--structured-json) · [ADR-006](#adr-006-ask-chat-sse-streaming) | Secure API access       | [architecture.md §4](architecture.md#4-http-api-flows)                                                       |
-| [ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off)                                                                                                                                                   | Monaco viewZones + a11y | [architecture.md §5 Monaco APIs](architecture.md#monaco-apis)                                                |
+| ADR                                                                                                                                                                                                                                                                               | Topic                   | Related documentation                                                                                        |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                                                                                                                                                                                                                          | Framework: SvelteKit    | [architecture.md §5](architecture.md#5-technologies-meta) · [svelte-health-check.md](svelte-health-check.md) |
+| [ADR-010](#adr-010-repository-layout-typescript-and-quality-gates) · [ADR-016](#adr-016-routes-feature-views-vs-ui-components) · [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                                                                                       | Component architecture  | [README § Repository structure](../README.md#repository-structure)                                           |
+| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later) · [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership) · [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) · [ADR-023](#adr-023-singleton-svelte-runes-vs-store-module-for-app-state) | State handling          | [architecture.md §6](architecture.md#6-state-management)                                                     |
+| [ADR-003](#adr-003-claude-only-via-server-api-routes) · [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask) · [ADR-005](#adr-005-learn-scaffold-rest--structured-json) · [ADR-006](#adr-006-ask-chat-sse-streaming)                                                      | Secure API access       | [architecture.md §4](architecture.md#4-http-api-flows)                                                       |
+| [ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off)                                                                                                                                                                                                        | Monaco viewZones + a11y | [architecture.md §5 Monaco APIs](architecture.md#monaco-apis)                                                |
 
 ---
 
@@ -41,6 +41,7 @@ All other ADRs (not grouped in Key decisions above). Full context in each linked
 | [ADR-020](#adr-020-client-side-i18n-english--german-via-flat-translation-dictionary) | Client-side i18n (EN/DE)                         | Accepted                                                                                 |
 | [ADR-021](#adr-021-session-intro-stream-and-lesson-start-gate)                       | Session intro stream + lesson start gate         | Accepted                                                                                 |
 | [ADR-022](#adr-022-shadcn-vs-custom-ui-controls)                                     | shadcn vs custom UI controls                     | Accepted                                                                                 |
+| [ADR-023](#adr-023-singleton-svelte-runes-vs-store-module-for-app-state)             | Singleton runes vs store module for app state    | Accepted                                                                                 |
 
 ---
 
@@ -280,9 +281,10 @@ Learn responses are not chat content; Monaco and question UI need a shared scaff
 - `startScaffoldRequest()` clears scaffolds and sets `loading`.
 - Client-safe types in `src/lib/types/scaffold.ts`; server `output-schema.ts` imports them.
 
-### Not yet implemented (planned)
+### Not yet implemented (superseded scope)
 
-- `editor.svelte.ts`, `questions.svelte.ts`, step index, localStorage progress, `/session/:id` routes.
+- Originally planned: `editor.svelte.ts`, `questions.svelte.ts` as separate global stores. **Not pursued** — in-lesson step index and Learning Card UI live in `monaco-editor.svelte` and `KnowledgeZoneBridge` instead (see [ADR-023](#adr-023-singleton-svelte-runes-vs-store-module-for-app-state)).
+- Step index in localStorage and `/session/:id` routes are shipped; step index persistence remains deferred (ADR-014).
 
 ### Consequences
 
@@ -824,6 +826,37 @@ ADR-017 sets **shadcn-first** for `ui/` primitives but does not record which con
 
 ---
 
+## ADR-023: Singleton Svelte runes vs store module for app state
+
+**Status:** Accepted
+
+### Context
+
+Scaffy is on **SvelteKit 5 / Svelte 5**. Cross-component state must cover session scaffolds, API status, `localStorage` sync, and ephemeral lesson UI. Early docs (ADR-009) mentioned splitting `editor.svelte.ts` and `questions.svelte.ts`; the shipped code uses one global **`session.svelte.ts`** singleton with **`$state`** runes, while **i18n** uses the classic **store module** (`writable` / `derived`).
+
+The official Svelte 5 guidance distinguishes when runes replace stores and when stores remain appropriate: [When to use stores](https://svelte.dev/docs/svelte/stores#When-to-use-stores).
+
+### Decision
+
+- **Domain / cross-pane Learn state** — singleton module `src/lib/session.svelte.ts` with module-level **`$state`** (`sessions`, `activeSessionId`, mirrored `status` / `errorMessage`). Mutations via exported functions (`setScaffolds`, `startScaffoldRequest`, …); **`persistSessions()`** writes `scaffy.sessions` and `scaffy.activeSessionId` on every change.
+- **Consumers** — Svelte components bind with **`$derived(getSessionById(…))`** or call getters from effects; no `writable`/`readable` wrapper around session data.
+- **Ephemeral UI state** — component **`$state`** (`monaco-editor.svelte`: step index, Learning Card visibility) or a per-instance class with runes (`KnowledgeZoneBridge` in `knowledge-zone-bridge.svelte.ts`). Not promoted to global stores unless multiple distant surfaces need the same mutable field.
+- **Deliberate store-module exception: i18n** — `src/lib/i18n/index.ts` uses **`writable`** for `language` and **`derived`** for `messages`, with **`language.subscribe()`** persisting `scaffy.language`. This matches the Svelte docs case for a simple global value with many subscribers and no lesson-domain coupling (ADR-020). **Do not** migrate i18n to runes for symmetry alone.
+
+### Alternatives considered
+
+- **Svelte stores for session** — rejected for new code: extra `.subscribe` / `$store` ceremony; runes are the framework default for component-adjacent reactive state in Svelte 5.
+- **Svelte context** — rejected for session list / scaffolds; would not survive the same “app-wide singleton + localStorage” pattern without re-plumbing every route.
+- **Split `editor.svelte.ts` / `questions.svelte.ts`** (ADR-009 plan) — rejected as shipped; Monaco and question flow are tightly bound to the editor instance; a third global store added navigation cost without clear ownership.
+
+### Consequences
+
+- New **lesson/session** fields belong in `session.svelte.ts` (or component-local runes if truly ephemeral). New **UI locale** strings belong in `translations.ts` + the i18n store.
+- Agents should read [architecture.md §6](architecture.md#6-state-management) for the three-layer map (URL / global / local).
+- `CLAUDE.md` already states “singleton `.svelte.ts` stores”; no agent-config batch required for this ADR alone.
+
+---
+
 ## Planned / nice-to-have (not ADRs yet)
 
 - Supabase adapter + Google Auth (see [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) Phase 2)
@@ -836,6 +869,7 @@ ADR-017 sets **shadcn-first** for `ui/` primitives but does not record which con
 
 | Date       | Change                                                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-01 | ADR-023: document singleton `$state` in `session.svelte.ts` vs store-module i18n; Svelte 5 “When to use stores” link; ADR-009 scope note updated.                               |
 | 2026-06-29 | Removed redundant full ADR index table; navigation via Key decisions + Further decisions only.                                                                                  |
 | 2026-06-29 | ADR-010: Vitest API unit tests, `pnpm run verify`, CI Option B (separate steps), lint-staged Vitest on staged API/server files only.                                            |
 | 2026-06-24 | Key decisions + Further decisions tables; ADR-011 merged with ADR-019 (a11y trade-off); ADR-019 superseded. Projektsteckbrief checklist aligned.                                |
