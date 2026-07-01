@@ -276,9 +276,10 @@ When making changes to project configuration or design decisions, update all thr
 
 ## Further Documentation
 
-| Document                                                     | Description                                                                 |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| [`docs/architecture.md`](docs/architecture.md)               | Logical and physical architecture (ABB/SSB), API flows, state               |
-| [`docs/decisions.md`](docs/decisions.md)                     | Architecture decision log                                                   |
-| [`Projektsteckbrief_Scaffy.md`](Projektsteckbrief_Scaffy.md) | Course project brief (German) — _Frameworkbasierte UI-Entwicklung_, SS 2026 |
-| [`CLAUDE.md`](CLAUDE.md)                                     | Short agent invariants (Claude Code, Cursor, Copilot)                       |
+| Document                                                               | Description                                                                 |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [`docs/architecture.md`](docs/architecture.md)                         | Logical and physical architecture (ABB/SSB), API flows, state               |
+| [`docs/decisions.md`](docs/decisions.md)                               | Architecture decision log                                                   |
+| [`docs/svelte-health-check.md`](docs/svelte-health-check.md)           | Svelte framework health check (German, course evaluation)                   |
+| [`docs/projektsteckbrief-scaffy.md`](docs/projektsteckbrief-scaffy.md) | Course project brief (German) — _Frameworkbasierte UI-Entwicklung_, SS 2026 |
+| [`CLAUDE.md`](CLAUDE.md)                                               | Short agent invariants (Claude Code, Cursor, Copilot)                       |

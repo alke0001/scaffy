@@ -222,7 +222,7 @@ CI and local dev assume `pnpm-lock.yaml` — use `pnpm install`, not `npm instal
 
 The project uses **Vitest** for unit testing. Quality gates (`pnpm run verify`, CI, Husky lint-staged) are documented in [ADR-010](decisions.md#adr-010-repository-layout-typescript-and-quality-gates) and the [README](../README.md#quality-gates).
 
-**Local PR check:** `pnpm run verify` (lint, check, check:i18n, test:run). **CI (Option B):** same checks as separate GitHub Actions steps for granular failure logs. **Pre-commit:** Vitest runs only when staged files touch `src/routes/api/`** (`vitest related --run`) or `src/lib/server/**` (full suite).
+**Local PR check:** `pnpm run verify` (lint, check, check:i18n, test:run). **CI (Option B):** same checks as separate GitHub Actions steps for granular failure logs. **Pre-commit:** Vitest runs only when staged files touch `src/routes/api/**` (`vitest related --run`) or `src/lib/server/**` (full suite).
 
 The following components are covered by unit tests:
 
@@ -306,5 +306,5 @@ Single app-wide singleton. Source of truth for **Learn data**.
 
 ## Further reading
 
-- **Why these choices:** `[docs/decisions.md](decisions.md)` (ADRs)
-- **Agent invariants:** `[CLAUDE.md](../CLAUDE.md)`
+- **Why these choices:** [`docs/decisions.md`](decisions.md) (ADRs)
+- **Agent invariants:** [`CLAUDE.md`](../CLAUDE.md)
