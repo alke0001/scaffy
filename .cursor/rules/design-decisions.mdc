@@ -21,7 +21,7 @@ alwaysApply: true
 ## Claude API — Core Flow
 - User submits a prompt (e.g. *"Generate a Svelte 5 login dialog component with password validation"*)
 - Claude returns **structured JSON** scaffolds in one shot (`POST /api/scaffold`, REST)
-- **Session intro** streams a concept preview in Ask in parallel (`POST /api/session-intro`, SSE)
+- **Session intro** streams a concept preview in Ask in parallel (`POST /api/chat-session-intro`, SSE)
 - Unlocked scaffold code via **`setValue()`** (typewriter `executeEdits` planned, ADR-011)
 - **Learning Card** in Monaco **`viewZone`**; next scaffold after correct answer
 - **Lesson start gate** before first scaffold (`lessonStarted`, ADR-021)
@@ -30,7 +30,7 @@ alwaysApply: true
 
 ### No direct browser API calls
 - The API key must **never** appear in the client bundle.
-- Claude is reached only via SvelteKit **`src/routes/api/<endpoint>/+server.ts`** handlers (`scaffold`, `chat`, `session-intro`). Each endpoint has its own **`system-prompt.md`** under `src/lib/server/<endpoint>/`.
+- Claude is reached only via SvelteKit **`src/routes/api/<endpoint>/+server.ts`** handlers (`scaffold`, `chat`, `chat-session-intro`). Prompts live under `src/lib/server/scaffold/` and `src/lib/server/chat/` (`ask-system-prompt.md`, `session-intro-system-prompt.md`).
 - `ANTHROPIC_API_KEY` is injected via `import { ANTHROPIC_API_KEY } from '$env/static/private'`.
 - Client code calls only same-origin `/api/...` paths — never `api.anthropic.com`.
 
@@ -40,7 +40,7 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 
 ### Streaming vs REST
 - **`/api/scaffold` (Learn):** REST — structured JSON (`json_schema`); full response before Monaco
-- **`/api/session-intro`:** SSE — concept preview while lesson loads
+- **`/api/chat-session-intro`:** SSE — concept preview while lesson loads
 - **`/api/chat` (Ask):** SSE — Socratic tutor; temperature 0.55; max_tokens 2048; history cap 30
 
 ### Model
@@ -51,19 +51,20 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 - `.env.example` — committed, documents required variables.
 
 ## State Architecture
-- Global state as singletons in `src/lib/*.svelte.ts`, split by concern: `editor`, `session`, `questions`.
+- Global **rune singletons** in `src/lib/global-state/` (`.svelte.ts`). New Learn/session globals belong here; see file headers for `localStorage` persistence.
 - State lives at three levels: **URL** (routing), **global/component state** (SPA), **localStorage**.
 - Learning progress is persisted in localStorage.
 
 ## Repository layout (source conventions)
+- **Global rune singletons:** `src/lib/global-state/` — e.g. `session.svelte.ts`. **i18n** stays at `src/lib/i18n/` (store module, not a rune singleton).
 - **Routes:** `src/routes/**/+page.svelte` thin — import view from `lib/`; URL = folder (no `-page` suffix on route files).
 - **Feature views:** `src/lib/components/<area>/` (`home`, `sessions`, `chat`, `editor`, `shell`, …) — domain copy, data, wiring.
 - **Generic UI:** `src/lib/components/ui/` — domain-agnostic primitives on **shadcn-svelte**; install via `shadcn-svelte add` before hand-rolling (ADR-017); custom `ui/` only when composing shadcn or documented in `docs/decisions.md`.
 - **Scrollbars:** hover-fade app-wide — default `ScrollArea` `type="hover"` (incl. modals); `--scaffy-scrollbar-*` in `scroll-area.css` + Monaco. No `type="always"` in product UI. See `scrollbars.mdc`.
 - **Assets:** `src/lib/assets/` — static SVG/images; avoid Svelte wrappers unless dynamic/themed.
 - **Unclear placement?** Ask before creating components (ADR-016, `component-layout.mdc`).
-- **HTTP API:** `src/routes/api/<endpoint>/+server.ts` — one folder per surface (`scaffold` REST, `chat` SSE, `session-intro` SSE).
-- **Server-only library:** `src/lib/server/` — never imported from the client. Subfolders per endpoint: `scaffold/`, `chat/`, `session-intro/` (each with `system-prompt.md`). Shared modules (e.g. `anthropic-client.ts`) at `server/` root until a `shared/` subfolder is warranted.
+- **HTTP API:** `src/routes/api/<endpoint>/+server.ts` — one folder per surface (`scaffold` REST, `chat` SSE, `chat-session-intro` SSE).
+- **Server-only library:** `src/lib/server/` — never imported from the client. Subfolders per endpoint: `scaffold/`, `chat/` (Ask + session-intro prompts). Shared modules (e.g. `anthropic-client.ts`) at `server/` root until a `shared/` subfolder is warranted.
 
 ## Monaco Integration
 - **`changeViewZones`** — custom DOM in editor flow: Learning Card (Svelte mount) and loading spinner (plain DOM, rAF)
