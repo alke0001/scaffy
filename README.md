@@ -168,24 +168,16 @@ cp .env.example .env.local   # then edit .env.local
 | Typecheck        | `pnpm run check`      | `svelte-check`                            |
 | i18n key parity  | `pnpm run check:i18n` | en/de keys in `translations.ts` match     |
 | CI install       | `pnpm run ci`         | Frozen lockfile install (same as Actions) |
+| Tests (watch)    | `pnpm run test`       | Vitest watch mode                         |
+| Tests (once)     | `pnpm run test:run`   | Full unit test suite                      |
+| Coverage         | `pnpm run coverage`   | Vitest with coverage report               |
+| PR checks        | `pnpm run verify`     | lint + check + check:i18n + test:run      |
 
 Preview the production build locally:
 
 ```sh
 pnpm run build
 pnpm run preview
-```
-
----
-
-### Code quality and Git hooks
-
-**Pre-commit (Husky + lint-staged):** On `git commit`, staged files are auto-formatted with Prettier and ESLint-fixed (see `lint-staged` in `package.json`). Staging `src/lib/i18n/translations.ts` also runs `pnpm run check:i18n`. Hooks are installed when you run `pnpm install` (`prepare` script).
-
-Run the same checks CI uses before opening a PR:
-
-```sh
-pnpm run ci && pnpm run lint && pnpm run check && pnpm run check:i18n
 ```
 
 Format specific files after editing:
@@ -197,28 +189,54 @@ pnpm exec eslint path/to/file
 
 ---
 
-### Continuous integration
+### Quality gates
 
-Every push and pull request targeting `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+**Before opening a pull request**, run the same checks CI uses (except install):
 
 ```sh
-pnpm run ci
+pnpm run verify
+```
+
+That runs lint, typecheck, i18n key parity, and the Vitest suite in one command. Use `pnpm run test` for watch mode while editing API routes.
+
+#### Continuous integration
+
+Every push and pull request targeting `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml). CI copies [`.env.test`](.env.test) to `.env` before install so `svelte-kit sync` can generate `$env/static/private` types (no real API key in Actions), then runs:
+
+```sh
+pnpm run ci          # frozen lockfile install
 pnpm run lint
 pnpm run check
 pnpm run check:i18n
+pnpm run test:run
 ```
 
-`pnpm run ci` installs dependencies from `pnpm-lock.yaml` with a frozen lockfile (fails if the lockfile is out of sync with `package.json`). CI copies [`.env.test`](.env.test) to `.env` before install so `svelte-kit sync` can generate `$env/static/private` types (no real API key in Actions).
+These are the same checks as `pnpm run verify`, but **separate steps** in GitHub Actions so failed jobs show which gate broke (see [ADR-010](docs/decisions.md#adr-010-repository-layout-typescript-and-quality-gates) in `docs/decisions.md`).
+
+Unit tests use **Vitest**; v1 scope is API routes under `src/routes/api/` with Anthropic mocked — details in [`docs/architecture.md` §5](docs/architecture.md#testing).
 
 **Branch protection (repo admin):** After CI has run at least once on `main`, open **GitHub → Settings → Branches → Add branch protection rule** for `main`, enable **Require status checks to pass before merging**, and select the **`ci`** check.
 
-No extra GitHub configuration is required for Husky — hooks run locally only; CI remains the safety net if someone commits with `--no-verify`.
+#### Pre-commit (Husky + lint-staged)
+
+On `git commit`, staged files are auto-formatted with Prettier and ESLint-fixed (see `lint-staged` in `package.json`). Hooks install when you run `pnpm install` (`prepare` script).
+
+| When you stage…                 | lint-staged runs…                            |
+| ------------------------------- | -------------------------------------------- |
+| Any matching source/config file | Prettier write + ESLint fix                  |
+| `src/lib/i18n/translations.ts`  | `pnpm run check:i18n`                        |
+| `src/routes/api/**/*.{ts}`      | `vitest related --run` (affected tests only) |
+| `src/lib/server/**/*.{ts}`      | `pnpm run test:run` (full API test suite)    |
+
+UI-only or session-store commits skip Vitest — hooks stay fast. CI remains the safety net if someone commits with `--no-verify`.
+
+Fresh clones without `.env.local` can copy `.env.test` to `.env` (same as CI) so type generation and tests work locally.
 
 ---
 
 ### Continuous deployment
 
-Scaffy is deployed on [Vercel](https://vercel.com). The same environment variables from [Environment setup](#environment-setup) must be set on the Vercel project so serverless functions can reach the API.
+Scaffy is deployed on [Vercel](https://vercel.com). The same environment variables from [Environment setup](#environment-setup) must be set on the Vercel project so serverless functions can reach the API
 
 **Via Vercel Dashboard:**  
 Project → Settings → Environment Variables → add `ANTHROPIC_API_KEY` (Production + Preview). Optionally add `ANTHROPIC_DEFAULT_MODEL`.
@@ -258,9 +276,10 @@ When making changes to project configuration or design decisions, update all thr
 
 ## Further Documentation
 
-| Document                                                     | Description                                                                 |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| [`docs/architecture.md`](docs/architecture.md)               | Logical and physical architecture (ABB/SSB), API flows, state               |
-| [`docs/decisions.md`](docs/decisions.md)                     | Architecture decision log                                                   |
-| [`Projektsteckbrief_Scaffy.md`](Projektsteckbrief_Scaffy.md) | Course project brief (German) — _Frameworkbasierte UI-Entwicklung_, SS 2026 |
-| [`CLAUDE.md`](CLAUDE.md)                                     | Short agent invariants (Claude Code, Cursor, Copilot)                       |
+| Document                                                               | Description                                                                 |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [`docs/architecture.md`](docs/architecture.md)                         | Logical and physical architecture (ABB/SSB), API flows, state               |
+| [`docs/decisions.md`](docs/decisions.md)                               | Architecture decision log                                                   |
+| [`docs/svelte-health-check.md`](docs/svelte-health-check.md)           | Svelte framework health check (German, course evaluation)                   |
+| [`docs/projektsteckbrief-scaffy.md`](docs/projektsteckbrief-scaffy.md) | Course project brief (German) — _Frameworkbasierte UI-Entwicklung_, SS 2026 |
+| [`CLAUDE.md`](CLAUDE.md)                                               | Short agent invariants (Claude Code, Cursor, Copilot)                       |

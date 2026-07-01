@@ -2,7 +2,8 @@
 
 - **Language**: TypeScript
 - **Package Manager**: pnpm
-- **Add-ons**: prettier, eslint, tailwindcss, sveltekit-adapter, mcp
+- **Add-ons**: prettier, eslint, tailwindcss, sveltekit-adapter, mcp, vitest
+- **Tests:** Vitest — API routes under `src/routes/api/`; `pnpm run verify` before PR; pre-commit runs related tests only when API/server files are staged (ADR-010). **Do not** run the full test suite on every agent edit.
 - **MCP Servers (.cursor/mcp.json)**: svelte, vercel
 
 ## Agent Config Synchronization
