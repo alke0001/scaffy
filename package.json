@@ -17,12 +17,15 @@
 		"format": "prettier --write .",
 		"test": "vitest",
 		"test:run": "vitest run",
-		"coverage": "vitest run --coverage"
+		"coverage": "vitest run --coverage",
+		"verify": "pnpm run lint && pnpm run check && pnpm run check:i18n && pnpm run test:run"
 	},
 	"lint-staged": {
 		"*.{js,ts,mjs,cjs,svelte,css,md,json,yml,yaml}": "prettier --write",
 		"*.{js,ts,svelte}": "eslint --fix",
-		"src/lib/i18n/translations.ts": "pnpm run check:i18n"
+		"src/lib/i18n/translations.ts": "pnpm run check:i18n",
+		"src/routes/api/**/*.{ts}": "vitest related --run",
+		"src/lib/server/**/*.{ts}": "pnpm run test:run"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.4",

@@ -26,7 +26,7 @@ ADR = Architecture Decision Record
 | [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership)                          | ChatPanel dual mode and state ownership                  | Accepted                                              |
 | [ADR-008](#adr-008-chat-message-lifecycle-statuses)                                  | Chat message lifecycle statuses                          | Accepted                                              |
 | [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later)                         | Session store for scaffolds (Monaco later)               | Accepted                                              |
-| [ADR-010](#adr-010-repository-layout-and-typescript)                                 | Repository layout and TypeScript                         | Accepted                                              |
+| [ADR-010](#adr-010-repository-layout-typescript-and-quality-gates)                   | Repository layout, TypeScript, quality gates             | Accepted                                              |
 | [ADR-011](#adr-011-monaco-typewriter-and-viewzones-planned)                          | Monaco typewriter and viewZones (planned)                | Accepted (viewZone shipped)                           |
 | [ADR-012](#adr-012-ask-markdown-rendering-during-stream)                             | Ask markdown rendering during stream                     | Accepted                                              |
 | [ADR-013](#adr-013-documentation-split-claudemd-vs-decisionsmd)                      | Documentation split: CLAUDE.md vs decisions.md           | Accepted                                              |
@@ -288,13 +288,13 @@ Learn responses are not chat content; Monaco and question UI need a shared scaff
 
 ---
 
-## ADR-010: Repository layout and TypeScript
+## ADR-010: Repository layout, TypeScript, and quality gates
 
 **Status:** Accepted
 
 ### Context
 
-The codebase will grow (Monaco, questions, more API surfaces). Conventions reduce navigation cost.
+The codebase will grow (Monaco, questions, more API surfaces). Conventions reduce navigation cost. API routes are the security boundary to Claude; regressions there should be caught before merge without slowing every commit.
 
 ### Decision
 
@@ -303,6 +303,32 @@ The codebase will grow (Monaco, questions, more API surfaces). Conventions reduc
 - **Server-only:** `src/lib/server/<endpoint>/` + shared `anthropic-client.ts`.
 - **All application code:** TypeScript; Svelte `<script lang="ts">`; no new `.js` under `src/`.
 - **README / code comments:** American English; chat with users may be German.
+
+#### Quality gates, testing, and CI
+
+- **Vitest** for unit tests. **v1 scope:** `src/routes/api/**` (co-located `server.test.ts` / `*.test.ts`) plus extracted helpers (e.g. `chat/utils.ts`). Anthropic SDK calls are **mocked** — no network or API credits. [`.env.test`](../.env.test) supplies stub env for CI and fresh clones (`cp .env.test .env` before sync/tests when `.env.local` is absent).
+- **Local PR gate:** `pnpm run verify` runs `lint`, `check`, `check:i18n`, and `test:run` in one command.
+- **CI (Option B — intentional):** [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs the **same checks as `verify` but as separate steps** after `pnpm run ci` (frozen install). Granular GitHub logs show which gate failed; README documents a single local command instead of duplicating four blocks.
+- **Pre-commit (Husky + lint-staged):** Prettier + ESLint on staged files; `check:i18n` when `translations.ts` is staged; **Vitest only when API/server code is staged:**
+  - `src/routes/api/**/*.{ts}` → `vitest related --run` (affected tests only)
+  - `src/lib/server/**/*.{ts}` → `pnpm run test:run` (full suite — mocks do not link server modules into the import graph)
+  - UI, session store, and i18n-only commits skip tests; CI remains the safety net for `--no-verify`.
+- **Agent workflow:** Agents format and lint per `.cursor/rules/format-and-lint.mdc`; **do not** run the full test suite on every agent edit — only when changing tested API/server surfaces.
+- **Deferred:** component tests, Playwright E2E.
+
+### Alternatives considered
+
+| Alternative                                    | Why not                                                                                      |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **CI calls `pnpm run verify` only** (Option A) | One failing blob in Actions; harder to see which gate broke                                  |
+| **Full `test:run` on every commit**            | Slow and noisy for UI/docs-only changes                                                      |
+| **No pre-commit tests**                        | API regressions slip through until CI; related tests on staged API files are fast (~seconds) |
+
+### Consequences
+
+- New API routes should ship with co-located Vitest coverage and mocks for `$lib/server/*`.
+- Keep `verify` script in sync with CI check steps (lint, check, check:i18n, test:run).
+- See [`docs/architecture.md` §5 Testing](architecture.md#testing) for covered files.
 
 ### Models (implementation note)
 
@@ -577,7 +603,7 @@ Scaffy grew separate surfaces (home, session, sessions overview) plus shared chr
 
 ### Consequences
 
-- Extends [ADR-010](#adr-010-repository-layout-and-typescript); does not replace it.
+- Extends [ADR-010](#adr-010-repository-layout-typescript-and-quality-gates); does not replace it.
 - New Cursor rule: `component-layout.mdc` (`alwaysApply: true`).
 - Promote large areas to `src/lib/features/<name>/` when `components/<area>/` outgrows maintainability (unchanged from ADR-010).
 
@@ -817,6 +843,7 @@ ADR-017 sets **shadcn-first** for `ui/` primitives but does not record which con
 
 | Date       | Change                                                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-29 | ADR-010: Vitest API unit tests, `pnpm run verify`, CI Option B (separate steps), lint-staged Vitest on staged API/server files only.                                            |
 | 2026-06-24 | ADR-022: shadcn vs custom UI inventory (ScaffyDropdown, ScaffyModal, ChipGrid, etc.) and when to install vs compose.                                                            |
 | 2026-06-25 | ADR-020: `MessageKey` compile-time checks; `check:i18n` for en/de parity (CI + lint-staged on `translations.ts`). Session intro renumbered to ADR-021 (duplicate id cleanup).   |
 | 2026-06-21 | ADR-020: client-side i18n (EN/DE) — `src/lib/i18n` store + flat `translations.ts`; Session/Sessions/About copy localized; About intro split into `about-content.md` / `.de.md`. |

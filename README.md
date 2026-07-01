@@ -236,7 +236,7 @@ Fresh clones without `.env.local` can copy `.env.test` to `.env` (same as CI) so
 
 ### Continuous deployment
 
-Scaffy is deployed on [Vercel](https://vercel.com). The same environment variables from [Environment setup](#environment-setup) must be set on the Vercel project so serverless functions can reach the API.
+Scaffy is deployed on [Vercel](https://vercel.com). The same environment variables from [Environment setup](#environment-setup) must be set on the Vercel project so serverless functions can reach the API
 
 **Via Vercel Dashboard:**  
 Project → Settings → Environment Variables → add `ANTHROPIC_API_KEY` (Production + Preview). Optionally add `ANTHROPIC_DEFAULT_MODEL`.

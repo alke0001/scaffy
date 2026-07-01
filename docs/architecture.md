@@ -76,9 +76,9 @@ flowchart TB
 | -------------------------------- | -------------------------------------------------------------------------- |
 | **SvelteKit client**             | SPA shell, Learn UI (Monaco + Learning Cards), Ask chat panel              |
 | **session store · localStorage** | Client-side persistence for sessions and scaffold progress                 |
-| **`/api/scaffold`**              | Learn: REST, structured JSON, server-side schema validation                |
-| **`/api/session-intro`**         | Session intro: Server-Sent Events (SSE) concept preview while lesson loads |
-| **`/api/chat`**                  | Ask: Server-Sent Events (SSE) stream from server → browser                 |
+| `/api/scaffold`                  | Learn: REST, structured JSON, server-side schema validation                |
+| `/api/session-intro`             | Session intro: Server-Sent Events (SSE) concept preview while lesson loads |
+| `/api/chat`                      | Ask: Server-Sent Events (SSE) stream from server → browser                 |
 | **anthropic-client**             | Shared server module; holds API key, model resolution                      |
 | **Claude API**                   | External model provider                                                    |
 
@@ -98,9 +98,9 @@ flowchart TB
 
 ## 4. HTTP API flows
 
-Three **`POST /api/*`** surfaces — each with its own **`system-prompt.md`** under `src/lib/server/<endpoint>/`. The browser never calls Anthropic directly; all use `@anthropic-ai/sdk` on the server.
+Three `POST /api/*` surfaces — each with its own `system-prompt.md` under `src/lib/server/<endpoint>/`. The browser never calls Anthropic directly; all use `@anthropic-ai/sdk` on the server.
 
-> **Server-Sent Events (SSE)** — one HTTP response stays open; the server pushes many `data: …` lines as text arrives (`Content-Type: text/event-stream`). Used for Ask chat and session intro. Scaffy parses them with **`fetch` POST** + `getReader()` (not the browser’s `EventSource`, which only supports GET).
+> **Server-Sent Events (SSE)** — one HTTP response stays open; the server pushes many `data: …` lines as text arrives (`Content-Type: text/event-stream`). Used for Ask chat and session intro. Scaffy parses them with `fetch` **POST** + `getReader()` (not the browser’s `EventSource`, which only supports GET).
 
 | Surface             | Route                     | Transport                       | Output / Anthropic feature      | Client module                           |
 | ------------------- | ------------------------- | ------------------------------- | ------------------------------- | --------------------------------------- |
@@ -108,7 +108,7 @@ Three **`POST /api/*`** surfaces — each with its own **`system-prompt.md`** un
 | **Ask tutor**       | `POST /api/chat`          | **Server-Sent Events (SSE)**    | Plain text stream               | `chat-stream.ts` → `streamChatReply`    |
 | **Session intro**   | `POST /api/session-intro` | **Server-Sent Events (SSE)**    | Plain text concept preview      | `chat-stream.ts` → `streamSessionIntro` |
 
-On **`/session/[id]`** load, **scaffold REST** and **session intro (SSE)** run **in parallel** (`ensureScaffold` + `ensureSessionIntro`). Intro failure does not block the lesson.
+On `/session/[id]` load, **scaffold REST** and **session intro (SSE)** run **in parallel** (`ensureScaffold` + `ensureSessionIntro`). Intro failure does not block the lesson.
 
 ### Learn — structured output (REST)
 
@@ -161,7 +161,7 @@ One-shot concept preview in the Ask panel while scaffolds generate. Same Server-
 
 Two hops — do not conflate them:
 
-1. **`@anthropic-ai/sdk`** streams Claude → Vercel (`messages.stream`, `on('text')`).
+1. `@anthropic-ai/sdk` streams Claude → Vercel (`messages.stream`, `on('text')`).
 2. **Custom bridge** (no library): `ReadableStream` in `+server.ts` re-emits chunks as **Server-Sent Events**; `chat-stream.ts` reads them with `fetch` + `getReader()` (not browser `EventSource`, because the route is `POST`).
 
 ```mermaid
@@ -216,13 +216,13 @@ Cross-cutting choices that cut across physical components. Listed here, not in t
 | **Quality**         | Prettier, ESLint, Husky, lint-staged, **Vitest**, GitHub Actions | Format, lint, unit testing, pre-commit, CI                                                                           |
 | **Package manager** | [pnpm](https://pnpm.io) (not npm)                                | Install, scripts, CI (`pnpm run ci` with frozen lockfile); faster deduped `node_modules`, stricter dependency layout |
 
-CI and local dev assume **`pnpm-lock.yaml`** — use `pnpm install`, not `npm install`.
+CI and local dev assume `pnpm-lock.yaml` — use `pnpm install`, not `npm install`.
 
 ### Testing
 
 The project uses **Vitest** for unit testing. Quality gates (`pnpm run verify`, CI, Husky lint-staged) are documented in [ADR-010](decisions.md#adr-010-repository-layout-typescript-and-quality-gates) and the [README](../README.md#quality-gates).
 
-**Local PR check:** `pnpm run verify` (lint, check, check:i18n, test:run). **CI (Option B):** same checks as separate GitHub Actions steps for granular failure logs. **Pre-commit:** Vitest runs only when staged files touch `src/routes/api/**` (`vitest related --run`) or `src/lib/server/**` (full suite).
+**Local PR check:** `pnpm run verify` (lint, check, check:i18n, test:run). **CI (Option B):** same checks as separate GitHub Actions steps for granular failure logs. **Pre-commit:** Vitest runs only when staged files touch `src/routes/api/`** (`vitest related --run`) or `src/lib/server/**` (full suite).
 
 The following components are covered by unit tests:
 
@@ -240,7 +240,7 @@ External Anthropic API calls are mocked during testing. This allows the tests to
 | API                        | Purpose                                                                                                       |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `editor.create`            | Standalone Learn editor (`monaco-editor.svelte`)                                                              |
-| `setValue`                 | Scaffold snippets (full chunk); loading/wait **`<!-- HTML comments -->`**; errors; clear buffer               |
+| `setValue`                 | Scaffold snippets (full chunk); loading/wait `<!-- HTML comments -->`; errors; clear buffer                   |
 | `changeViewZones`          | **Custom DOM in editor flow** — Learning Card (Svelte); loading spinner (plain DOM). No per-frame model edits |
 | `deltaDecorations`         | Inline styling on scaffold error screen                                                                       |
 | `setModelLanguage`         | `html` for scaffolds and loading states                                                                       |
@@ -288,7 +288,7 @@ Single app-wide singleton. Source of truth for **Learn data**.
 
 **Per session:** `id`, `prompt`, `createdAt`, `scaffolds[]`, `status`, `errorMessage`, `completed`, `askMessages[]`, `introStatus`, `lessonStarted` (last two in-memory only).
 
-**Lifecycle:** `idle` → `loading` (`startScaffoldRequest` + parallel intro) → `ready` (`setScaffolds`) or `error` → retry → `loading`. **`lessonStarted`** gates first scaffold in Monaco (ADR-021). `completed` via `markSessionCompleted()` after all gates passed.
+**Lifecycle:** `idle` → `loading` (`startScaffoldRequest` + parallel intro) → `ready` (`setScaffolds`) or `error` → retry → `loading`. `lessonStarted` gates first scaffold in Monaco (ADR-021). `completed` via `markSessionCompleted()` after all gates passed.
 
 ### Ephemeral (not in store)
 
@@ -306,5 +306,5 @@ Single app-wide singleton. Source of truth for **Learn data**.
 
 ## Further reading
 
-- **Why these choices:** [`docs/decisions.md`](decisions.md) (ADRs)
-- **Agent invariants:** [`CLAUDE.md`](../CLAUDE.md)
+- **Why these choices:** `[docs/decisions.md](decisions.md)` (ADRs)
+- **Agent invariants:** `[CLAUDE.md](../CLAUDE.md)`
