@@ -87,6 +87,11 @@ const EN_MESSAGES = {
 	'home.myLearningSessions': 'My learning sessions →',
 	'home.tryOneOfThese': 'Try one of these',
 
+	'onboarding.title': 'Your Scaffy tutor helps',
+	'onboarding.body':
+		'While Scaffy implements your instructions in the editor on the left, the tutor streams a concept preview here during the wait. Use the time to read through it — then start the session with one click on the button below the tutor message when you are ready.',
+	'onboarding.acknowledge': 'Got it',
+
 	'chat.askPlaceholder': 'Ask Scaffy a question about the code (min. 10 characters)',
 	'chat.askMinLengthTooltip':
 		'Enter at least 10 characters to ask Scaffy a question. We skip very short prompts to avoid unnecessary AI calls and reduce environmental impact.',
@@ -101,7 +106,9 @@ const EN_MESSAGES = {
 	'chat.introCtaWaitIntro': 'Reading concept preview…',
 
 	'chat.introCtaScaffoldTooltip':
-		'Scaffy is still preparing your lesson on the left. When it is ready, the exercises appear there and you can start here.',
+		'Scaffy is still generating your code in the editor on the left. Once that is finished, click this button here to start the session.',
+	'chat.introCtaIntroTooltip':
+		'The concept preview is still streaming. Once the tutor message is complete, click this button to start the session.',
 	'editor.retry': 'Try again',
 	'editor.loadFallback': 'Load fallback',
 	'editor.loadingTitle': 'Scaffy · generating lesson',
@@ -203,6 +210,11 @@ const DE_MESSAGES = {
 	'home.myLearningSessions': 'Meine Lernsitzungen →',
 	'home.tryOneOfThese': 'Probiere eines davon',
 
+	'onboarding.title': 'Dein scaffy Tutor hilft',
+	'onboarding.body':
+		'Während scaffy deine Anweisung links im Editor implementiert, liefert der Tutor dir während der Wartezeit bereits eine Konzeptvorschau. Nutze die Zeit und lies dir die Informationen durch, bevor du am Ende der Tutor-Nachricht die Session mit einem Klick starten kannst.',
+	'onboarding.acknowledge': 'Verstanden',
+
 	'chat.askPlaceholder': 'Stelle Scaffy eine Frage zum Code (mind. 10 Zeichen)',
 	'chat.askMinLengthTooltip':
 		'Gib mindestens 10 Zeichen ein, um Scaffy eine Frage zu stellen. Sehr kurze Eingaben überspringen wir, um unnötige KI-Aufrufe zu vermeiden und die Umweltbelastung zu reduzieren.',
@@ -217,7 +229,9 @@ const DE_MESSAGES = {
 	'chat.introCtaWaitIntro': 'Konzeptvorschau wird gelesen…',
 
 	'chat.introCtaScaffoldTooltip':
-		'Scaffy bereitet deine Lektion links noch vor. Sobald sie bereit ist, erscheinen dort die Übungen und du kannst hier starten.',
+		'Scaffy erzeugt links im Editor noch deinen Code. Sobald das fertig ist, kannst du hier auf den Button klicken, um die Session zu starten.',
+	'chat.introCtaIntroTooltip':
+		'Die Konzeptvorschau wird noch gestreamt. Sobald die Tutor-Nachricht vollständig ist, kannst du hier klicken, um die Session zu starten.',
 	'editor.retry': 'Erneut versuchen',
 	'editor.loadFallback': 'Fallback laden',
 	'editor.loadingVerb1': 'Scaffy wird aufgeweckt...',

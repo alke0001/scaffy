@@ -715,6 +715,8 @@ The aria-hidden / Lighthouse trade-off for Learning Cards in Monaco viewZones is
 
 Starting a session from home left the Ask panel empty for 10–30s while Monaco showed a loading spinner. Users had nothing to read and might not realize the chat is for questions during the lesson.
 
+**Presentation feedback (2026):** Users did not connect the **session intro streaming on the right** with **scaffold loading on the left** as one coordinated flow — even after the intro stream and CTA shipped.
+
 ### Decision
 
 - **`POST /api/chat-session-intro`** — SSE stream with a dedicated system prompt (`src/lib/server/chat/session-intro-system-prompt.md`); ephemeral system-prompt cache (`5m`) like `/api/chat` and `/api/scaffold`.
@@ -724,17 +726,21 @@ Starting a session from home left the Ask panel empty for 10–30s while Monaco 
 - **Ask during intro** — intro stream does not block the Ask composer (`isAskComposerBusy` excludes intro message IDs).
 - **Retry / fallback** — scaffold retry clears chat and re-runs intro; fallback loads scaffolds and **regenerates** intro in-place (overwrite assistant bubble + stream animation).
 - **In-memory only** — `introStatus`, `lessonStarted`, intro messages follow ADR-014 (not localStorage); restored sessions with existing scaffolds skip the gate (`lessonStarted: true`).
+- **First-use onboarding (presentation sprint)** — [`onboarding-coordinator.svelte`](../src/lib/components/session/onboarding-coordinator.svelte) + generic [`OnboardingSpotlight`](../src/lib/components/ui/onboarding-spotlight/); **one-step** spotlight on the **chat pane** on the **first session ever** (`scaffy.onboarding.v1` in localStorage via [`onboarding.svelte.ts`](../src/lib/global-state/onboarding.svelte.ts)). Copy explains parallel tutor preview while code generates left; **Got it / Verstanden** dismisses only — **session start stays on the ChatPanel CTA** (`canStartLesson` / `acknowledgeIntroAndStartLesson`). **`suppressIntroCta`** hides the CTA while the spotlight is open. Disabled CTA tooltips explain when to click after left-pane generation finishes.
 
 ### Alternatives considered
 
 - Reuse `/api/chat` with an intent flag — rejected; Socratic Ask prompt and history semantics do not fit a one-shot preview.
 - Scroll-to-bottom or checkbox in model output — rejected; compliance theater; CTA is client UI only.
+- **Footer hint or Monaco comments only** — rejected after presentation feedback; did not link the two panes spatially.
+- **Separate editor and chat overlay components** — rejected; one domain-agnostic `OnboardingSpotlight` with chat-pane target from [`session-workspace.svelte`](../src/lib/components/session/session-workspace.svelte). Two-step editor-first tour — rejected; single chat-pane step with dismiss-only acknowledge button.
 
 ### Consequences
 
 - Two Claude calls per new session (scaffold REST + intro SSE); intro failure does not block scaffold.
 - Intro content is inferred from the user prompt only — may diverge from scaffold steps; prompt uses cooperative tone without hedging (“vermutlich”).
 - UI footer hint (“Ask questions here…”) is static app copy, not model output.
+- First-time users see the spotlight tour once; API/intro stream unchanged; coordinator visually couples both panes during the initial wait.
 
 ---
 
@@ -941,6 +947,7 @@ The hard requirement is **custom DOM embedded in the editor’s vertical documen
 
 | Date       | Change                                                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-01 | Onboarding: single chat-pane step, dismiss-only “Verstanden”; session start via ChatPanel CTA; clearer disabled CTA tooltips.                                                   |
 | 2026-07-01 | ADR-025: why Monaco (viewZones hard requirement) vs CodeMirror/Ace/textarea; Key decisions Monaco row extended.                                                                 |
 | 2026-07-01 | ADR-024: CI generates sbom.json then allowlist-check; SBOM uploaded as GitHub artifact (`licenses:ci`).                                                                         |
 | 2026-07-01 | Move rune singleton `session.svelte.ts` to `src/lib/global-state/`; i18n stays at `src/lib/i18n/`.                                                                              |
