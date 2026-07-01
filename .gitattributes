@@ -1,0 +1,2 @@
+# Match Linux CI and Prettier — LF in the working tree on all platforms.
+* text=auto eol=lf
