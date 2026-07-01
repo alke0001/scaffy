@@ -31,6 +31,13 @@
 			<div class="space-y-8 px-1 pr-3 pb-4 text-sm">
 				<MarkdownContent content={aboutContent} />
 
+				<aside
+					class="border-t border-border pt-4 text-xs text-muted-foreground"
+					aria-label={$messages['about.legalNoticeAriaLabel']}
+				>
+					{$messages['about.legalNotice']}
+				</aside>
+
 				<section class="space-y-3">
 					<h3 class="text-sm font-semibold text-muted-foreground">
 						{$messages['about.faqHeading']}

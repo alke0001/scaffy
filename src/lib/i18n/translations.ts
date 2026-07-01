@@ -22,6 +22,9 @@ const EN_MESSAGES = {
 
 	'about.faqHeading': 'FAQ',
 	'about.close': 'Close',
+	'about.legalNoticeAriaLabel': 'Legal notice',
+	'about.legalNotice':
+		'This app is a student project for the module “Framework-based UI Development” (SoSe 2026) in the Computer Science program at Kaiserslautern University of Applied Sciences. It serves academic purposes within the module only and is not operated commercially. There is no legal imprint obligation under § 5 DDG (German Digital Services Act) in this context; this notice deliberately does not replace a separate imprint page.',
 
 	'about.faq.chatgpt.question': 'How is Scaffy different from ChatGPT or Copilot?',
 	'about.faq.chatgpt.answer':
@@ -134,6 +137,9 @@ const DE_MESSAGES = {
 
 	'about.faqHeading': 'FAQ',
 	'about.close': 'Schließen',
+	'about.legalNoticeAriaLabel': 'Rechtlicher Hinweis',
+	'about.legalNotice':
+		'Diese App ist ein studentisches Projekt im Rahmen des Moduls „Frameworkbasierte UI-Entwicklung“ (SoSe 2026) im Studiengang Informatik an der Hochschule Kaiserslautern. Sie dient ausschließlich akademischen Zwecken im Modulrahmen und wird nicht gewerblich betrieben. Eine gesetzliche Impressumspflicht nach § 5 DDG liegt hier nicht vor; dieser Hinweis ersetzt bewusst keine separate Impressumsseite.',
 
 	'about.faq.chatgpt.question': 'Wie unterscheidet sich Scaffy von ChatGPT oder Copilot?',
 	'about.faq.chatgpt.answer':
