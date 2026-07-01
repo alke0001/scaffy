@@ -3,10 +3,7 @@ import type { RequestHandler } from './$types';
 import { APIError } from '@anthropic-ai/sdk';
 import { client, resolveModel } from '$lib/server/anthropic-client.js';
 import systemPrompt from '$lib/server/chat/system-prompt.md?raw';
-
-/** Max prior user+assistant messages sent as history (≈15 turns). Keeps cost and context bounded. */
-const MAX_HISTORY_MESSAGES = 30;
-
+import { buildMessages, encodeSse } from './utils.js';
 const CONFIG = {
 	maxOutputTokens: 2048,
 	/** Slightly warmer phrasing for teaching prose; structure still comes from the system prompt. */
@@ -18,41 +15,12 @@ const CONFIG = {
 	systemPromptCacheTtl: '5m' | '1h';
 };
 
-type ChatHistoryEntry = {
-	role?: unknown;
-	content?: unknown;
-};
-
 type ChatRequestBody = {
 	prompt?: unknown;
 	model?: unknown;
 	history?: unknown;
 	language?: unknown;
 };
-
-function encodeSse(payload: Record<string, unknown>): Uint8Array {
-	return new TextEncoder().encode(`data: ${JSON.stringify(payload)}\n\n`);
-}
-
-function buildMessages(
-	trimmedPrompt: string,
-	history: ChatHistoryEntry[] | undefined,
-): { role: 'user' | 'assistant'; content: string }[] {
-	const messages: { role: 'user' | 'assistant'; content: string }[] = [];
-
-	if (Array.isArray(history)) {
-		const prior: { role: 'user' | 'assistant'; content: string }[] = [];
-		for (const entry of history) {
-			if (entry.role !== 'user' && entry.role !== 'assistant') continue;
-			if (typeof entry.content !== 'string' || entry.content.trim().length === 0) continue;
-			prior.push({ role: entry.role, content: entry.content.trim() });
-		}
-		messages.push(...prior.slice(-MAX_HISTORY_MESSAGES));
-	}
-
-	messages.push({ role: 'user', content: trimmedPrompt });
-	return messages;
-}
 
 /**
  * POST /api/chat — Ask-mode tutor; streams plain text as SSE.

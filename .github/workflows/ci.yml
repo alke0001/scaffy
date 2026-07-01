@@ -25,6 +25,8 @@ jobs:
           cache: pnpm
       - run: cp .env.test .env
       - run: pnpm run ci
+      # Same checks as `pnpm run verify` (separate steps for granular CI logs — ADR-010)
       - run: pnpm run lint
       - run: pnpm run check
       - run: pnpm run check:i18n
+      - run: pnpm run test:run
