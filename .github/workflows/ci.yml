@@ -29,4 +29,12 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run check
       - run: pnpm run check:i18n
+      # ADR-024: full production scan → sbom.json → allowlist check (scripts/allowed-licenses.json)
+      - run: pnpm run licenses:ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-sbom
+          path: sbom.json
+          if-no-files-found: ignore
       - run: pnpm run test:run

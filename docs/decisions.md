@@ -42,6 +42,7 @@ All other ADRs (not grouped in Key decisions above). Full context in each linked
 | [ADR-021](#adr-021-session-intro-stream-and-lesson-start-gate)                       | Session intro stream + lesson start gate         | Accepted                                                                                 |
 | [ADR-022](#adr-022-shadcn-vs-custom-ui-controls)                                     | shadcn vs custom UI controls                     | Accepted                                                                                 |
 | [ADR-023](#adr-023-singleton-svelte-runes-vs-store-module-for-app-state)             | Singleton runes vs store module for app state    | Accepted                                                                                 |
+| [ADR-024](#adr-024-monaco-mit-license-sbom-and-ci-check)                             | Monaco MIT — SBOM + CI license check             | Accepted                                                                                 |
 
 ---
 
@@ -858,6 +859,38 @@ The official Svelte 5 guidance distinguishes when runes replace stores and when 
 
 ---
 
+## ADR-024: Monaco MIT — SBOM and CI license check
+
+**Status:** Accepted
+
+### Context
+
+Presentation feedback and academic submission require **transparent third-party licensing**. **Monaco Editor** (`monaco-editor`) is Scaffy’s largest runtime dependency and the reason we can embed VS Code–grade editing with **`viewZones`** (Learning Cards, loading spinner). The package is published under the **MIT License** by Microsoft. We also need a repeatable way to audit **all production** npm dependencies, not just Monaco.
+
+### Decision
+
+- **Document Monaco as MIT** in [`architecture.md` §5](architecture.md#5-technologies-meta) (Editor row) and in this ADR.
+- **Allowlist (single source):** [`scripts/allowed-licenses.json`](../scripts/allowed-licenses.json) — currently `MIT` and `(MPL-2.0 OR Apache-2.0)` (DOMPurify). Extend only with rationale in this ADR.
+- **Pipeline:** [`scripts/license-audit.mjs`](../scripts/license-audit.mjs) — (1) **`license-checker`** full production scan (no pre-filter), (2) write CycloneDX **`sbom.json`**, (3) validate SBOM component licenses against the allowlist.
+- **Scripts:** `pnpm run sbom` (write only), `pnpm run licenses:check` (validate existing `sbom.json`), `pnpm run licenses:ci` (sbom + check — **CI**).
+- **CI:** [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs **`licenses:ci`**; uploads **`sbom.json`** as GitHub Actions artifact (`production-sbom`, `if: always()`) for traceability — including when the allowlist check fails.
+- **`sbom.json` is gitignored** — generated per CI run or locally; not committed.
+
+### Alternatives considered
+
+- **Manual LICENSE review only** — rejected; does not scale when dependencies change.
+- **`@cyclonedx/cyclonedx-npm`** — rejected on **pnpm 9** (tool calls `pnpm ls` with npm-only flags); replaced by `license-audit.mjs` + `license-checker`.
+- **Commit `sbom.json`** — rejected; large, churn-heavy; generate locally or in release pipelines instead.
+- **Stricter allowlist (MIT only)** — rejected; would block DOMPurify, already chosen in ADR-012 for Ask/About markdown sanitization.
+
+### Consequences
+
+- Agents adding **production** dependencies must ensure licenses pass `pnpm run licenses:check`; extend **`scripts/allowed-licenses.json`** only with documented rationale in this ADR.
+- Monaco’s MIT terms remain compatible with Scaffy’s academic, non-commercial use (see About Impressum note in presentation sprint).
+- **`pnpm sbom` (native, pnpm 11+)** may replace the custom CycloneDX writer when upgrading pnpm.
+
+---
+
 ## Planned / nice-to-have (not ADRs yet)
 
 - Supabase adapter + Google Auth (see [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) Phase 2)
@@ -870,6 +903,7 @@ The official Svelte 5 guidance distinguishes when runes replace stores and when 
 
 | Date       | Change                                                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-01 | ADR-024: CI generates sbom.json then allowlist-check; SBOM uploaded as GitHub artifact (`licenses:ci`).                                                                         |
 | 2026-07-01 | Move rune singleton `session.svelte.ts` to `src/lib/global-state/`; i18n stays at `src/lib/i18n/`.                                                                              |
 | 2026-07-01 | ADR-023: document singleton `$state` in `session.svelte.ts` vs store-module i18n; Svelte 5 “When to use stores” link; ADR-009 scope note updated.                               |
 | 2026-06-29 | Removed redundant full ADR index table; navigation via Key decisions + Further decisions only.                                                                                  |
