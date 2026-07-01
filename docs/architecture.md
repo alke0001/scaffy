@@ -262,22 +262,24 @@ Three layers — separate from ABB/SSB (§1–2) and API transport (§4).
 ```mermaid
 flowchart LR
   URL["URL<br/>/session/:id"]
-  GlobalRunes["global-state/<br/>session.svelte.ts"]
-  GlobalI18n["i18n/<br/>language store"]
+  GlobalRunes["global-state/<br/>session · translation · onboarding"]
+  GlobalI18n["i18n/<br/>translations + store adapters"]
   Local["Component $state<br/>ephemeral"]
 
   URL --> GlobalRunes
   GlobalRunes --> Local
 ```
 
-**Global rune singletons** live in **`src/lib/global-state/`** (`.svelte.ts` modules). **i18n** stays in **`src/lib/i18n/`** (Svelte store module + `translations.ts`). Each persisting module documents `localStorage` in its file header.
+**Global rune singletons** live in **`src/lib/global-state/`** (`.svelte.ts` modules). **`src/lib/i18n/`** holds static copy (`translations.ts`) and thin store adapters (`index.ts`). Each persisting global-state module documents `localStorage` in its file header.
 
-| Layer      | Where                            | Persists on reload?         | Holds                                                                         |
-| ---------- | -------------------------------- | --------------------------- | ----------------------------------------------------------------------------- |
-| **URL**    | SvelteKit routes                 | —                           | Which session/workspace is open (`/session/:id`)                              |
-| **Global** | `global-state/session.svelte.ts` | **Partial** → see module    | Learn sessions, scaffolds, API status, active tab                             |
-| **Global** | `i18n/` (`language` store)       | **Yes** → `scaffy.language` | UI locale only — not lesson progress (ADR-020)                                |
-| **Local**  | Component `$state`               | **No**                      | In-lesson step index, Learning Card UI, loading spinner rAF, Ask prompt draft |
+| Layer      | Where                                | Persists on reload?              | Holds                                                                         |
+| ---------- | ------------------------------------ | -------------------------------- | ----------------------------------------------------------------------------- |
+| **URL**    | SvelteKit routes                     | —                                | Which session/workspace is open (`/session/:id`)                              |
+| **Global** | `global-state/session.svelte.ts`     | **Partial** → see module         | Learn sessions, scaffolds, API status, active tab                             |
+| **Global** | `global-state/translation.svelte.ts` | **Yes** → `scaffy.language`      | UI locale only — not lesson progress (ADR-020)                                |
+| **Global** | `global-state/onboarding.svelte.ts`  | **Yes** → `scaffy.onboarding.v1` | First-use spotlight dismissed (ADR-021)                                       |
+| **Global** | `i18n/translations.ts`               | **No** (bundled copy)            | EN/DE message strings, types                                                  |
+| **Local**  | Component `$state`                   | **No**                           | In-lesson step index, Learning Card UI, loading spinner rAF, Ask prompt draft |
 
 ### `global-state/session.svelte.ts`
 
@@ -294,6 +296,14 @@ Single app-wide singleton. Source of truth for **Learn data**. **Persists** via 
 
 **Lifecycle:** `idle` → `loading` (`startScaffoldRequest` + parallel intro) → `ready` (`setScaffolds`) or `error` → retry → `loading`. `lessonStarted` gates first scaffold in Monaco (ADR-021). `completed` via `markSessionCompleted()` after all gates passed.
 
+### `global-state/translation.svelte.ts`
+
+UI locale preference. **`setLanguage()`** → `scaffy.language`. Static strings live in **`i18n/translations.ts`** (bundled, not persisted). Components use **`$language` / `$messages`** via store adapters in **`i18n/index.ts`**.
+
+### `global-state/onboarding.svelte.ts`
+
+First-use chat spotlight dismissed flag. **`completeOnboarding()`** → `scaffy.onboarding.v1`. UI in `onboarding-coordinator.svelte` (ADR-021).
+
 ### Ephemeral (not in store)
 
 | Location                          | State                                                        | Lost on reload?                     |
@@ -304,7 +314,7 @@ Single app-wide singleton. Source of truth for **Learn data**. **Persists** via 
 
 **Ask chat:** `askMessages` on `SessionRecord` — survives SPA navigation (Home ↔ Session ↔ Sessions); **not** in `localStorage` (lost on full reload). In-lesson step index is not yet persisted (ADR-014).
 
-**Code:** file headers in `src/lib/global-state/session.svelte.ts` and `src/lib/i18n/index.ts`.
+**Code:** file headers in `src/lib/global-state/*.svelte.ts` and `src/lib/i18n/index.ts`.
 
 ---
 

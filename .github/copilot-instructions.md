@@ -78,12 +78,13 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 
 ### State & Architecture
 
-- Global **rune singletons** in `src/lib/global-state/` (`.svelte.ts`). New Learn/session globals belong here; see file headers for `localStorage` persistence.
+- Global **rune singletons** in `src/lib/global-state/` (`.svelte.ts`: `session`, `translation`, `onboarding`). See each file header for what persists to `localStorage` vs memory-only.
 - State is handled at three levels: **URL** (routing), **global/component state** (SPA), **localStorage**.
 - Learning progress persisted in localStorage.
 
 ### Repository layout (source conventions)
 
+- **Global rune singletons:** `src/lib/global-state/` — session, translation (locale), onboarding. **`src/lib/i18n/`** — static `translations.ts` + store adapters in `index.ts` (`$language` / `$messages`).
 - **Routes:** `src/routes/**/+page.svelte` thin — import view from `lib/`; URL = folder (no `-page` suffix on route files).
 - **Feature views:** `src/lib/components/<area>/` (`home`, `sessions`, `chat`, `editor`, `shell`, …) — domain copy, data, wiring.
 - **Generic UI:** `src/lib/components/ui/` — domain-agnostic primitives on **shadcn-svelte**; install via `shadcn-svelte add` before hand-rolling (ADR-017); custom `ui/` only when composing shadcn or documented in `docs/decisions.md`.

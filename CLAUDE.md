@@ -78,7 +78,7 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 
 ### State & Architecture
 
-- Global **rune singletons** in `src/lib/global-state/` (`.svelte.ts`). New Learn/session globals belong here; see file headers for `localStorage` persistence.
+- Global **rune singletons** in `src/lib/global-state/` (`.svelte.ts`: `session`, `translation`, `onboarding`). See each file header for what persists to `localStorage` vs memory-only.
 - State is handled at three levels: **URL** (routing), **global/component state** (SPA), **localStorage**
 - Learning progress persisted in localStorage
 
@@ -86,7 +86,7 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 
 These conventions keep the codebase navigable as we add endpoints (for example **`/api/chat`**) and more UI. Prefer them for new files; refactor opportunistically when touching old paths.
 
-- **Global rune singletons:** `src/lib/global-state/` — e.g. `session.svelte.ts`. **i18n** stays at `src/lib/i18n/` (store module, not a rune singleton).
+- **Global rune singletons:** `src/lib/global-state/` — session, translation (locale), onboarding. **`src/lib/i18n/`** — static `translations.ts` + store adapters in `index.ts` (`$language` / `$messages`).
 - **Svelte UI components:** `src/lib/components/<area>/` — one subdirectory per product area (`chat`, `editor`, future `questions`, …). Do not add new loose `*.svelte` files at `src/lib/` root unless they are tiny one-offs. When an area grows large (many components plus `*.svelte.ts` and helpers), consider promoting it to `src/lib/features/<name>/` instead of deepening `components/` indefinitely.
 - **Routes vs views vs ui/ (ADR-016, ADR-017):** `src/routes/**/+page.svelte` stays thin (import view only). Screen copy, example data, and wiring live in `components/<area>/`. Domain-agnostic primitives in `components/ui/` built on **shadcn-svelte** — install via `shadcn-svelte add` before hand-rolling (ScrollArea, Dialog, …); custom `ui/` only when composing shadcn or documented in `docs/decisions.md`. Static logos/images in `src/lib/assets/`. If placement is unclear when adding a component, ask before creating files.
 - **Scrollbars (ADR-017):** hover-fade everywhere — default `ScrollArea` `type="hover"` (incl. `ScaffyModalBody scroll`); tokens in `scroll-area.css` + `monaco-editor.css`. No `type="always"` in product UI. See `.cursor/rules/scrollbars.mdc`.
