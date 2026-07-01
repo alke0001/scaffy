@@ -202,25 +202,27 @@ sequenceDiagram
 
 Cross-cutting choices that cut across physical components. Listed here, not in the diagrams above.
 
-| Area                | Technology                                                 | Used for                                                                                                             |
-| ------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **Framework**       | SvelteKit 5 (SPA), Svelte 5 runes, TypeScript, Vite        | App shell, routing, components, build                                                                                |
-| **Bundling**        | Conditional dynamic `import()` on `/sessions`              | Empty state eager; list UI lazy when sessions exist                                                                  |
-| **UI**              | Tailwind CSS 4, shadcn-svelte (bits-ui), Lucide icons      | Layout, design system, icons                                                                                         |
-| **Layout**          | paneforge                                                  | Resizable editor / chat split                                                                                        |
-| **Editor**          | Monaco Editor (`@monaco-editor/loader`)                    | Code display, viewZones (Learning Card, loading spinner)                                                             |
-| **AI SDK**          | `@anthropic-ai/sdk`                                        | All server-side Claude calls (see §4)                                                                                |
-| **Markdown**        | `marked` + `dompurify`                                     | Ask replies and About dialog                                                                                         |
-| **State**           | Singleton `.svelte.ts` stores, URL routing, `localStorage` | See [§6 State management](#6-state-management)                                                                       |
-| **Deploy**          | `@sveltejs/adapter-vercel`, Vercel serverless              | Production hosting, API routes                                                                                       |
-| **Quality**         | Prettier, ESLint, Husky, lint-staged, **Vitest**, GitHub Actions | Format, lint, unit testing, pre-commit, CI
-| **Package manager** | [pnpm](https://pnpm.io) (not npm)                          | Install, scripts, CI (`pnpm run ci` with frozen lockfile); faster deduped `node_modules`, stricter dependency layout |
+| Area                | Technology                                                       | Used for                                                                                                             |
+| ------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Framework**       | SvelteKit 5 (SPA), Svelte 5 runes, TypeScript, Vite              | App shell, routing, components, build                                                                                |
+| **Bundling**        | Conditional dynamic `import()` on `/sessions`                    | Empty state eager; list UI lazy when sessions exist                                                                  |
+| **UI**              | Tailwind CSS 4, shadcn-svelte (bits-ui), Lucide icons            | Layout, design system, icons                                                                                         |
+| **Layout**          | paneforge                                                        | Resizable editor / chat split                                                                                        |
+| **Editor**          | Monaco Editor (`@monaco-editor/loader`)                          | Code display, viewZones (Learning Card, loading spinner)                                                             |
+| **AI SDK**          | `@anthropic-ai/sdk`                                              | All server-side Claude calls (see §4)                                                                                |
+| **Markdown**        | `marked` + `dompurify`                                           | Ask replies and About dialog                                                                                         |
+| **State**           | Singleton `.svelte.ts` stores, URL routing, `localStorage`       | See [§6 State management](#6-state-management)                                                                       |
+| **Deploy**          | `@sveltejs/adapter-vercel`, Vercel serverless                    | Production hosting, API routes                                                                                       |
+| **Quality**         | Prettier, ESLint, Husky, lint-staged, **Vitest**, GitHub Actions | Format, lint, unit testing, pre-commit, CI                                                                           |
+| **Package manager** | [pnpm](https://pnpm.io) (not npm)                                | Install, scripts, CI (`pnpm run ci` with frozen lockfile); faster deduped `node_modules`, stricter dependency layout |
 
 CI and local dev assume **`pnpm-lock.yaml`** — use `pnpm install`, not `npm install`.
 
 ### Testing
 
-The project uses **Vitest** for unit testing.
+The project uses **Vitest** for unit testing. Quality gates (`pnpm run verify`, CI, Husky lint-staged) are documented in [ADR-010](decisions.md#adr-010-repository-layout-typescript-and-quality-gates) and the [README](../README.md#quality-gates).
+
+**Local PR check:** `pnpm run verify` (lint, check, check:i18n, test:run). **CI (Option B):** same checks as separate GitHub Actions steps for granular failure logs. **Pre-commit:** Vitest runs only when staged files touch `src/routes/api/**` (`vitest related --run`) or `src/lib/server/**` (full suite).
 
 The following components are covered by unit tests:
 
