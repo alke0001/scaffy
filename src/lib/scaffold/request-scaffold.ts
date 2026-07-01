@@ -1,6 +1,6 @@
 import { fetchJson } from '$lib/api/kit-error.js';
-import { devLog } from '$lib/dev/log.js';
-import fallbackData from '$lib/learn/scaffold-fallback.json';
+import { devLog } from '$lib/dev/logging.js';
+import fallbackData from '$lib/scaffold/scaffold-fallback.mock.json';
 import {
 	retryScaffoldRequest,
 	setScaffoldError,
@@ -8,8 +8,8 @@ import {
 	startScaffoldRequest,
 	getSessionById,
 	resetLessonStarted,
-} from '$lib/session.svelte.js';
-import { regenerateSessionIntro } from '$lib/learn/request-session-intro.js';
+} from '$lib/global-state/session.svelte.js';
+import { regenerateSessionIntro } from '$lib/chat/request-session-intro.js';
 import { type StructuredScaffoldOutput } from '$lib/types/scaffold.js';
 import { get } from 'svelte/store';
 import { language } from '$lib/i18n';
@@ -129,7 +129,7 @@ export async function retryScaffold(sessionId: string): Promise<void> {
 export function loadFallbackScaffolds(sessionId: string): void {
 	if (!isValidFallback(fallbackData)) {
 		setScaffoldError(
-			'Fallback JSON is empty or invalid. Paste 3 scaffolds into src/lib/learn/scaffold-fallback.json.',
+			'Fallback JSON is empty or invalid. Paste 3 scaffolds into src/lib/scaffold/scaffold-fallback.mock.json.',
 			sessionId,
 		);
 		return;

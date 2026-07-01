@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { deleteSession, getActiveSessionId, getSessions } from '$lib/session.svelte.js';
+	import {
+		deleteSession,
+		getActiveSessionId,
+		getSessions,
+	} from '$lib/global-state/session.svelte.js';
 	import { cn } from '$lib/utils.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';

@@ -6,15 +6,15 @@
 	import MonacoEditor from '$lib/components/editor/monaco-editor.svelte';
 	import SessionTabs from '$lib/components/session/session-tabs.svelte';
 	import * as Resizable from '$lib/components/ui/resizable/index.js';
-	import { ensureScaffold } from '$lib/learn/request-scaffold.js';
-	import { ensureSessionIntro } from '$lib/learn/request-session-intro.js';
-	import { devLog } from '$lib/dev/log.js';
+	import { ensureScaffold } from '$lib/scaffold/request-scaffold.js';
+	import { ensureSessionIntro } from '$lib/chat/request-session-intro.js';
+	import { devLog } from '$lib/dev/logging.js';
 	import {
 		getActiveSessionId,
 		getSessionById,
 		getSessions,
 		setActiveSessionId,
-	} from '$lib/session.svelte.js';
+	} from '$lib/global-state/session.svelte.js';
 
 	interface Props {
 		sessionId: string;

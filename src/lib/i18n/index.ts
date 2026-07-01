@@ -1,3 +1,10 @@
+/**
+ * UI language store (`src/lib/i18n`).
+ *
+ * **localStorage:** `language.subscribe()` persists `scaffy.language` on every change.
+ * Copy lives in `translations.ts` (not persisted).
+ */
+
 import { browser } from '$app/environment';
 import { derived, get, writable } from 'svelte/store';
 import {

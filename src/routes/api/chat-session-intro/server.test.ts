@@ -44,7 +44,7 @@ vi.mock('$lib/server/anthropic-client.js', () => ({
 	},
 }));
 
-vi.mock('$lib/server/session-intro/system-prompt.md?raw', () => ({
+vi.mock('$lib/server/chat/session-intro-system-prompt.md?raw', () => ({
 	default: 'system prompt',
 }));
 
@@ -83,7 +83,7 @@ function createEvent(body: unknown): RequestEvent {
  * -----------------------------
  */
 
-describe('POST /api/session-intro', () => {
+describe('POST /api/chat-session-intro', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 

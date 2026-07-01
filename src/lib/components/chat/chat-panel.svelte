@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ChatMessageList from '$lib/components/chat/chat-message-list.svelte';
 	import { streamChatReply } from '$lib/api/chat-stream.js';
-	import { requestScaffold } from '$lib/learn/request-scaffold.js';
+	import { requestScaffold } from '$lib/scaffold/request-scaffold.js';
 	import {
 		appendToMessage,
 		createAssistantPlaceholder,
@@ -21,7 +21,7 @@
 		hasLessonStarted,
 		setAskMessages,
 		updateAskMessages,
-	} from '$lib/session.svelte.js';
+	} from '$lib/global-state/session.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';

@@ -32,7 +32,7 @@ vi.mock('@sveltejs/kit', () => ({
 	},
 }));
 
-vi.mock('$lib/server/chat/system-prompt.md?raw', () => ({
+vi.mock('$lib/server/chat/ask-system-prompt.md?raw', () => ({
 	default: 'Language: {{COURSE_LANGUAGE}}',
 }));
 

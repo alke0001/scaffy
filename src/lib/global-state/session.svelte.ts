@@ -1,10 +1,14 @@
 import { browser } from '$app/environment';
 import type { ChatMessage } from '$lib/types/chat-message.js';
 import type { Scaffold } from '$lib/types/scaffold';
-import { devLog } from '$lib/dev/log.js';
+import { devLog } from '$lib/dev/logging.js';
 
 /**
- * Global Learn session store (singleton).
+ * Cross-component Learn session state (`src/lib/global-state/session.svelte.ts`).
+ *
+ * **localStorage:** every mutating export calls `persistSessions()` → keys `scaffy.sessions`
+ * and `scaffy.activeSessionId`. Restored once at load via `restoreSessions()`. Some fields are
+ * stripped before save (see below).
  *
  * ## Three state layers in Scaffy
  * 1. **URL** — `/session/:id` selects which session the workspace shows.

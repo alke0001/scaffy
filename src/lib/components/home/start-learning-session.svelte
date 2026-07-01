@@ -7,7 +7,7 @@
 
 	import { HOME_EXAMPLE_PROMPTS } from '$lib/components/home/example-prompts.js';
 
-	import { startLearnSession } from '$lib/learn/request-scaffold.js';
+	import { startLearnSession } from '$lib/scaffold/request-scaffold.js';
 
 	import { ChipGrid } from '$lib/components/ui/chip/index.js';
 
@@ -21,7 +21,7 @@
 
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 
-	import { getSessions } from '$lib/session.svelte.js';
+	import { getSessions } from '$lib/global-state/session.svelte.js';
 
 	import { language, messages } from '$lib/i18n/index.js';
 

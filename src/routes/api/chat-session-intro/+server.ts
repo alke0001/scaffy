@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { APIError } from '@anthropic-ai/sdk';
 import { client, resolveModel } from '$lib/server/anthropic-client.js';
-import systemPrompt from '$lib/server/session-intro/system-prompt.md?raw';
+import systemPrompt from '$lib/server/chat/session-intro-system-prompt.md?raw';
 
 const CONFIG = {
 	maxOutputTokens: 1024,
@@ -24,7 +24,7 @@ function encodeSse(payload: Record<string, unknown>): Uint8Array {
 }
 
 /**
- * POST /api/session-intro — one-shot concept preview while the lesson loads; streams plain text as SSE.
+ * POST /api/chat-session-intro — one-shot concept preview while the lesson loads; streams plain text as SSE.
  */
 export const POST: RequestHandler = async ({ request }) => {
 	let body: unknown;

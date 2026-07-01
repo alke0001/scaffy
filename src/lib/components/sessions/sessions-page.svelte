@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import type { SessionRecord } from '$lib/session.svelte.js';
-	import { deleteSession, getSessions, setActiveSessionId } from '$lib/session.svelte.js';
+	import type { SessionRecord } from '$lib/global-state/session.svelte.js';
+	import {
+		deleteSession,
+		getSessions,
+		setActiveSessionId,
+	} from '$lib/global-state/session.svelte.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import DeleteConfirmationDialog from '$lib/components/session/delete-confirmation-dialog.svelte';
 	import { cn } from '$lib/utils.js';

@@ -2,12 +2,16 @@
 	import { onDestroy, onMount, tick } from 'svelte';
 	import loader from '@monaco-editor/loader';
 	import type * as Monaco from 'monaco-editor';
-	import { getActiveSession, getSessionById, markSessionCompleted } from '$lib/session.svelte.js';
+	import {
+		getActiveSession,
+		getSessionById,
+		markSessionCompleted,
+	} from '$lib/global-state/session.svelte.js';
 	import {
 		isFallbackScaffoldAvailable,
 		loadFallbackScaffolds,
 		retryScaffold,
-	} from '$lib/learn/request-scaffold.js';
+	} from '$lib/scaffold/request-scaffold.js';
 	import { type KnowledgeCheck } from '$lib/types/scaffold.js';
 	import {
 		ScaffoldLoadingAnimator,
@@ -29,7 +33,7 @@
 	import { KnowledgeZoneBridge } from '$lib/components/editor/knowledge-zone-bridge.svelte.js';
 	import ReadOnlyHint from '$lib/components/editor/read-only-hint.svelte';
 	import { cn } from '$lib/utils.js';
-	import { devLog } from '$lib/dev/log.js';
+	import { devLog } from '$lib/dev/logging.js';
 	import { messages } from '$lib/i18n/index.js';
 	import './monaco-editor.css';
 	import { t } from '$lib/i18n';

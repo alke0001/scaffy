@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { APIError } from '@anthropic-ai/sdk';
 import { client, resolveModel } from '$lib/server/anthropic-client.js';
-import systemPrompt from '$lib/server/chat/system-prompt.md?raw';
+import systemPrompt from '$lib/server/chat/ask-system-prompt.md?raw';
 import { buildMessages, encodeSse } from './utils.js';
 const CONFIG = {
 	maxOutputTokens: 2048,

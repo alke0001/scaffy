@@ -8,13 +8,13 @@ import {
 	mergeIntroSlotWithFollowUps,
 	updateMessage,
 } from '$lib/chat/message-actions.js';
-import { devLog } from '$lib/dev/log.js';
+import { devLog } from '$lib/dev/logging.js';
 import {
 	getAskMessages,
 	getSessionById,
 	setIntroStatus,
 	updateAskMessages,
-} from '$lib/session.svelte.js';
+} from '$lib/global-state/session.svelte.js';
 import type { ChatMessage } from '$lib/types/chat-message.js';
 
 const inFlight = new Map<string, Promise<void>>();
