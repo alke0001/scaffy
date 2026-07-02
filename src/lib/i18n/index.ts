@@ -1,5 +1,13 @@
-import { browser } from '$app/environment';
+/**
+ * i18n public API (`src/lib/i18n`).
+ *
+ * - **Copy:** `translations.ts` — static EN/DE strings, `MessageKey` types, `check:i18n` parity (ADR-020).
+ * - **Runtime locale state:** `global-state/translation.svelte.ts` — `$state` + `scaffy.language` localStorage.
+ * - **This file:** Svelte store adapters (`language`, `messages`) for `$language` / `$messages`, plus `t()`.
+ */
+
 import { derived, get, writable } from 'svelte/store';
+import { getLanguage, setLanguage } from '$lib/global-state/translation.svelte.js';
 import {
 	AVAILABLE_LANGUAGES,
 	DEFAULT_LANGUAGE,
@@ -8,28 +16,26 @@ import {
 	type MessageKey,
 } from './translations.js';
 
-const STORAGE_KEY = 'scaffy.language';
+function createLanguageStore() {
+	const { subscribe, set: setStore } = writable<LanguageCode>(getLanguage());
 
-const initialLanguage = (() => {
-	if (!browser) return DEFAULT_LANGUAGE;
-	const stored = localStorage.getItem(STORAGE_KEY);
-	if (stored && Object.keys(TRANSLATIONS).includes(stored)) {
-		return stored as LanguageCode;
-	}
-	return DEFAULT_LANGUAGE;
-})();
+	return {
+		subscribe,
+		set(code: LanguageCode) {
+			setLanguage(code);
+			setStore(getLanguage());
+		},
+	};
+}
 
-export const language = writable<LanguageCode>(initialLanguage);
+/** UI locale — mutations call `setLanguage()` → `scaffy.language` in localStorage. */
+export const language = createLanguageStore();
+
 export const messages = derived(
 	language,
 	($language): Record<MessageKey, string> =>
 		TRANSLATIONS[$language] ?? TRANSLATIONS[DEFAULT_LANGUAGE],
 );
-
-language.subscribe((value) => {
-	if (!browser) return;
-	localStorage.setItem(STORAGE_KEY, value);
-});
 
 export function t(key: MessageKey, params?: Record<string, string | number>): string {
 	const dictionary = get(messages);

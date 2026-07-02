@@ -53,7 +53,7 @@ These three files must stay semantically identical in their shared project assum
 #### No direct browser API calls
 
 - The API key must **never** appear in the client bundle.
-- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** handlers (`scaffold` REST, `chat` SSE, `session-intro` SSE).
+- Claude is used only through SvelteKit **`src/routes/api/<endpoint>/+server.ts`** handlers (`scaffold` REST, `chat` SSE, `chat-session-intro` SSE).
 - `ANTHROPIC_API_KEY` is injected server-side via `import { ANTHROPIC_API_KEY } from '$env/static/private'`.
 - Client code calls only same-origin **`/api/...`** — never `api.anthropic.com` directly.
 
@@ -64,7 +64,7 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 #### Streaming vs REST
 
 - **`/api/scaffold` (Learn):** REST — structured JSON (`json_schema`); full response before Monaco updates
-- **`/api/session-intro`:** SSE — concept preview; parallel to scaffold on session load
+- **`/api/chat-session-intro`:** SSE — concept preview; parallel to scaffold on session load
 - **`/api/chat` (Ask):** SSE — Socratic tutor; temperature 0.55; max_tokens 2048; history cap 30
 
 #### Model
@@ -78,20 +78,21 @@ Browser → /api/<endpoint> (SvelteKit server route) → api.anthropic.com
 
 ### State & Architecture
 
-- Global state as singletons in `src/lib/*.svelte.ts`, split by concern: `editor`, `session`, `questions`.
+- Global **rune singletons** in `src/lib/global-state/` (`.svelte.ts`: `session`, `translation`, `onboarding`). See each file header for what persists to `localStorage` vs memory-only.
 - State is handled at three levels: **URL** (routing), **global/component state** (SPA), **localStorage**.
 - Learning progress persisted in localStorage.
 
 ### Repository layout (source conventions)
 
+- **Global rune singletons:** `src/lib/global-state/` — session, translation (locale), onboarding. **`src/lib/i18n/`** — static `translations.ts` + store adapters in `index.ts` (`$language` / `$messages`).
 - **Routes:** `src/routes/**/+page.svelte` thin — import view from `lib/`; URL = folder (no `-page` suffix on route files).
 - **Feature views:** `src/lib/components/<area>/` (`home`, `sessions`, `chat`, `editor`, `shell`, …) — domain copy, data, wiring.
 - **Generic UI:** `src/lib/components/ui/` — domain-agnostic primitives on **shadcn-svelte**; install via `shadcn-svelte add` before hand-rolling (ADR-017); custom `ui/` only when composing shadcn or documented in `docs/decisions.md`.
 - **Scrollbars:** hover-fade app-wide — default `ScrollArea` `type="hover"` (incl. modals); `--scaffy-scrollbar-*` in `scroll-area.css` + Monaco. No `type="always"` in product UI. See `.cursor/rules/scrollbars.mdc`.
 - **Assets:** `src/lib/assets/` — static SVG/images; avoid Svelte wrappers unless dynamic/themed.
 - **Unclear placement?** Ask before creating components (ADR-016, `component-layout.mdc`).
-- **HTTP API:** `src/routes/api/<endpoint>/+server.ts` — `scaffold` (REST), `chat` (SSE), `session-intro` (SSE)
-- **Server-only library:** `src/lib/server/` — subfolders: `scaffold/`, `chat/`, `session-intro/`; shared `anthropic-client.ts`
+- **HTTP API:** `src/routes/api/<endpoint>/+server.ts` — `scaffold` (REST), `chat` (SSE), `chat-session-intro` (SSE)
+- **Server-only library:** `src/lib/server/` — subfolders: `scaffold/`, `chat/` (`ask-system-prompt.md`, `session-intro-system-prompt.md`); shared `anthropic-client.ts`
 
 ### Monaco + Svelte Integration
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { getSessions } from '$lib/session.svelte.js';
+	import { getSessions } from '$lib/global-state/session.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { messages } from '$lib/i18n/index.js';
 

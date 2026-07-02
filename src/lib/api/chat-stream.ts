@@ -118,5 +118,5 @@ export async function streamSessionIntro(
 	callbacks: ChatStreamCallbacks,
 	signal?: AbortSignal,
 ): Promise<void> {
-	return streamSsePost('/api/session-intro', body, callbacks, signal);
+	return streamSsePost('/api/chat-session-intro', body, callbacks, signal);
 }

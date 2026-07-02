@@ -18,6 +18,9 @@
 		"test": "vitest",
 		"test:run": "vitest run",
 		"coverage": "vitest run --coverage",
+		"sbom": "node scripts/license-audit.mjs sbom",
+		"licenses:check": "node scripts/license-audit.mjs check",
+		"licenses:ci": "node scripts/license-audit.mjs ci",
 		"verify": "pnpm run lint && pnpm run check && pnpm run check:i18n && pnpm run test:run"
 	},
 	"lint-staged": {
@@ -49,6 +52,7 @@
 		"eslint-plugin-svelte": "^3.17.0",
 		"globals": "^17.4.0",
 		"husky": "^9.1.7",
+		"license-checker": "^25.0.1",
 		"lint-staged": "^17.0.7",
 		"paneforge": "^1.0.2",
 		"prettier": "^3.8.1",

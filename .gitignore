@@ -12,6 +12,9 @@ node_modules
 .DS_Store
 Thumbs.db
 
+# SBOM (generated locally via pnpm run sbom — ADR-024)
+sbom.json
+
 # Env
 .env
 .env.*

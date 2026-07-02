@@ -5,7 +5,7 @@ import {
 	LOADING_SPINNER_AFTER_LINE,
 	LOADING_SPINNER_ZONE_HEIGHT_PX,
 } from '$lib/components/editor/scaffold-loading-content.js';
-import { devLog } from '$lib/dev/log.js';
+import { devLog } from '$lib/dev/logging.js';
 
 export const MONACO_CODE_LANGUAGE = 'html';
 

@@ -15,13 +15,13 @@ This document records **why** Scaffy is built the way it is. It complements [`CL
 
 Architecturally central ADRs — grouped by topic. Full context in each linked entry below.
 
-| ADR                                                                                                                                                                                                                          | Topic                   | Related documentation                                                                                        |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------ |
-| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                                                                                                                                                                     | Framework: SvelteKit    | [architecture.md §5](architecture.md#5-technologies-meta) · [svelte-health-check.md](svelte-health-check.md) |
-| [ADR-010](#adr-010-repository-layout-typescript-and-quality-gates) · [ADR-016](#adr-016-routes-feature-views-vs-ui-components) · [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                                  | Component architecture  | [README § Repository structure](../README.md#repository-structure)                                           |
-| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later) · [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership) · [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first)                       | State handling          | [architecture.md §6](architecture.md#6-state-management)                                                     |
-| [ADR-003](#adr-003-claude-only-via-server-api-routes) · [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask) · [ADR-005](#adr-005-learn-scaffold-rest--structured-json) · [ADR-006](#adr-006-ask-chat-sse-streaming) | Secure API access       | [architecture.md §4](architecture.md#4-http-api-flows)                                                       |
-| [ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off)                                                                                                                                                   | Monaco viewZones + a11y | [architecture.md §5 Monaco APIs](architecture.md#monaco-apis)                                                |
+| ADR                                                                                                                                                                                                                                                                               | Topic                  | Related documentation                                                                                        |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [ADR-002](#adr-002-spa-sveltekit-5-no-ssr-for-app-shell)                                                                                                                                                                                                                          | Framework: SvelteKit   | [architecture.md §5](architecture.md#5-technologies-meta) · [svelte-health-check.md](svelte-health-check.md) |
+| [ADR-010](#adr-010-repository-layout-typescript-and-quality-gates) · [ADR-016](#adr-016-routes-feature-views-vs-ui-components) · [ADR-017](#adr-017-ui-primitives-shadcn-first-scroll-area)                                                                                       | Component architecture | [README § Repository structure](../README.md#repository-structure)                                           |
+| [ADR-009](#adr-009-session-store-for-scaffolds-monaco-later) · [ADR-007](#adr-007-chatpanel-dual-mode-and-state-ownership) · [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) · [ADR-023](#adr-023-singleton-svelte-runes-vs-store-module-for-app-state) | State handling         | [architecture.md §6](architecture.md#6-state-management)                                                     |
+| [ADR-003](#adr-003-claude-only-via-server-api-routes) · [ADR-004](#adr-004-separate-api-endpoints-for-learn-and-ask) · [ADR-005](#adr-005-learn-scaffold-rest--structured-json) · [ADR-006](#adr-006-ask-chat-sse-streaming)                                                      | Secure API access      | [architecture.md §4](architecture.md#4-http-api-flows)                                                       |
+| [ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off) · [ADR-025](#adr-025-why-monaco-editor-not-codemirror-ace-or-textarea)                                                                                                                                 | Monaco editor choice   | [architecture.md §5 Monaco APIs](architecture.md#monaco-apis)                                                |
 
 ---
 
@@ -41,6 +41,9 @@ All other ADRs (not grouped in Key decisions above). Full context in each linked
 | [ADR-020](#adr-020-client-side-i18n-english--german-via-flat-translation-dictionary) | Client-side i18n (EN/DE)                         | Accepted                                                                                 |
 | [ADR-021](#adr-021-session-intro-stream-and-lesson-start-gate)                       | Session intro stream + lesson start gate         | Accepted                                                                                 |
 | [ADR-022](#adr-022-shadcn-vs-custom-ui-controls)                                     | shadcn vs custom UI controls                     | Accepted                                                                                 |
+| [ADR-023](#adr-023-singleton-svelte-runes-vs-store-module-for-app-state)             | Singleton runes vs store module for app state    | Accepted                                                                                 |
+| [ADR-024](#adr-024-monaco-mit-license-sbom-and-ci-check)                             | Monaco MIT — SBOM + CI license check             | Accepted                                                                                 |
+| [ADR-025](#adr-025-why-monaco-editor-not-codemirror-ace-or-textarea)                 | Why Monaco (not CodeMirror / Ace / textarea)     | Accepted                                                                                 |
 
 ---
 
@@ -125,11 +128,11 @@ Learn, Ask, and session intro need different system prompts, output shapes, temp
 
 ### Decision
 
-| Surface           | Route                     | Transport                | Output                                 | System prompt                                   |
-| ----------------- | ------------------------- | ------------------------ | -------------------------------------- | ----------------------------------------------- |
-| **Learn Code**    | `POST /api/scaffold`      | REST                     | Structured JSON `{ scaffolds: [...] }` | `src/lib/server/scaffold/system-prompt.md`      |
-| **Ask**           | `POST /api/chat`          | Server-Sent Events (SSE) | Plain text stream                      | `src/lib/server/chat/system-prompt.md`          |
-| **Session intro** | `POST /api/session-intro` | Server-Sent Events (SSE) | Plain text concept preview             | `src/lib/server/session-intro/system-prompt.md` |
+| Surface           | Route                          | Transport                | Output                                 | System prompt                                        |
+| ----------------- | ------------------------------ | ------------------------ | -------------------------------------- | ---------------------------------------------------- |
+| **Learn Code**    | `POST /api/scaffold`           | REST                     | Structured JSON `{ scaffolds: [...] }` | `src/lib/server/scaffold/system-prompt.md`           |
+| **Ask**           | `POST /api/chat`               | Server-Sent Events (SSE) | Plain text stream                      | `src/lib/server/chat/ask-system-prompt.md`           |
+| **Session intro** | `POST /api/chat-session-intro` | Server-Sent Events (SSE) | Plain text concept preview             | `src/lib/server/chat/session-intro-system-prompt.md` |
 
 - Server assets: one subfolder per endpoint under `src/lib/server/<endpoint>/`.
 - Shared: `src/lib/server/anthropic-client.ts` (`@anthropic-ai/sdk`).
@@ -164,7 +167,7 @@ That fragility is **rooted in LLM non-determinism + structured-output constraint
 - **Temperature ~0.3**, `max_tokens` 6144 — tuned in `src/routes/api/scaffold/+server.ts`.
 - Post-parse: `validateStructuredOutput()` → `validate-lesson.ts` (trim to 3 scaffolds if the model over-generates; **strict cumulative** `codeSnippet` chain; one **server retry** on validation failure).
 - **In-editor loading** while waiting (~45s): static `<!-- HTML comment -->` lines via `setValue()`; Braille spinner + rotating verbs in a Monaco **viewZone** (DOM updates only — no per-frame model edits).
-- **Resilience:** client auto-retry once; error state with retry + static `scaffold-fallback.json` (dev paste from localStorage).
+- **Resilience:** client auto-retry once; error state with retry + static `scaffold-fallback.mock.json` (dev paste from localStorage).
 - **Prompt rules:** min 10 characters (Learn and Ask).
 
 ### Alternatives considered
@@ -195,7 +198,7 @@ Ask is free-form Q&A; users expect token-by-token replies like other chat produc
 - Proxy emits **Server-Sent Events (SSE)** — `Content-Type: text/event-stream`; one open HTTP response with many `data: …` lines. Event types: `ready`, `text` (delta), `done`, `error`.
 - **Temperature 0.55**, **`max_tokens` 2048** (teaching replies; ladder: UI concept → Runes → syntax).
 - **History cap:** last **30 messages** (~15 user/assistant turns) in `buildMessages()` — cost and context control; focused use per open question, not long threads.
-- **No** structured output schema; **scaffolded Socratic** tutor prompt in `src/lib/server/chat/system-prompt.md` (teach mental model first, then questions + small steps; not interrogation-only; topic-agnostic for any scaffold lesson; no MC spoilers).
+- **No** structured output schema; **scaffolded Socratic** tutor prompt in `src/lib/server/chat/ask-system-prompt.md` (teach mental model first, then questions + small steps; not interrogation-only; topic-agnostic for any scaffold lesson; no MC spoilers).
 - **Prompt rules:** min 10 characters (same as Learn).
 - **Lesson context** (current scaffold/knowledge check) — planned later; not in API body yet.
 - Client: `src/lib/api/chat-stream.ts` appends deltas; `request.signal` / `AbortController` for cancel.
@@ -276,13 +279,14 @@ Learn responses are not chat content; Monaco and question UI need a shared scaff
 
 ### Decision
 
-- `src/lib/session.svelte.ts`: `status` (`idle` | `loading` | `ready` | `error`), `scaffolds`, `errorMessage`.
+- `src/lib/global-state/session.svelte.ts`: `status` (`idle` | `loading` | `ready` | `error`), `scaffolds`, `errorMessage`.
 - `startScaffoldRequest()` clears scaffolds and sets `loading`.
 - Client-safe types in `src/lib/types/scaffold.ts`; server `output-schema.ts` imports them.
 
-### Not yet implemented (planned)
+### Not yet implemented (superseded scope)
 
-- `editor.svelte.ts`, `questions.svelte.ts`, step index, localStorage progress, `/session/:id` routes.
+- Originally planned: `editor.svelte.ts`, `questions.svelte.ts` as separate global stores. **Not pursued** — in-lesson step index and Learning Card UI live in `monaco-editor.svelte` and `KnowledgeZoneBridge` instead (see [ADR-023](#adr-023-singleton-svelte-runes-vs-store-module-for-app-state)).
+- Step index in localStorage and `/session/:id` routes are shipped; step index persistence remains deferred (ADR-014).
 
 ### Consequences
 
@@ -439,17 +443,17 @@ Agent config files must stay small and synced across three tools; detailed ratio
 
 ## ADR-014: Learning session persistence port — localStorage first
 
-**Status:** Accepted — **localStorage shipped inline** in [`session.svelte.ts`](../src/lib/session.svelte.ts); **persistence port / adapter pattern deferred**
+**Status:** Accepted — **localStorage shipped inline** in [`session.svelte.ts`](../src/lib/global-state/session.svelte.ts); **persistence port / adapter pattern deferred**
 
 ### Context
 
 Learning progress must survive reloads and back navigation ([`projektsteckbrief-scaffy.md`](projektsteckbrief-scaffy.md): `/session/:id`, `/sessions`, step index, answered knowledge checks). We considered persisting directly in **Supabase** with **Google Auth** and **RLS** (cross-device, per-user rows). That path needs dashboard setup, OAuth redirects, env secrets on Vercel, and sync/error UX before the core learn loop is proven in the UI.
 
-[`session.svelte.ts`](../src/lib/session.svelte.ts) already holds **runtime** scaffold data for Learn; persistence is a separate concern from ChatPanel and Claude API routes.
+[`session.svelte.ts`](../src/lib/global-state/session.svelte.ts) already holds **runtime** scaffold data for Learn; persistence is a separate concern from ChatPanel and Claude API routes.
 
 ### Current state (shipped)
 
-- [`session.svelte.ts`](../src/lib/session.svelte.ts) persists `SessionRecord[]` and the active session id to `localStorage` on change; restores on load.
+- [`session.svelte.ts`](../src/lib/global-state/session.svelte.ts) persists `SessionRecord[]` and the active session id to `localStorage` on change; restores on load.
 - Sessions overview page and session tabs read from the same store; no separate `LocalStorageSessionStore` adapter or `LearningSessionStore` port yet.
 - Step-level progress (current scaffold index, answered Learning Cards) is **not** fully persisted across reload — only session list, scaffolds payload, and `completed` flag.
 - **Ask chat** per session: `askMessages` on `SessionRecord` in the singleton — survives SPA navigation; **stripped** from `localStorage` JSON (lost on full reload).
@@ -711,26 +715,32 @@ The aria-hidden / Lighthouse trade-off for Learning Cards in Monaco viewZones is
 
 Starting a session from home left the Ask panel empty for 10–30s while Monaco showed a loading spinner. Users had nothing to read and might not realize the chat is for questions during the lesson.
 
+**Presentation feedback (2026):** Users did not connect the **session intro streaming on the right** with **scaffold loading on the left** as one coordinated flow — even after the intro stream and CTA shipped.
+
 ### Decision
 
-- **`POST /api/session-intro`** — SSE stream with a dedicated system prompt (`src/lib/server/session-intro/system-prompt.md`); ephemeral system-prompt cache (`5m`) like `/api/chat` and `/api/scaffold`.
+- **`POST /api/chat-session-intro`** — SSE stream with a dedicated system prompt (`src/lib/server/chat/session-intro-system-prompt.md`); ephemeral system-prompt cache (`5m`) like `/api/chat` and `/api/scaffold`.
 - **Parallel to scaffold fetch** — `ensureSessionIntro(sessionId)` runs alongside `ensureScaffold` when `session.status === 'loading'`.
 - **Intro slot in Ask thread** — fixed message IDs (`intro-user`, `intro-assistant`); user bubble = session prompt; assistant streams concept preview (SFC, Runes, props — no solution code).
 - **Lesson start gate** — Monaco does not call `loadNextScaffold()` until `lessonStarted` is true; user clicks **Got it — start lesson** (existing shadcn `Button` in `ChatPanel`).
 - **Ask during intro** — intro stream does not block the Ask composer (`isAskComposerBusy` excludes intro message IDs).
 - **Retry / fallback** — scaffold retry clears chat and re-runs intro; fallback loads scaffolds and **regenerates** intro in-place (overwrite assistant bubble + stream animation).
 - **In-memory only** — `introStatus`, `lessonStarted`, intro messages follow ADR-014 (not localStorage); restored sessions with existing scaffolds skip the gate (`lessonStarted: true`).
+- **First-use onboarding (presentation sprint)** — [`onboarding-coordinator.svelte`](../src/lib/components/session/onboarding-coordinator.svelte) + generic [`OnboardingSpotlight`](../src/lib/components/ui/onboarding-spotlight/); **one-step** spotlight on the **chat pane** on the **first session ever** (`scaffy.onboarding.v1` in localStorage via [`onboarding.svelte.ts`](../src/lib/global-state/onboarding.svelte.ts)). Copy explains parallel tutor preview while code generates left; **Got it / Verstanden** dismisses only — **session start stays on the ChatPanel CTA** (`canStartLesson` / `acknowledgeIntroAndStartLesson`). **`suppressIntroCta`** hides the CTA while the spotlight is open. Disabled CTA tooltips explain when to click after left-pane generation finishes.
 
 ### Alternatives considered
 
 - Reuse `/api/chat` with an intent flag — rejected; Socratic Ask prompt and history semantics do not fit a one-shot preview.
 - Scroll-to-bottom or checkbox in model output — rejected; compliance theater; CTA is client UI only.
+- **Footer hint or Monaco comments only** — rejected after presentation feedback; did not link the two panes spatially.
+- **Separate editor and chat overlay components** — rejected; one domain-agnostic `OnboardingSpotlight` with chat-pane target from [`session-workspace.svelte`](../src/lib/components/session/session-workspace.svelte). Two-step editor-first tour — rejected; single chat-pane step with dismiss-only acknowledge button.
 
 ### Consequences
 
 - Two Claude calls per new session (scaffold REST + intro SSE); intro failure does not block scaffold.
 - Intro content is inferred from the user prompt only — may diverge from scaffold steps; prompt uses cooperative tone without hedging (“vermutlich”).
 - UI footer hint (“Ask questions here…”) is static app copy, not model output.
+- First-time users see the spotlight tour once; API/intro stream unchanged; coordinator visually couples both panes during the initial wait.
 
 ---
 
@@ -824,6 +834,107 @@ ADR-017 sets **shadcn-first** for `ui/` primitives but does not record which con
 
 ---
 
+## ADR-023: Singleton Svelte runes vs store module for app state
+
+**Status:** Accepted
+
+### Context
+
+Scaffy is on **SvelteKit 5 / Svelte 5**. Cross-component state must cover session scaffolds, API status, `localStorage` sync, and ephemeral lesson UI. Early docs (ADR-009) mentioned splitting `editor.svelte.ts` and `questions.svelte.ts`; the shipped code uses one global **`session.svelte.ts`** singleton with **`$state`** runes, while **i18n** uses the classic **store module** (`writable` / `derived`).
+
+The official Svelte 5 guidance distinguishes when runes replace stores and when stores remain appropriate: [When to use stores](https://svelte.dev/docs/svelte/stores#When-to-use-stores).
+
+### Decision
+
+- **Domain / cross-pane Learn state** — singleton module `src/lib/global-state/session.svelte.ts` with module-level **`$state`** (`sessions`, `activeSessionId`, mirrored `status` / `errorMessage`). Mutations via exported functions (`setScaffolds`, `startScaffoldRequest`, …); **`persistSessions()`** writes `scaffy.sessions` and `scaffy.activeSessionId` on every change.
+- **Consumers** — Svelte components bind with **`$derived(getSessionById(…))`** or call getters from effects; no `writable`/`readable` wrapper around session data.
+- **Ephemeral UI state** — component **`$state`** (`monaco-editor.svelte`: step index, Learning Card visibility) or a per-instance class with runes (`KnowledgeZoneBridge` in `knowledge-zone-bridge.svelte.ts`). Not promoted to global stores unless multiple distant surfaces need the same mutable field.
+- **Deliberate store-module exception: i18n** — `src/lib/i18n/index.ts` uses **`writable`** for `language` and **`derived`** for `messages`, with **`language.subscribe()`** persisting `scaffy.language`. This matches the Svelte docs case for a simple global value with many subscribers and no lesson-domain coupling (ADR-020). **Do not** migrate i18n to runes for symmetry alone.
+
+### Alternatives considered
+
+- **Svelte stores for session** — rejected for new code: extra `.subscribe` / `$store` ceremony; runes are the framework default for component-adjacent reactive state in Svelte 5.
+- **Svelte context** — rejected for session list / scaffolds; would not survive the same “app-wide singleton + localStorage” pattern without re-plumbing every route.
+- **Split `editor.svelte.ts` / `questions.svelte.ts`** (ADR-009 plan) — rejected as shipped; Monaco and question flow are tightly bound to the editor instance; a third global store added navigation cost without clear ownership.
+
+### Consequences
+
+- New **lesson/session** fields belong in `session.svelte.ts` (or component-local runes if truly ephemeral). New **UI locale** strings belong in `translations.ts` + the i18n store.
+- Agents should read [architecture.md §6](architecture.md#6-state-management) for the three-layer map (URL / global / local).
+- Cross-component **rune singletons** live under **`src/lib/global-state/`**; `localStorage` behavior is documented in each module’s file header. **i18n** remains at **`src/lib/i18n/`** (store module).
+- Agent configs reference `src/lib/global-state/` for Learn globals.
+
+---
+
+## ADR-024: Monaco MIT — SBOM and CI license check
+
+**Status:** Accepted
+
+### Context
+
+Presentation feedback and academic submission require **transparent third-party licensing**. **Monaco Editor** (`monaco-editor`) is Scaffy’s largest runtime dependency and the reason we can embed VS Code–grade editing with **`viewZones`** (Learning Cards, loading spinner). The package is published under the **MIT License** by Microsoft. We also need a repeatable way to audit **all production** npm dependencies, not just Monaco.
+
+### Decision
+
+- **Document Monaco as MIT** in [`architecture.md` §5](architecture.md#5-technologies-meta) (Editor row) and in this ADR.
+- **Allowlist (single source):** [`scripts/allowed-licenses.json`](../scripts/allowed-licenses.json) — currently `MIT` and `(MPL-2.0 OR Apache-2.0)` (DOMPurify). Extend only with rationale in this ADR.
+- **Pipeline:** [`scripts/license-audit.mjs`](../scripts/license-audit.mjs) — (1) **`license-checker`** full production scan (no pre-filter), (2) write CycloneDX **`sbom.json`**, (3) validate SBOM component licenses against the allowlist.
+- **Scripts:** `pnpm run sbom` (write only), `pnpm run licenses:check` (validate existing `sbom.json`), `pnpm run licenses:ci` (sbom + check — **CI**).
+- **CI:** [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs **`licenses:ci`**; uploads **`sbom.json`** as GitHub Actions artifact (`production-sbom`, `if: always()`) for traceability — including when the allowlist check fails.
+- **`sbom.json` is gitignored** — generated per CI run or locally; not committed.
+
+### Alternatives considered
+
+- **Manual LICENSE review only** — rejected; does not scale when dependencies change.
+- **`@cyclonedx/cyclonedx-npm`** — rejected on **pnpm 9** (tool calls `pnpm ls` with npm-only flags); replaced by `license-audit.mjs` + `license-checker`.
+- **Commit `sbom.json`** — rejected; large, churn-heavy; generate locally or in release pipelines instead.
+- **Stricter allowlist (MIT only)** — rejected; would block DOMPurify, already chosen in ADR-012 for Ask/About markdown sanitization.
+
+### Consequences
+
+- Agents adding **production** dependencies must ensure licenses pass `pnpm run licenses:check`; extend **`scripts/allowed-licenses.json`** only with documented rationale in this ADR.
+- Monaco’s MIT terms remain compatible with Scaffy’s academic, non-commercial use (see About Impressum note in presentation sprint).
+- **`pnpm sbom` (native, pnpm 11+)** may replace the custom CycloneDX writer when upgrading pnpm.
+
+---
+
+## ADR-025: Why Monaco Editor (not CodeMirror / Ace / textarea)
+
+**Status:** Accepted
+
+### Context
+
+Scaffy’s Learn pane is not a generic code playground: the editor must show **cumulative scaffold code**, a **loading state** while Claude generates, and an **interactive Learning Card** (knowledge check) that **scrolls with the code** — not as a floating panel beside the editor. Presentation feedback and architecture reviews asked explicitly **why Monaco** and not a lighter editor.
+
+The hard requirement is **custom DOM embedded in the editor’s vertical document flow** after specific lines, with height that tracks content (`ResizeObserver`). That pattern is shipped today via Monaco **`viewZones`** ([ADR-011](#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off)): `KnowledgeViewZoneController` (Learning Card) and `LoadingSpinnerViewZone` in [`monaco-scaffold-loading.ts`](../src/lib/components/editor/monaco-scaffold-loading.ts).
+
+### Decision
+
+- **Use Monaco Editor** (`monaco-editor` + `@monaco-editor/loader`) as the Learn code surface.
+- **Primary reason — `changeViewZones`:** Mount Svelte Learning Cards and loading spinners **inline after line N**; zones participate in editor scroll layout. This is the product differentiator; overlay-only UIs were rejected in ADR-011.
+- **Secondary reasons:**
+  - **VS Code familiarity** — learners already know Monaco from Cursor/VS Code; syntax highlighting and read-only behaviour match expectations.
+  - **Proven in repo** — viewZone integration, read-only gate, scaffold `setValue`, loading comments + spinner, and a11y trade-off are documented and shipped (ADR-011), not theoretical.
+  - **License** — MIT, audited in CI/SBOM ([ADR-024](#adr-024-monaco-mit-license-sbom-and-ci-check)).
+
+### Alternatives considered
+
+| Alternative                        | Why not for Scaffy                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CodeMirror 6**                   | Strong editor, but Scaffy’s pedagogy depends on Monaco-style **view zones** tied to document lines. CM6 uses **widgets / decorations / panels** with a different layout model; replicating scroll-locked, resizable inline Svelte mounts after the last code line would be a custom integration, not a drop-in replacement for what ADR-011 already ships. |
+| **Ace**                            | Mature, but no first-class equivalent to Monaco **viewZones** for arbitrary DOM blocks in the document flow; Learning Card + loading row would likely become detached overlays — rejected for the same reason as overlay widgets in ADR-011.                                                                                                               |
+| **`<textarea>` / contenteditable** | No line model, no viewZones, no VS Code-grade highlighting or read-only semantics; unacceptable for a “code lesson” product surface.                                                                                                                                                                                                                       |
+| **Read-only highlighter only**     | Cannot host interactive gates inside the code scroll area.                                                                                                                                                                                                                                                                                                 |
+
+### Consequences
+
+- **Bundle cost** — Monaco is the largest client dependency; accepted for viewZone capability and familiarity.
+- **Do not swap the editor** without re-proving inline Learning Card + loading viewZone behaviour and revisiting ADR-011 a11y trade-offs.
+- Implementation references: [`monaco-knowledge-view-zone.ts`](../src/lib/components/editor/monaco-knowledge-view-zone.ts), [`monaco-scaffold-loading.ts`](../src/lib/components/editor/monaco-scaffold-loading.ts), [`architecture.md` §5 Monaco APIs](architecture.md#monaco-apis).
+- License compliance stays with ADR-024; editor choice stays documented here — no `CLAUDE.md` sync required unless agents need a new invariant.
+
+---
+
 ## Planned / nice-to-have (not ADRs yet)
 
 - Supabase adapter + Google Auth (see [ADR-014](#adr-014-learning-session-persistence-port--localstorage-first) Phase 2)
@@ -836,6 +947,11 @@ ADR-017 sets **shadcn-first** for `ui/` primitives but does not record which con
 
 | Date       | Change                                                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-01 | Onboarding: single chat-pane step, dismiss-only “Verstanden”; session start via ChatPanel CTA; clearer disabled CTA tooltips.                                                   |
+| 2026-07-01 | ADR-025: why Monaco (viewZones hard requirement) vs CodeMirror/Ace/textarea; Key decisions Monaco row extended.                                                                 |
+| 2026-07-01 | ADR-024: CI generates sbom.json then allowlist-check; SBOM uploaded as GitHub artifact (`licenses:ci`).                                                                         |
+| 2026-07-01 | Move rune singleton `session.svelte.ts` to `src/lib/global-state/`; i18n stays at `src/lib/i18n/`.                                                                              |
+| 2026-07-01 | ADR-023: document singleton `$state` in `session.svelte.ts` vs store-module i18n; Svelte 5 “When to use stores” link; ADR-009 scope note updated.                               |
 | 2026-06-29 | Removed redundant full ADR index table; navigation via Key decisions + Further decisions only.                                                                                  |
 | 2026-06-29 | ADR-010: Vitest API unit tests, `pnpm run verify`, CI Option B (separate steps), lint-staged Vitest on staged API/server files only.                                            |
 | 2026-06-24 | Key decisions + Further decisions tables; ADR-011 merged with ADR-019 (a11y trade-off); ADR-019 superseded. Projektsteckbrief checklist aligned.                                |
@@ -874,5 +990,5 @@ ADR-017 sets **shadcn-first** for `ui/` primitives but does not record which con
 | 2026-06-17 | ADR-015: persistent top nav (scaffy + My Sessions + session title); removed shadcn `ui/breadcrumb`; `/sessions` empty state.                                                    |
 | 2026-06-19 | ADR-005: removed Learn prompt `<`/`{`/`;` heuristic — caused false 400s; min 10 characters remains.                                                                             |
 | 2026-06-19 | ADR-014: Ask chat per session in `session.svelte.ts` (`askMessages`) — SPA navigation only, not localStorage.                                                                   |
-| 2026-06-19 | ADR-021: `/api/session-intro` parallel SSE; intro gate via `lessonStarted`; regenerate on scaffold fallback.                                                                    |
+| 2026-07-01 | API layout: `/api/session-intro` → `/api/chat-session-intro`; server prompts under `src/lib/server/chat/`; client intro under `src/lib/chat/`.                                  |
 | 2026-06-20 | Docs sync: ADR-004/005/011 — three API routes + prompts; Monaco loading = comments (`setValue`) + spinner viewZone; scaffold typewriter still planned.                          |

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ChatMessageList from '$lib/components/chat/chat-message-list.svelte';
 	import { streamChatReply } from '$lib/api/chat-stream.js';
-	import { requestScaffold } from '$lib/learn/request-scaffold.js';
+	import { requestScaffold } from '$lib/scaffold/request-scaffold.js';
 	import {
 		appendToMessage,
 		createAssistantPlaceholder,
@@ -21,7 +21,7 @@
 		hasLessonStarted,
 		setAskMessages,
 		updateAskMessages,
-	} from '$lib/session.svelte.js';
+	} from '$lib/global-state/session.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
@@ -41,6 +41,7 @@
 	const INTRO_CTA_WAIT_SCAFFOLD = $derived($i18nMessages['chat.introCtaWaitScaffold']);
 	const INTRO_CTA_WAIT_INTRO = $derived($i18nMessages['chat.introCtaWaitIntro']);
 	const INTRO_CTA_SCAFFOLD_TOOLTIP = $derived($i18nMessages['chat.introCtaScaffoldTooltip']);
+	const INTRO_CTA_INTRO_TOOLTIP = $derived($i18nMessages['chat.introCtaIntroTooltip']);
 
 	interface Props {
 		mode: ChatMode;
@@ -51,6 +52,8 @@
 		prompt?: string;
 		/** Session route — pinned composer, intro CTA, footer hint. */
 		sessionIntro?: boolean;
+		/** Hide intro CTA while first-use onboarding spotlight is active. */
+		suppressIntroCta?: boolean;
 	}
 
 	let {
@@ -59,6 +62,7 @@
 		promptOnly = false,
 		prompt = $bindable(''),
 		sessionIntro = false,
+		suppressIntroCta = false,
 	}: Props = $props();
 
 	const learnPromptFieldShellClass =
@@ -88,12 +92,20 @@
 	);
 	const lessonStarted = $derived(sessionId && sessionIntro ? hasLessonStarted(sessionId) : true);
 	const showIntroCta = $derived(
-		Boolean(sessionIntro && sessionId && !lessonStarted && boundSession?.introStatus !== 'idle'),
+		Boolean(
+			sessionIntro &&
+			sessionId &&
+			!lessonStarted &&
+			!suppressIntroCta &&
+			boundSession?.introStatus !== 'idle',
+		),
 	);
 	const introCtaEnabled = $derived(Boolean(sessionId && canStartLesson(sessionId)));
-	const introCtaWaitingScaffold = $derived(
-		Boolean(showIntroCta && !introCtaEnabled && boundSession?.status !== 'ready'),
-	);
+	const introCtaDisabledTooltip = $derived.by(() => {
+		if (!boundSession || boundSession.status !== 'ready') return INTRO_CTA_SCAFFOLD_TOOLTIP;
+		if (boundSession.introStatus === 'streaming') return INTRO_CTA_INTRO_TOOLTIP;
+		return INTRO_CTA_SCAFFOLD_TOOLTIP;
+	});
 	const introCtaLabel = $derived.by(() => {
 		if (!boundSession) return INTRO_CTA_WAIT_SCAFFOLD;
 		if (boundSession.status !== 'ready') return INTRO_CTA_WAIT_SCAFFOLD;
@@ -387,7 +399,7 @@
 			{#if showIntroCta}
 				<div class="shrink-0 pb-2">
 					<Tooltip.Provider>
-						<Tooltip.Root disabled={!introCtaWaitingScaffold}>
+						<Tooltip.Root disabled={introCtaEnabled}>
 							<Tooltip.Trigger>
 								{#snippet child({ props })}
 									<span {...props} class="inline-flex w-full sm:w-auto">
@@ -407,7 +419,7 @@
 								sideOffset={6}
 								class="max-w-xs text-left whitespace-normal"
 							>
-								{INTRO_CTA_SCAFFOLD_TOOLTIP}
+								{introCtaDisabledTooltip}
 							</Tooltip.Content>
 						</Tooltip.Root>
 					</Tooltip.Provider>

@@ -4,17 +4,18 @@
 	import { resolve } from '$app/paths';
 	import ChatPanel from '$lib/components/chat/chat-panel.svelte';
 	import MonacoEditor from '$lib/components/editor/monaco-editor.svelte';
+	import OnboardingCoordinator from '$lib/components/session/onboarding-coordinator.svelte';
 	import SessionTabs from '$lib/components/session/session-tabs.svelte';
 	import * as Resizable from '$lib/components/ui/resizable/index.js';
-	import { ensureScaffold } from '$lib/learn/request-scaffold.js';
-	import { ensureSessionIntro } from '$lib/learn/request-session-intro.js';
-	import { devLog } from '$lib/dev/log.js';
+	import { ensureScaffold } from '$lib/scaffold/request-scaffold.js';
+	import { ensureSessionIntro } from '$lib/chat/request-session-intro.js';
+	import { devLog } from '$lib/dev/logging.js';
 	import {
 		getActiveSessionId,
 		getSessionById,
 		getSessions,
 		setActiveSessionId,
-	} from '$lib/session.svelte.js';
+	} from '$lib/global-state/session.svelte.js';
 
 	interface Props {
 		sessionId: string;
@@ -26,6 +27,12 @@
 
 	/** One Ask panel in the DOM — desktop and mobile layouts both hid a mounted instance before. */
 	let desktopLayout = $state(browser ? window.matchMedia('(min-width: 768px)').matches : true);
+
+	let desktopChatPaneEl = $state<HTMLElement | null>(null);
+	let mobileChatPaneEl = $state<HTMLElement | null>(null);
+	let onboardingActive = $state(false);
+
+	const chatPaneEl = $derived(desktopLayout ? desktopChatPaneEl : mobileChatPaneEl);
 
 	$effect(() => {
 		if (!browser) return;
@@ -98,9 +105,12 @@
 				</Resizable.Pane>
 				<Resizable.Handle />
 				<Resizable.Pane defaultSize={40} minSize={20} class="min-h-0">
-					<div class="flex h-full min-h-0 flex-col overflow-hidden bg-background p-2">
+					<div
+						bind:this={desktopChatPaneEl}
+						class="flex h-full min-h-0 flex-col overflow-hidden bg-background p-2"
+					>
 						{#if desktopLayout}
-							<ChatPanel mode="ask" {sessionId} sessionIntro />
+							<ChatPanel mode="ask" {sessionId} sessionIntro suppressIntroCta={onboardingActive} />
 						{/if}
 					</div>
 				</Resizable.Pane>
@@ -116,11 +126,22 @@
 				/>
 				<MonacoEditor class="min-h-0 flex-1" {sessionId} />
 			</section>
-			<div class="flex min-h-0 flex-2 flex-col overflow-hidden border-t border-scaffy-divider p-2">
+			<div
+				bind:this={mobileChatPaneEl}
+				class="flex min-h-0 flex-2 flex-col overflow-hidden border-t border-scaffy-divider p-2"
+			>
 				{#if !desktopLayout}
-					<ChatPanel mode="ask" {sessionId} sessionIntro />
+					<ChatPanel mode="ask" {sessionId} sessionIntro suppressIntroCta={onboardingActive} />
 				{/if}
 			</div>
 		</div>
 	</main>
+
+	<OnboardingCoordinator
+		onActiveChange={(active) => {
+			onboardingActive = active;
+		}}
+		{sessionId}
+		{chatPaneEl}
+	/>
 </div>

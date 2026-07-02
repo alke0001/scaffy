@@ -12,7 +12,7 @@
 	import CircleHelp from '@lucide/svelte/icons/circle-help';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ScaffyLogo from '$lib/assets/scaffy-logo.svelte';
-	import { getSessionById } from '$lib/session.svelte.js';
+	import { getSessionById } from '$lib/global-state/session.svelte.js';
 	import { cn } from '$lib/utils.js';
 	import { language, AVAILABLE_LANGUAGES, messages, type LanguageCode } from '$lib/i18n/index.js';
 

@@ -59,7 +59,7 @@ flowchart TB
   end
 
   subgraph Vercel["Vercel — serverless"]
-    API["/api/scaffold · /api/chat · /api/session-intro"]
+    API["/api/scaffold · /api/chat · /api/chat-session-intro"]
     AC["anthropic-client"]
   end
 
@@ -77,7 +77,7 @@ flowchart TB
 | **SvelteKit client**             | SPA shell, Learn UI (Monaco + Learning Cards), Ask chat panel              |
 | **session store · localStorage** | Client-side persistence for sessions and scaffold progress                 |
 | `/api/scaffold`                  | Learn: REST, structured JSON, server-side schema validation                |
-| `/api/session-intro`             | Session intro: Server-Sent Events (SSE) concept preview while lesson loads |
+| `/api/chat-session-intro`        | Session intro: Server-Sent Events (SSE) concept preview while lesson loads |
 | `/api/chat`                      | Ask: Server-Sent Events (SSE) stream from server → browser                 |
 | **anthropic-client**             | Shared server module; holds API key, model resolution                      |
 | **Claude API**                   | External model provider                                                    |
@@ -86,13 +86,13 @@ flowchart TB
 
 ## 3. Logical → physical mapping
 
-| ABB                 | Realized by (SSB)                                                                        |
-| ------------------- | ---------------------------------------------------------------------------------------- |
-| **Learn**           | SvelteKit client (Monaco viewZones + `setValue`) + `POST /api/scaffold`                  |
-| **Session intro**   | SvelteKit client (Ask panel intro slot) + `POST /api/session-intro` (Server-Sent Events) |
-| **Ask**             | SvelteKit client (chat panel) + `POST /api/chat` (Server-Sent Events)                    |
-| **Persist**         | `session.svelte.ts` + `localStorage`                                                     |
-| **Secure AI proxy** | SvelteKit `+server.ts` on Vercel + `anthropic-client` + `$env/static/private`            |
+| ABB                 | Realized by (SSB)                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------- |
+| **Learn**           | SvelteKit client (Monaco viewZones + `setValue`) + `POST /api/scaffold`                       |
+| **Session intro**   | SvelteKit client (Ask panel intro slot) + `POST /api/chat-session-intro` (Server-Sent Events) |
+| **Ask**             | SvelteKit client (chat panel) + `POST /api/chat` (Server-Sent Events)                         |
+| **Persist**         | `src/lib/global-state/session.svelte.ts` + `localStorage`                                     |
+| **Secure AI proxy** | SvelteKit `+server.ts` on Vercel + `anthropic-client` + `$env/static/private`                 |
 
 ---
 
@@ -102,11 +102,11 @@ Three `POST /api/*` surfaces — each with its own `system-prompt.md` under `src
 
 > **Server-Sent Events (SSE)** — one HTTP response stays open; the server pushes many `data: …` lines as text arrives (`Content-Type: text/event-stream`). Used for Ask chat and session intro. Scaffy parses them with `fetch` **POST** + `getReader()` (not the browser’s `EventSource`, which only supports GET).
 
-| Surface             | Route                     | Transport                       | Output / Anthropic feature      | Client module                           |
-| ------------------- | ------------------------- | ------------------------------- | ------------------------------- | --------------------------------------- |
-| **Learn scaffolds** | `POST /api/scaffold`      | **REST** (single JSON response) | Structured JSON (`json_schema`) | `request-scaffold.ts`                   |
-| **Ask tutor**       | `POST /api/chat`          | **Server-Sent Events (SSE)**    | Plain text stream               | `chat-stream.ts` → `streamChatReply`    |
-| **Session intro**   | `POST /api/session-intro` | **Server-Sent Events (SSE)**    | Plain text concept preview      | `chat-stream.ts` → `streamSessionIntro` |
+| Surface             | Route                          | Transport                       | Output / Anthropic feature      | Client module                           |
+| ------------------- | ------------------------------ | ------------------------------- | ------------------------------- | --------------------------------------- |
+| **Learn scaffolds** | `POST /api/scaffold`           | **REST** (single JSON response) | Structured JSON (`json_schema`) | `request-scaffold.ts`                   |
+| **Ask tutor**       | `POST /api/chat`               | **Server-Sent Events (SSE)**    | Plain text stream               | `chat-stream.ts` → `streamChatReply`    |
+| **Session intro**   | `POST /api/chat-session-intro` | **Server-Sent Events (SSE)**    | Plain text concept preview      | `chat-stream.ts` → `streamSessionIntro` |
 
 On `/session/[id]` load, **scaffold REST** and **session intro (SSE)** run **in parallel** (`ensureScaffold` + `ensureSessionIntro`). Intro failure does not block the lesson.
 
@@ -138,7 +138,7 @@ sequenceDiagram
 
 | Layer      | File                                         | Role                                          |
 | ---------- | -------------------------------------------- | --------------------------------------------- |
-| Client     | `src/lib/learn/request-scaffold.ts`          | `POST /api/scaffold`, stores scaffolds        |
+| Client     | `src/lib/scaffold/request-scaffold.ts`       | `POST /api/scaffold`, stores scaffolds        |
 | Server     | `src/routes/api/scaffold/+server.ts`         | Proxy, retry on validation failure            |
 | Prompt     | `src/lib/server/scaffold/system-prompt.md`   | Learn pedagogy for structured output          |
 | Schema     | `src/lib/server/scaffold/output.schema.json` | Wire schema for `output_config.format.schema` |
@@ -148,12 +148,12 @@ sequenceDiagram
 
 One-shot concept preview in the Ask panel while scaffolds generate. Same Server-Sent Events bridge as Ask (`chat-stream.ts`).
 
-| Layer  | File                                            | Role                                     |
-| ------ | ----------------------------------------------- | ---------------------------------------- |
-| Client | `src/lib/learn/request-session-intro.ts`        | Intro slot, batched store updates        |
-| Client | `src/lib/api/chat-stream.ts`                    | Shared Server-Sent Events parser         |
-| Server | `src/routes/api/session-intro/+server.ts`       | SDK stream → Server-Sent Events response |
-| Prompt | `src/lib/server/session-intro/system-prompt.md` | Concept preview (no solution code)       |
+| Layer  | File                                                 | Role                                     |
+| ------ | ---------------------------------------------------- | ---------------------------------------- |
+| Client | `src/lib/chat/request-session-intro.ts`              | Intro slot, batched store updates        |
+| Client | `src/lib/api/chat-stream.ts`                         | Shared Server-Sent Events parser         |
+| Server | `src/routes/api/chat-session-intro/+server.ts`       | SDK stream → Server-Sent Events response |
+| Prompt | `src/lib/server/chat/session-intro-system-prompt.md` | Concept preview (no solution code)       |
 
 **Gate:** Monaco waits for **Got it — start lesson** (`lessonStarted`) before first scaffold — ADR-021.
 
@@ -193,7 +193,7 @@ sequenceDiagram
 | UI     | `src/lib/components/chat/chat-panel.svelte` | Calls `streamChatReply`                                    |
 | Client | `src/lib/api/chat-stream.ts`                | `fetch` POST, parse `data: …` lines                        |
 | Server | `src/routes/api/chat/+server.ts`            | SDK stream → `ReadableStream` → Server-Sent Events headers |
-| Prompt | `src/lib/server/chat/system-prompt.md`      | Socratic Ask tutor                                         |
+| Prompt | `src/lib/server/chat/ask-system-prompt.md`  | Socratic Ask tutor                                         |
 | Shared | `src/lib/server/anthropic-client.ts`        | `new Anthropic({ apiKey })`                                |
 
 ---
@@ -202,19 +202,19 @@ sequenceDiagram
 
 Cross-cutting choices that cut across physical components. Listed here, not in the diagrams above.
 
-| Area                | Technology                                                       | Used for                                                                                                             |
-| ------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **Framework**       | SvelteKit 5 (SPA), Svelte 5 runes, TypeScript, Vite              | App shell, routing, components, build                                                                                |
-| **Bundling**        | Conditional dynamic `import()` on `/sessions`                    | Empty state eager; list UI lazy when sessions exist                                                                  |
-| **UI**              | Tailwind CSS 4, shadcn-svelte (bits-ui), Lucide icons            | Layout, design system, icons                                                                                         |
-| **Layout**          | paneforge                                                        | Resizable editor / chat split                                                                                        |
-| **Editor**          | Monaco Editor (`@monaco-editor/loader`)                          | Code display, viewZones (Learning Card, loading spinner)                                                             |
-| **AI SDK**          | `@anthropic-ai/sdk`                                              | All server-side Claude calls (see §4)                                                                                |
-| **Markdown**        | `marked` + `dompurify`                                           | Ask replies and About dialog                                                                                         |
-| **State**           | Singleton `.svelte.ts` stores, URL routing, `localStorage`       | See [§6 State management](#6-state-management)                                                                       |
-| **Deploy**          | `@sveltejs/adapter-vercel`, Vercel serverless                    | Production hosting, API routes                                                                                       |
-| **Quality**         | Prettier, ESLint, Husky, lint-staged, **Vitest**, GitHub Actions | Format, lint, unit testing, pre-commit, CI                                                                           |
-| **Package manager** | [pnpm](https://pnpm.io) (not npm)                                | Install, scripts, CI (`pnpm run ci` with frozen lockfile); faster deduped `node_modules`, stricter dependency layout |
+| Area                | Technology                                                           | Used for                                                                                                                                                                                                                                                                                                                |
+| ------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Framework**       | SvelteKit 5 (SPA), Svelte 5 runes, TypeScript, Vite                  | App shell, routing, components, build                                                                                                                                                                                                                                                                                   |
+| **Bundling**        | Conditional dynamic `import()` on `/sessions`                        | Empty state eager; list UI lazy when sessions exist                                                                                                                                                                                                                                                                     |
+| **UI**              | Tailwind CSS 4, shadcn-svelte (bits-ui), Lucide icons                | Layout, design system, icons                                                                                                                                                                                                                                                                                            |
+| **Layout**          | paneforge                                                            | Resizable editor / chat split                                                                                                                                                                                                                                                                                           |
+| **Editor**          | Monaco Editor (`monaco-editor`, **MIT**) via `@monaco-editor/loader` | Code display, **viewZones** (Learning Card, loading spinner) — [ADR-025](decisions.md#adr-025-why-monaco-editor-not-codemirror-ace-or-textarea), [ADR-011](decisions.md#adr-011-monaco-viewzones-editor-integration-and-a11y-trade-off); license — [ADR-024](decisions.md#adr-024-monaco-mit-license-sbom-and-ci-check) |
+| **AI SDK**          | `@anthropic-ai/sdk`                                                  | All server-side Claude calls (see §4)                                                                                                                                                                                                                                                                                   |
+| **Markdown**        | `marked` + `dompurify`                                               | Ask replies and About dialog                                                                                                                                                                                                                                                                                            |
+| **State**           | Singleton `.svelte.ts` stores, URL routing, `localStorage`           | See [§6 State management](#6-state-management)                                                                                                                                                                                                                                                                          |
+| **Deploy**          | `@sveltejs/adapter-vercel`, Vercel serverless                        | Production hosting, API routes                                                                                                                                                                                                                                                                                          |
+| **Quality**         | Prettier, ESLint, Husky, lint-staged, **Vitest**, GitHub Actions     | Format, lint, unit testing, pre-commit, CI                                                                                                                                                                                                                                                                              |
+| **Package manager** | [pnpm](https://pnpm.io) (not npm)                                    | Install, scripts, CI (`pnpm run ci` with frozen lockfile); faster deduped `node_modules`, stricter dependency layout                                                                                                                                                                                                    |
 
 CI and local dev assume `pnpm-lock.yaml` — use `pnpm install`, not `npm install`.
 
@@ -222,13 +222,13 @@ CI and local dev assume `pnpm-lock.yaml` — use `pnpm install`, not `npm instal
 
 The project uses **Vitest** for unit testing. Quality gates (`pnpm run verify`, CI, Husky lint-staged) are documented in [ADR-010](decisions.md#adr-010-repository-layout-typescript-and-quality-gates) and the [README](../README.md#quality-gates).
 
-**Local PR check:** `pnpm run verify` (lint, check, check:i18n, test:run). **CI (Option B):** same checks as separate GitHub Actions steps for granular failure logs. **Pre-commit:** Vitest runs only when staged files touch `src/routes/api/**` (`vitest related --run`) or `src/lib/server/**` (full suite).
+**Local PR check:** `pnpm run verify` (lint, check, check:i18n, test:run). **CI (Option B):** same checks plus **`licenses:ci`** (full production scan → `sbom.json` → allowlist — ADR-024; artifact `production-sbom`). **Local SBOM:** `pnpm run sbom` then `pnpm run licenses:check`. **Pre-commit:** Vitest runs only when staged files touch `src/routes/api/**` (`vitest related --run`) or `src/lib/server/**` (full suite).
 
 The following components are covered by unit tests:
 
 - `src/routes/api/chat/+server.ts`
 - `src/routes/api/scaffold/+server.ts`
-- `src/routes/api/session-intro/+server.ts`
+- `src/routes/api/chat-session-intro/+server.ts`
 - `src/routes/api/chat/utils.ts`
 
 The API route tests verify request validation, response handling, and interactions with the Anthropic client. The utility tests verify the helper functions independently.
@@ -262,22 +262,28 @@ Three layers — separate from ABB/SSB (§1–2) and API transport (§4).
 ```mermaid
 flowchart LR
   URL["URL<br/>/session/:id"]
-  Global["session.svelte.ts<br/>+ localStorage"]
+  GlobalRunes["global-state/<br/>session · translation · onboarding"]
+  GlobalI18n["i18n/<br/>translations + store adapters"]
   Local["Component $state<br/>ephemeral"]
 
-  URL --> Global
-  Global --> Local
+  URL --> GlobalRunes
+  GlobalRunes --> Local
 ```
 
-| Layer      | Where                       | Persists on reload?      | Holds                                                                                     |
-| ---------- | --------------------------- | ------------------------ | ----------------------------------------------------------------------------------------- |
-| **URL**    | SvelteKit routes            | —                        | Which session/workspace is open (`/session/:id`)                                          |
-| **Global** | `src/lib/session.svelte.ts` | **Yes** → `localStorage` | Session list, prompt, scaffold JSON from Claude, API status, `completed` flag, active tab |
-| **Local**  | Component `$state`          | **No**                   | In-lesson step index, Learning Card UI, loading spinner rAF, Ask prompt draft             |
+**Global rune singletons** live in **`src/lib/global-state/`** (`.svelte.ts` modules). **`src/lib/i18n/`** holds static copy (`translations.ts`) and thin store adapters (`index.ts`). Each persisting global-state module documents `localStorage` in its file header.
 
-### Global store (`session.svelte.ts`)
+| Layer      | Where                                | Persists on reload?              | Holds                                                                         |
+| ---------- | ------------------------------------ | -------------------------------- | ----------------------------------------------------------------------------- |
+| **URL**    | SvelteKit routes                     | —                                | Which session/workspace is open (`/session/:id`)                              |
+| **Global** | `global-state/session.svelte.ts`     | **Partial** → see module         | Learn sessions, scaffolds, API status, active tab                             |
+| **Global** | `global-state/translation.svelte.ts` | **Yes** → `scaffy.language`      | UI locale only — not lesson progress (ADR-020)                                |
+| **Global** | `global-state/onboarding.svelte.ts`  | **Yes** → `scaffy.onboarding.v1` | First-use spotlight dismissed (ADR-021)                                       |
+| **Global** | `i18n/translations.ts`               | **No** (bundled copy)            | EN/DE message strings, types                                                  |
+| **Local**  | Component `$state`                   | **No**                           | In-lesson step index, Learning Card UI, loading spinner rAF, Ask prompt draft |
 
-Single app-wide singleton. Source of truth for **Learn data**.
+### `global-state/session.svelte.ts`
+
+Single app-wide singleton. Source of truth for **Learn data**. **Persists** via `persistSessions()` → `scaffy.sessions`, `scaffy.activeSessionId`.
 
 | In memory                                      | Also in `localStorage`            |
 | ---------------------------------------------- | --------------------------------- |
@@ -290,6 +296,14 @@ Single app-wide singleton. Source of truth for **Learn data**.
 
 **Lifecycle:** `idle` → `loading` (`startScaffoldRequest` + parallel intro) → `ready` (`setScaffolds`) or `error` → retry → `loading`. `lessonStarted` gates first scaffold in Monaco (ADR-021). `completed` via `markSessionCompleted()` after all gates passed.
 
+### `global-state/translation.svelte.ts`
+
+UI locale preference. **`setLanguage()`** → `scaffy.language`. Static strings live in **`i18n/translations.ts`** (bundled, not persisted). Components use **`$language` / `$messages`** via store adapters in **`i18n/index.ts`**.
+
+### `global-state/onboarding.svelte.ts`
+
+First-use chat spotlight dismissed flag. **`completeOnboarding()`** → `scaffy.onboarding.v1`. UI in `onboarding-coordinator.svelte` (ADR-021).
+
 ### Ephemeral (not in store)
 
 | Location                          | State                                                        | Lost on reload?                     |
@@ -300,7 +314,7 @@ Single app-wide singleton. Source of truth for **Learn data**.
 
 **Ask chat:** `askMessages` on `SessionRecord` — survives SPA navigation (Home ↔ Session ↔ Sessions); **not** in `localStorage` (lost on full reload). In-lesson step index is not yet persisted (ADR-014).
 
-**Code:** file header and section comments in `src/lib/session.svelte.ts`.
+**Code:** file headers in `src/lib/global-state/*.svelte.ts` and `src/lib/i18n/index.ts`.
 
 ---
 
