@@ -19,20 +19,24 @@ Scaffy generates code step by step and uses targeted questions to block the next
 
 ## For developers
 
+This project was built with **agentic coding** (AI-assisted development). Shared agent config, Cursor rules, and MCP setup are documented under [Agentic coding](#agentic-coding).
+
 ### Getting started
 
-**Prerequisites:** Node.js 20+ and [pnpm](https://pnpm.io/) 9.x
+**Prerequisites:** Node.js 20+ and [pnpm](https://pnpm.io/) **9.15.9** (pinned in `package.json` → `packageManager`)
 
 Install pnpm if it is not already on your PATH:
 
 ```sh
-# Option A — Corepack (bundled with Node 20+)
+# Option A — Corepack (bundled with Node 20+; matches packageManager)
 corepack enable
 corepack prepare pnpm@9.15.9 --activate
 
 # Option B — global install (e.g. when Corepack is unavailable)
 npm install -g pnpm@9.15.9
 ```
+
+After `corepack enable`, `pnpm install` in this repo also picks up **9.15.9** from `packageManager` without the explicit `prepare` step.
 
 Clone and install dependencies (this also installs Git hooks via Husky):
 
@@ -86,61 +90,59 @@ On Cursor, replace `code` with `cursor`.
 
 ### Repository structure
 
+SvelteKit maps **URL paths to `src/routes/` folders**. Feature views live in `src/lib/components/<area>/`; route `+page.svelte` files stay thin.
+
 ```
 src/
 ├── lib/
+│   ├── actions/                    # Svelte actions (e.g. portal)
+│   ├── api/                        # Shared API helpers (SSE, kit errors)
+│   ├── assets/                     # Logos and static images
+│   ├── chat/                       # Ask client helpers (session-intro stream)
 │   ├── components/
-│   │   ├── chat/          # Ask tutor UI (SSE, markdown, composer)
-│   │   ├── editor/        # Monaco, Learning Card, viewZone bridge
-│   │   ├── sessions/      # Sessions overview page view
-│   │   ├── home/          # Home prompt + start session
-│   │   ├── session/       # Session workspace, session tabs
-│   │   ├── shell/         # App title bar (persistent top nav)
-│   │   └── ui/            # shadcn-svelte primitives (Button, Dialog, …)
-│   ├── server/
-│   │   ├── scaffold/      # Structured JSON schema + system prompt (Learn)
-│   │   ├── chat/          # Ask + session-intro system prompts
-│   │   │   ├── ask-system-prompt.md
-│   │   │   └── session-intro-system-prompt.md
-│   │   └── anthropic-client.ts
-│   ├── global-state/      # Runes singletons (see file headers for localStorage)
-│   │   └── session.svelte.ts  # Learn sessions, scaffolds, API status
-│   ├── i18n/              # EN/DE copy, MessageKey, language store (Svelte stores)
-│   ├── chat/              # Ask message helpers + session-intro stream client
-│   │   ├── message-actions.ts
-│   │   └── request-session-intro.ts
-│   ├── scaffold/          # Client scaffold fetch + mock fixtures
-│   │   ├── request-scaffold.ts
-│   │   └── scaffold-fallback.mock.json  # Dev fallback + optional golden sample (paste from API)
-│   ├── types/             # Shared types (scaffold, chat-message)
-│   ├── actions/           # Svelte actions (e.g. portal for overlays)
-│   └── dev/               # Dev-only helpers (logging.ts)
+│   │   ├── about/                  # About dialog content
+│   │   ├── chat/                   # scaffy ask tutor chatpanel
+│   │   ├── editor/                 # Monaco, Learning Card
+│   │   ├── home/                   # Home prompt, start session
+│   │   ├── session/                # Session workspace, tabs, onboarding
+│   │   ├── sessions/               # Sessions overview page
+│   │   ├── shell/                  # App title bar
+│   │   └── ui/                     # shadcn-svelte primitives (Button, Dialog, …) & scaffy custom UI components
+│   ├── dev/                        # Dev-only helpers
+│   ├── global-state/               # $state singletons only — session, onboarding, translation (locale)
+│   ├── i18n/                       # EN/DE strings + Svelte stores ($language, $messages) for locale UI
+│   ├── scaffold/                   # Scaffold fetch client, dev fixtures
+│   ├── server/                     # Server-only — never import from the client
+│   │   ├── chat/                   # Ask + session-intro system prompts
+│   │   ├── scaffold/               # Learn schema, prompts, validation
+│   │   └── anthropic-client.ts     # Shared Anthropic client
+│   └── types/                      # Shared TypeScript types
 └── routes/
-    ├── +page.svelte       # Home (thin → start-learning-session)
-    ├── sessions/          # Sessions overview (lazy-loaded view)
-    ├── session/[id]/      # Session workspace
-    └── api/
-        ├── scaffold/      # POST /api/scaffold — REST structured JSON (Learn)
-        ├── chat/          # POST /api/chat — SSE tutor (Ask)
-        └── chat-session-intro/ # POST /api/chat-session-intro — SSE concept preview
+    ├── api/
+    (REST)
+    │   ├── chat/                   # POST /api/chat — Ask tutor (SSE)
+    │   ├── chat-session-intro/     # POST /api/chat-session-intro — concept preview (SSE)
+    │   └── scaffold/               # POST /api/scaffold — Learn (REST JSON)
+    ├── history/                    # /history — legacy redirect → /sessions
+    ├── session/[id]/               # /session/:id — learning workspace
+    ├── sessions/                   # /sessions — saved sessions overview
+    ├── +layout.svelte              # App shell
+    └── +page.svelte                # / — home
 ```
-
-- **Routes** stay thin; feature views live under `src/lib/components/<area>/`. `/sessions` shows an **eager** empty state when there are no sessions; the list UI is **lazy-loaded** only when `localStorage` has sessions (conditional code split).
-- **API routes** are thin proxies: parse request → call Anthropic → return response.
-- **Server-only** logic lives in `src/lib/server/` (never imported from the client).
 
 ### Architecture & stack
 
-| Area        | Choice                                                    |
-| ----------- | --------------------------------------------------------- |
-| Framework   | SvelteKit 5 — **SPA** (`ssr = false`)                     |
-| Editor      | Monaco (viewZones for Learning Cards)                     |
-| UI          | shadcn-svelte, Tailwind CSS 4                             |
-| AI          | Claude via server-only `/api/*` proxies                   |
-| State       | Svelte 5 runes — `src/lib/global-state/session.svelte.ts` |
-| Persistence | `localStorage` (sessions, scaffolds, metadata)            |
-| i18n        | EN (default) + DE — `src/lib/i18n/`                       |
-| Deploy      | Vercel + GitHub Actions CI                                |
+| Area        | Choice                                                                                       |
+| ----------- | -------------------------------------------------------------------------------------------- |
+| Framework   | SvelteKit 5 — **SPA** (`ssr = false`)                                                        |
+| Editor      | Monaco (viewZones for Learning Cards)                                                        |
+| UI          | shadcn-svelte, Tailwind CSS 4                                                                |
+| AI          | Claude via server-only `/api/*` proxies                                                      |
+| State       | `$state` singletons in `global-state/*`; locale UI via Svelte stores in `i18n/index.ts` only |
+| Persistence | `localStorage` (sessions, scaffolds, metadata)                                               |
+| i18n        | EN (default) + DE — `src/lib/i18n/`                                                          |
+| Testing     | Vitest — API routes under `src/routes/api/` (mocked Anthropic)                               |
+| Deploy      | Vercel + GitHub Actions CI                                                                   |
 
 Logical and physical building blocks (ABB/SSB), API flows, and state: [`docs/architecture.md`](docs/architecture.md) · [`docs/decisions.md`](docs/decisions.md)
 
@@ -161,24 +163,36 @@ cp .env.example .env.local   # then edit .env.local
 
 `.env.local` is listed in `.gitignore` and is never committed.
 
+**No API key yet?** Copy [`.env.test`](.env.test) to `.env` (same as CI) so `svelte-kit sync` can generate types and Vitest can run without a real key:
+
+```sh
+cp .env.test .env
+```
+
 ---
 
 ### Development scripts
 
-| Script           | Command               | Purpose                                   |
-| ---------------- | --------------------- | ----------------------------------------- |
-| Dev server       | `pnpm run dev`        | Vite dev server                           |
-| Production build | `pnpm run build`      | Build for Vercel                          |
-| Preview build    | `pnpm run preview`    | Serve production build locally            |
-| Format all       | `pnpm run format`     | Prettier write on the whole repo          |
-| Lint             | `pnpm run lint`       | Prettier check + ESLint                   |
-| Typecheck        | `pnpm run check`      | `svelte-check`                            |
-| i18n key parity  | `pnpm run check:i18n` | en/de keys in `translations.ts` match     |
-| CI install       | `pnpm run ci`         | Frozen lockfile install (same as Actions) |
-| Tests (watch)    | `pnpm run test`       | Vitest watch mode                         |
-| Tests (once)     | `pnpm run test:run`   | Full unit test suite                      |
-| Coverage         | `pnpm run coverage`   | Vitest with coverage report               |
-| PR checks        | `pnpm run verify`     | lint + check + check:i18n + test:run      |
+All commands run from the repo root. `pnpm run build` wraps SvelteKit’s production build (`vite build` under the hood — same command Vercel uses).
+
+| Script           | Command                   | Purpose                                          |
+| ---------------- | ------------------------- | ------------------------------------------------ |
+| Dev server       | `pnpm run dev`            | Vite dev server                                  |
+| Production build | `pnpm run build`          | SvelteKit production build (`vite build`)        |
+| Preview build    | `pnpm run preview`        | Serve the production build locally               |
+| Typecheck        | `pnpm run check`          | `svelte-check`                                   |
+| Typecheck watch  | `pnpm run check:watch`    | `svelte-check` in watch mode                     |
+| i18n key parity  | `pnpm run check:i18n`     | en/de keys in `translations.ts` match            |
+| Format all       | `pnpm run format`         | Prettier write on the whole repo                 |
+| Lint             | `pnpm run lint`           | Prettier check + ESLint                          |
+| Tests (watch)    | `pnpm run test`           | Vitest watch mode                                |
+| Tests (once)     | `pnpm run test:run`       | Full unit test suite                             |
+| Coverage         | `pnpm run coverage`       | Vitest with coverage report                      |
+| PR checks        | `pnpm run verify`         | lint + check + check:i18n + test:run             |
+| CI install       | `pnpm run ci`             | Frozen lockfile install (same as GitHub Actions) |
+| License audit    | `pnpm run licenses:check` | Validate production dependency licenses          |
+| License CI       | `pnpm run licenses:ci`    | SBOM + license allowlist (CI step)               |
+| SBOM             | `pnpm run sbom`           | Write CycloneDX `sbom.json` only                 |
 
 Preview the production build locally:
 
@@ -187,7 +201,7 @@ pnpm run build
 pnpm run preview
 ```
 
-Format specific files after editing:
+Format and lint specific files after editing:
 
 ```sh
 pnpm exec prettier --write path/to/file
@@ -204,25 +218,7 @@ pnpm exec eslint path/to/file
 pnpm run verify
 ```
 
-That runs lint, typecheck, i18n key parity, and the Vitest suite in one command. Use `pnpm run test` for watch mode while editing API routes.
-
-#### Continuous integration
-
-Every push and pull request targeting `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml). CI copies [`.env.test`](.env.test) to `.env` before install so `svelte-kit sync` can generate `$env/static/private` types (no real API key in Actions), then runs:
-
-```sh
-pnpm run ci          # frozen lockfile install
-pnpm run lint
-pnpm run check
-pnpm run check:i18n
-pnpm run test:run
-```
-
-These are the same checks as `pnpm run verify`, but **separate steps** in GitHub Actions so failed jobs show which gate broke (see [ADR-010](docs/decisions.md#adr-010-repository-layout-typescript-and-quality-gates) in `docs/decisions.md`).
-
-Unit tests use **Vitest**; v1 scope is API routes under `src/routes/api/` with Anthropic mocked — details in [`docs/architecture.md` §5](docs/architecture.md#testing).
-
-**Branch protection (repo admin):** After CI has run at least once on `main`, open **GitHub → Settings → Branches → Add branch protection rule** for `main`, enable **Require status checks to pass before merging**, and select the **`ci`** check.
+Use `pnpm run test` for watch mode while editing API routes.
 
 #### Pre-commit (Husky + lint-staged)
 
@@ -237,18 +233,35 @@ On `git commit`, staged files are auto-formatted with Prettier and ESLint-fixed 
 
 UI-only or session-store commits skip Vitest — hooks stay fast. CI remains the safety net if someone commits with `--no-verify`.
 
-Fresh clones without `.env.local` can copy `.env.test` to `.env` (same as CI) so type generation and tests work locally.
-
 ---
 
-### Continuous deployment
+### CI/CD
 
-Scaffy is deployed on [Vercel](https://vercel.com). The same environment variables from [Environment setup](#environment-setup) must be set on the Vercel project so serverless functions can reach the API
+#### Continuous integration (GitHub Actions)
 
-**Via Vercel Dashboard:**  
+Every push and pull request targeting `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml). CI copies [`.env.test`](.env.test) to `.env` before install (no real API key in Actions), then runs:
+
+```sh
+pnpm run ci           # frozen lockfile install
+pnpm run lint
+pnpm run check
+pnpm run check:i18n
+pnpm run licenses:ci  # SBOM + license allowlist
+pnpm run test:run
+```
+
+These match `pnpm run verify` plus the license audit. Steps are **separate** in GitHub Actions so failed jobs show which gate broke.
+
+**Branch protection (repo admin):** After CI has run at least once on `main`, open **GitHub → Settings → Branches → Add branch protection rule** for `main`, enable **Require status checks to pass before merging**, and select the **`ci`** check.
+
+#### Continuous deployment (Vercel)
+
+Scaffy deploys on [Vercel](https://vercel.com). The same environment variables from [Environment setup](#environment-setup) must be set on the Vercel project so serverless functions can reach the API.
+
+**Vercel (project admin) — via Dashboard:**  
 Project → Settings → Environment Variables → add `ANTHROPIC_API_KEY` (Production + Preview). Optionally add `ANTHROPIC_DEFAULT_MODEL`.
 
-**Via Vercel CLI:**
+**Vercel (project admin) — via CLI:**
 
 ```sh
 pnpm add -g vercel
@@ -269,7 +282,7 @@ vercel env pull .env.local
 
 ### Agentic coding
 
-This project is configured for AI-assisted development with three tools. All agents share the same design decisions and coding conventions defined in `CLAUDE.md`.
+This project is configured for AI-assisted development with three tools. All agents share the same design decisions and coding conventions defined in [`CLAUDE.md`](CLAUDE.md).
 
 | Tool                                                  | Config                               |
 | ----------------------------------------------------- | ------------------------------------ |
@@ -277,7 +290,9 @@ This project is configured for AI-assisted development with three tools. All age
 | [Cursor](https://cursor.com)                          | `.cursor/rules/`, `.cursor/mcp.json` |
 | [GitHub Copilot](https://github.com/features/copilot) | `.github/copilot-instructions.md`    |
 
-When making changes to project configuration or design decisions, update all three config files in the same edit batch to keep them in sync.
+**Cursor** loads workspace rules from [`.cursor/rules/`](.cursor/rules/) (formatting, layout, scrollbars, TypeScript, decision-log workflow). [Cursor Skills](https://cursor.com/docs/context/skills) are optional user- or team-level prompt packs — this repo does not ship skill files, but you can add your own.
+
+When making changes to project configuration or design decisions, update all three agent config files in the same edit batch to keep them in sync.
 
 ---
 
